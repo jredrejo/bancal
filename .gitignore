@@ -1,0 +1,16 @@
+web2py/cache.*
+*.pyc
+*.sqlite
+127.0.0.1*
+web2py/cron.master
+web2py/httpserver.*
+web2py/applications/bancal/databases/*
+web2py/applications/bancal/sessions/*
+web2py/applications/bancal/errors/*
+web2py/applications/bancal/cache/*
+web2py/applications/admin
+web2py/parameters_8000.py
+web2py/.project
+web2py/.pydevproject
+web2py/.settings
+web2py/routes.py

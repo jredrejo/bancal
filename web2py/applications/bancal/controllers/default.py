@@ -18,8 +18,15 @@ def index():
     if you need a simple wiki simple replace the two lines below with:
     return auth.wiki()
     """
-    response.flash = T("Welcome to web2py!")
-    return dict(message=T('Hello World'))
+    if not session.auth:
+        response.title = None
+    response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
+    db2=DAL('sqlite://SigabaAlimentos.sqlite',pool_size=1, check_reserved=['all'], auto_import=True)
+    
+    listado =[]
+    import pdb
+    pdb.set_trace()
+    return dict()
 
 
 def user():

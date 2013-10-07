@@ -9,18 +9,9 @@
 ## be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
 
-if not request.env.web2py_runtime_gae:
-    ## if NOT running on Google App Engine use SQLite or other DB
-    db = DAL('sqlite://storage.sqlite',pool_size=1,check_reserved=['all'])
-else:
-    ## connect to Google BigTable (optional 'google:datastore://namespace')
-    db = DAL('google:datastore')
-    ## store sessions and tickets there
-    session.connect(request, response, db=db)
-    ## or store session in Memcache, Redis, etc.
-    ## from gluon.contrib.memdb import MEMDB
-    ## from google.appengine.api.memcache import Client
-    ## session.connect(request, response, db = MEMDB(Client()))
+
+db = DAL('sqlite://storage.sqlite',pool_size=1,check_reserved=['all'])
+
 
 ## by default give a view/generic.extension to all actions from localhost
 ## none otherwise. a pattern can be 'controller/function.extension'
@@ -54,13 +45,9 @@ mail.settings.login = 'username:password'
 
 ## configure auth policy
 auth.settings.registration_requires_verification = False
-auth.settings.registration_requires_approval = False
+auth.settings.registration_requires_approval = True
 auth.settings.reset_password_requires_verification = True
 
-## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.
-## register with janrain.com, write your domain:api_key in private/janrain.key
-from gluon.contrib.login_methods.rpx_account import use_janrain
-use_janrain(auth, filename='private/janrain.key')
 
 #########################################################################
 ## Define your tables below (or better in another model file) for example
@@ -79,5 +66,31 @@ use_janrain(auth, filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
+
+db.define_table('Almacen',
+    Field('Descripcion',label='Descripción'),
+    Field('Direccion', label='Dirección'),
+    Field('Activo','boolean',default=True)
+    )
+
+db.define_table('Familia',
+    Field('Descripcion',label='Descripción')
+    )
+
+db.define_table('SubFamilia',
+    Field('Descripcion',label='Descripción'),
+    Field('Familia',db.Familia)
+    )
+
+db.define_table('Alimento',
+    Field('Codigo','integer',label='Código'),
+    Field('Descripcion',label='Descripción'),
+    Field('Familia',db.Familia),
+    Field('SubFamilia',db.SubFamilia),
+    Field('Conservacion',label='Conservación',default=T('Calor')),
+    Field('Unidades',default='Kg.')
+    )
+db.Alimento.Conservacion.requires=IS_IN_SET(T('Calor'),T('Frío'))
+db.Alimento.Unidades.requires=IS_IN_SET('Kg.','L.')    
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)

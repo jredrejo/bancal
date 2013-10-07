@@ -21,11 +21,13 @@ def index():
     if not session.auth:
         response.title = None
     response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
-    db2=DAL('sqlite://SigabaAlimentos.sqlite',pool_size=1, check_reserved=['all'], auto_import=True)
-    
-    listado =[]
-    import pdb
-    pdb.set_trace()
+
+
+    ### Temporal, para importar datos de bb.dd. anterior ###
+    import importacion
+    #importacion.rellena_familias()
+    #importacion.rellena_subfamilias()
+    #importacion.rellena_alimentos()
     return dict()
 
 

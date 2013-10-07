@@ -24,7 +24,7 @@ if session.auth:
         (SPAN(T('Configuración'), _class='highlighted'), False, None, [
         (T('Datos de la sede'), False,  URL('default', 'index'), []),
         (T('Almacenes'), False,  URL('default', 'index'), []),
-        (T('Alimentos'), False,  URL('default', 'index'), []),
+        (T('Alimentos'), False,  URL('config', 'alimentos'), []),
         ])
     ]
 

@@ -8,10 +8,10 @@
 ## if SSL/HTTPS is properly configured and you want all HTTP requests to
 ## be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
-
+from gluon import current
 
 db = DAL('sqlite://storage.sqlite',pool_size=1,check_reserved=['all'])
-
+current.db = db
 
 ## by default give a view/generic.extension to all actions from localhost
 ## none otherwise. a pattern can be 'controller/function.extension'

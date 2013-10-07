@@ -1,0 +1,22 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+{{block right_sidebar}}
+{{pass}}
+
+
+{{=grid}}
+
+
+<script type="text/javascript">
+
+ $(document).ready(function() {
+   // chrome fix.
+   document.onselectstart = function () { return false; };             
+
+
+
+  jQuery("#searchText").focus();
+
+  });
+
+</script>

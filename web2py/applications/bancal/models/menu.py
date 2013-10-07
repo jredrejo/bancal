@@ -21,7 +21,7 @@ response.google_analytics_id = None
 
 if session.auth:
     response.menu = [
-        (SPAN(T('Configuración'), _class='highlighted'), False, None, [
+        (T('Configuración'), False, None, [
         (T('Datos de la sede'), False,  URL('default', 'index'), []),
         (T('Almacenes'), False,  URL('default', 'index'), []),
         (T('Alimentos'), False,  URL('config', 'alimentos'), []),
@@ -38,7 +38,7 @@ if session.auth:
 
                     ])]
 
-    response.menu +=[(SPAN(T('Almacen'), _class='highlighted'), False, None, [
+    response.menu +=[(T('Almacen'), False, None, [
                     (T('Entradas'), False,  URL('default', 'index'), []),
                     (T('Salidas'), False,  URL('default', 'index'), []),
                     (T('Stock'), False,  URL('default', 'index'), [])])]

@@ -74,12 +74,13 @@ db.define_table('Almacen',
     )
 
 db.define_table('Familia',
-    Field('Descripcion',label='Descripción')
+    Field('Descripcion',label='Descripción'),format='%(Descripcion)s'
     )
 
 db.define_table('SubFamilia',
     Field('Descripcion',label='Descripción'),
-    Field('Familia',db.Familia)
+    Field('Familia',db.Familia),
+    format='%(Descripcion)s'
     )
 
 db.define_table('Alimento',
@@ -90,7 +91,19 @@ db.define_table('Alimento',
     Field('Conservacion',label='Conservación',default=T('Calor')),
     Field('Unidades',default='Kg.')
     )
-db.Alimento.Conservacion.requires=IS_IN_SET(T('Calor'),T('Frío'))
-db.Alimento.Unidades.requires=IS_IN_SET('Kg.','L.')    
+db.Alimento.Conservacion.requires=IS_IN_SET((T('Calor'),T('Frío')))
+db.Alimento.Unidades.requires=IS_IN_SET(('Kg.','L.'))
+
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)
+tipo_beneficiario=("TODOS","Residencia de Ancianos","Guarderias","Comedores Sociales","Caritas",
+                    "Centros de Reinserción","Centros de Acogida","Conventos","Asociaciones Asistenciales",
+                    "Banco Alimentos","Regularizacion de existencias","Iglesias Evangelistas","Ayuntamientos",
+                    "Otras Asociaciones","Otras Confesiones Religiosas","Otros Organismos Publicos")
+tipo_empresa=("ACTUALIZACIÓN DE STOCK","MAYORISTAS Y DISTRIBUIDUIDORES","EMPRESAS E INDUSTRIA AGROALIMENTARIA",
+              "BANCO DE ALIMENTOS","ASOC. BENEF./SOCIAL/DEPORT./CULTUR.","CENTROS EDUCATIVOS","COMERCIOS MINORISTAS",
+              "DONACIONES PARTICULARES","ORGANISMOS PÚBLICOS","FEGA")
+tipo_procedencia=("REGULARIZACIÓN DE STOCK","DONACIONES","OPERACIÓN KILO","MERMAS","EXCEDENTES DE PRODUCCIÓN",
+                  "DECOMISOS","AYUDAS PÚBLICAS","INVENTARIO","OTROS BANCOS","UNION EUROPEA")
+
+                    

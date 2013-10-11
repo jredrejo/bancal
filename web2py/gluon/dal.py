@@ -1403,12 +1403,15 @@ class BaseAdapter(ConnectionPool):
     def COMMA(self, first, second):
         return '%s, %s' % (self.expand(first), self.expand(second))
 
+    def CAST(self, first, second):
+        return 'CAST(%s AS %s)' % (first, second)
+
     def expand(self, expression, field_type=None):
         if isinstance(expression, Field):
             out = '%s.%s' % (expression.table._tablename, expression.name)
             if field_type == 'string' and not expression.type in (
                 'string','text','json','password'):
-                out = 'CAST(%s AS %s)' % (out, self.types['text'])
+                out = self.CAST(out, self.types['text'])
             return out
         elif isinstance(expression, (Expression, Query)):
             first = expression.first
@@ -2737,14 +2740,16 @@ class PostgreSQLAdapter(BaseAdapter):
     def LIKE(self,first,second):
         args = (self.expand(first), self.expand(second,'string'))
         if not first.type in ('string', 'text', 'json'):
-            return '(CAST(%s AS CHAR(%s)) LIKE %s)' % (args[0], first.length, args[1])
+            return '(%s LIKE %s)' % (
+                self.CAST(args[0], 'CHAR(%s)' % first.length), args[1])
         else:
             return '(%s LIKE %s)' % args
 
     def ILIKE(self,first,second):
         args = (self.expand(first), self.expand(second,'string'))
         if not first.type in ('string', 'text', 'json'):
-            return '(CAST(%s AS CHAR(%s)) LIKE %s)' % (args[0], first.length, args[1])
+            return '(%s LIKE %s)' % (
+                self.CAST(args[0], 'CHAR(%s)' % first.length), args[1])
         else:
             return '(%s ILIKE %s)' % args
 
@@ -3180,6 +3185,9 @@ class MSSQLAdapter(BaseAdapter):
 
     def ALLOW_NULL(self):
         return ' NULL'
+
+    def CAST(self, first, second):
+        return first # apparently no cast necessary in MSSQL
 
     def SUBSTRING(self,field,parameters):
         return 'SUBSTRING(%s,%s,%s)' % (self.expand(field), parameters[0], parameters[1])
@@ -6116,7 +6124,7 @@ class IMAPAdapter(NoSQLAdapter):
         else:
             return (uid_list[0], uid_list[-1])
 
-    def convert_date(self, date, add=None):
+    def convert_date(self, date, add=None, imf=False):
         if add is None:
             add = datetime.timedelta()
         """ Convert a date object to a string
@@ -6130,7 +6138,10 @@ class IMAPAdapter(NoSQLAdapter):
         if isinstance(date, basestring):
             # Prevent unexpected date response format
             try:
-                dayname, datestring = date.split(",")
+                if "," in date:
+                    dayname, datestring = date.split(",")
+                else:
+                    dayname, datestring = None, date
                 date_list = datestring.strip().split()
                 year = int(date_list[2])
                 month = months.index(date_list[1].upper())
@@ -6142,8 +6153,10 @@ class IMAPAdapter(NoSQLAdapter):
                 LOGGER.error("Could not parse date text: %s. %s" %
                              (date, e))
                 return None
-        elif isinstance(date, (datetime.datetime, datetime.date)):
-            return (date + add).strftime("%d-%b-%Y")
+        elif isinstance(date, (datetime.date, datetime.datetime)):
+            if imf: date_format = "%a, %d %b %Y %H:%M:%S %z"
+            else: date_format = "%d-%b-%Y"
+            return (date + add).strftime(date_format)
         else:
             return None
 
@@ -6524,7 +6537,8 @@ class IMAPAdapter(NoSQLAdapter):
 
         mailbox = table.mailbox
         d = dict(((k.name, v) for k, v in fields))
-        date_time = (d.get("created", datetime.datetime.now())).timetuple()
+        date_time = d.get("created", datetime.datetime.now())
+        struct_time = date_time.timetuple()
         if len(d) > 0:
             message = d.get("email", None)
             attachments = d.get("attachments", [])
@@ -6539,6 +6553,8 @@ class IMAPAdapter(NoSQLAdapter):
                 message = Message()
                 message["from"] = d.get("sender", "")
                 message["subject"] = d.get("subject", "")
+                message["date"] = self.convert_date(date_time, imf=True)
+
                 if mime:
                     message.set_type(mime)
                 if charset:
@@ -6561,7 +6577,7 @@ class IMAPAdapter(NoSQLAdapter):
                     [add_payload(message, c) for c in content]
                     [add_payload(message, a) for a in attachments]
                 message = message.as_string()
-            return (mailbox, flags, date_time, message)
+            return (mailbox, flags, struct_time, message)
         else:
             raise NotImplementedError("IMAP empty insert is not implemented")
 
@@ -10493,7 +10509,7 @@ class Rows(object):
 
 
         if i is None:
-            return (self.repr(i, fields=fields) for i in range(len(self)))
+            return (self.render(i, fields=fields) for i in range(len(self)))
         import sqlhtml
         row = copy.deepcopy(self.records[i])
         keys = row.keys()

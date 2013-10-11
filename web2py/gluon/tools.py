@@ -883,6 +883,7 @@ class Auth(object):
         auth_manager_role=None,
         login_captcha=None,
         register_captcha=None,
+        pre_registration_div=None,
         retrieve_username_captcha=None,
         retrieve_password_captcha=None,
         captcha=None,
@@ -913,6 +914,7 @@ class Auth(object):
         use_username=False,
         login_email_validate=True,
         login_userfield=None,
+        multi_login=False,
         logout_onlogout=None,
         register_fields=None,
         register_verify_password=True,
@@ -942,6 +944,9 @@ class Auth(object):
         access_denied='Insufficient privileges',
         registration_verifying='Registration needs verification',
         registration_pending='Registration is pending approval',
+        email_taken='This email already has an account',
+        invalid_username='Invalid username',
+        username_taken='Username already taken',
         login_disabled='Login disabled by administrator',
         logged_in='Logged in',
         email_sent='Email sent',
@@ -956,7 +961,7 @@ class Auth(object):
         invalid_password='Invalid password',
         is_empty="Cannot be empty",
         mismatched_password="Password fields don't match",
-        verify_email='Click on the link %(link)s to verify your email',
+        verify_email='Welcome %(username)s! Click on the link %(link)s to verify your email',
         verify_email_subject='Email verification',
         username_sent='Your username was emailed to you',
         new_password_sent='A new password was emailed to you',
@@ -1651,7 +1656,8 @@ class Auth(object):
                            min_length=settings.password_min_length)
         is_unique_email = [
             IS_EMAIL(error_message=self.messages.invalid_email),
-            IS_NOT_IN_DB(db, '%s.email' % settings.table_user_name)]
+            IS_NOT_IN_DB(db, '%s.email' % settings.table_user_name,
+                         error_message=self.messages.email_taken)]
         if not settings.email_case_sensitive:
             is_unique_email.insert(1, IS_LOWER())
         if not settings.table_user_name in db.tables:
@@ -1660,8 +1666,10 @@ class Auth(object):
                 settings.table_user_name, []) + signature_list
             if username or settings.cas_provider:
                 is_unique_username = \
-                    [IS_MATCH('[\w\.\-]+', strict=True),
-                     IS_NOT_IN_DB(db, '%s.username' % settings.table_user_name)]
+                    [IS_MATCH('[\w\.\-]+', strict=True,
+                              error_message=self.messages.invalid_username),
+                     IS_NOT_IN_DB(db, '%s.username' % settings.table_user_name,
+                                  error_message=self.messages.username_taken)]
                 if not settings.username_case_sensitive:
                     is_unique_username.insert(1, IS_LOWER())
                 db.define_table(
@@ -1970,7 +1978,7 @@ class Auth(object):
         """
         from gluon.settings import global_settings
         if global_settings.web2py_runtime_gae:
-            user = Row(self.settings.table_user._filter_fields(user, id=True))
+            user = Row(self.table_user()._filter_fields(user, id=True))
             delattr(user,'password')
         else:
             user = Row(user)
@@ -2162,12 +2170,6 @@ class Auth(object):
         """
 
         table_user = self.table_user()
-        if self.settings.login_userfield:
-            username = self.settings.login_userfield
-        elif 'username' in table_user.fields:
-            username = 'username'
-        else:
-            username = 'email'
         settings = self.settings
         if 'username' in table_user.fields or \
                 not settings.login_email_validate:
@@ -2178,8 +2180,6 @@ class Auth(object):
             tmpvalidator = IS_EMAIL(error_message=self.messages.invalid_email)
             if not settings.email_case_sensitive:
                 tmpvalidator = [IS_LOWER(), tmpvalidator]
-        old_requires = table_user[username].requires
-        table_user[username].requires = tmpvalidator
 
         request = current.request
         response = current.response
@@ -2221,6 +2221,21 @@ class Auth(object):
         onfail = settings.login_onfail
 
         user = None  # default
+
+
+        #Setup the default field used for the form
+        multi_login = False
+        if self.settings.login_userfield:
+            username = self.settings.login_userfield
+        else:
+            if 'username' in table_user.fields:
+                username = 'username'
+            else:
+                username = 'email'
+            if self.settings.multi_login:
+                multi_login = True
+        old_requires = table_user[username].requires
+        table_user[username].requires = tmpvalidator
 
         # do we use our own login form, or from a central source?
         if settings.login_form == self:
@@ -2279,7 +2294,12 @@ class Auth(object):
 
                 accepted_form = True
                 # check for username in db
-                user = table_user(**{username: form.vars[username]})
+                entered_username = form.vars[username]
+                if multi_login and '@' in entered_username:
+                    # if '@' in username check for email, not username
+                    user = table_user(email = entered_username)
+                else:
+                    user = table_user(**{username: entered_username})
                 if user:
                     # user in db, check if registration pending or disabled
                     temp_user = user
@@ -2491,6 +2511,7 @@ class Auth(object):
                 if item:
                     form.custom.widget.password_two = \
                         INPUT(_name="password_two", _type="password",
+                              _class="password",
                               requires=IS_EXPR(
                               'value==%s' %
                               repr(request.vars.get(passfield, None)),
@@ -2514,6 +2535,12 @@ class Auth(object):
             addrow(form, captcha.label, captcha,
                    captcha.comment, self.settings.formstyle, 'captcha__row')
 
+        #Add a message if specified
+        if self.settings.pre_registration_div:
+            addrow(form, '',
+                   DIV(_id="pre-reg", *self.settings.pre_registration_div),
+                   '', formstyle, '')
+
         table_user.registration_key.default = key = web2py_uuid()
         if form.accepts(request, session if self.csrf_prevention else None,
                         formname='register',
@@ -2536,7 +2563,8 @@ class Auth(object):
                     to=form.vars.email,
                     subject=self.messages.verify_email_subject,
                     message=self.messages.verify_email
-                        % dict(key=key, link=link)):
+                        % dict(key=key, link=link,
+                               username=form.vars[username])):
                     self.db.rollback()
                     response.flash = self.messages.unable_send_email
                     return form
@@ -3067,6 +3095,15 @@ class Auth(object):
             redirect(next, client_side=self.settings.client_side)
         return form
 
+    def run_login_onaccept(self):
+         onaccept = self.settings.login_onaccept
+         if onaccept:
+             form = Storage(dict(vars=self.user))
+             if not isinstance(onaccept,(list, tuple)):
+                 onaccept = [onaccept]
+             for callback in onaccept:
+                 callback(form)
+
     def is_impersonating(self):
         return self.is_logged_in() and 'impersonator' in current.session.auth
 
@@ -3090,7 +3127,7 @@ class Auth(object):
             user_id = current.request.post_vars.user_id
         if user_id and user_id != self.user.id and user_id != '0':
             if not self.has_permission('impersonate',
-                                       self.settings.table_user_name,
+                                       self.table_user(),
                                        user_id):
                 raise HTTP(403, "Forbidden")
             user = table_user(user_id)
@@ -3100,22 +3137,17 @@ class Auth(object):
             auth.user.update(
                 table_user._filter_fields(user, True))
             self.user = auth.user
-            self.update_groups()
-            onaccept = self.settings.login_onaccept
+            self.update_groups()            
             log = self.messages['impersonate_log']
             self.log_event(log, dict(id=current_id, other_id=auth.user.id))
-            if onaccept:
-                form = Storage(dict(vars=self.user))
-                if not isinstance(onaccept,(list, tuple)):
-                    onaccept = [onaccept]
-                for callback in onaccept:
-                    callback(form)
+            self.run_login_onaccept()
         elif user_id in (0, '0'):
             if self.is_impersonating():
                 session.clear()
                 session.update(cPickle.loads(auth.impersonator))
                 self.user = session.auth.user
                 self.update_groups()
+                self.run_login_onaccept()
             return None
         if requested_id is DEFAULT and not request.post_vars:
             return SQLFORM.factory(Field('user_id', 'integer'))
@@ -3148,7 +3180,7 @@ class Auth(object):
             table_membership.user_id == self.user.id).select()
         table = TABLE()
         for membership in memberships:
-            table_group = self.db[self.settings.table_group_name]
+            table_group = self.table_group()
             groups = self.db(table_group.id == membership.group_id).select()
             if groups:
                 group = groups[0]

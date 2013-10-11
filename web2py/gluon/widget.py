@@ -320,7 +320,7 @@ class web2pyDialog(object):
 
         if options.taskbar:
             import gluon.contrib.taskbar_widget
-            self.tb = contrib.taskbar_widget.TaskBarIcon()
+            self.tb = gluon.contrib.taskbar_widget.TaskBarIcon()
             self.checkTaskBar()
 
             if options.password != '<ask>':
@@ -1005,7 +1005,7 @@ def console():
         if not os.path.exists('applications/__init__.py'):
             write_file('applications/__init__.py', '')
 
-    return (options, args)
+    return options, args
 
 
 def check_existent_app(options, appname):
@@ -1022,7 +1022,7 @@ def get_code_for_scheduler(app, options):
         code = code % ("','".join(app[1:]))
     app_ = app[0]
     if not check_existent_app(options, app_):
-        print "Application '%s' doesn't exist, skipping" % (app_)
+        print "Application '%s' doesn't exist, skipping" % app_
         return None, None
     return app_, code
 
@@ -1262,6 +1262,25 @@ end tell
         print 'please visit:'
         print '\t', url
         print 'use "kill -SIGTERM %i" to shutdown the web2py server' % os.getpid()
+
+    # enhance linecache.getline (used by debugger) to look at the source file
+    # if the line was not found (under py2exe & when file was modified)
+    import linecache
+    py2exe_getline = linecache.getline
+    def getline(filename, lineno, *args, **kwargs):
+        line = py2exe_getline(filename, lineno, *args, **kwargs)
+        if not line:                
+            f = open(filename, "r")
+            try:
+                for i, line in enumerate(f):
+                    if lineno == i + 1:
+                        break
+                else:
+                    line = None
+            finally:
+                f.close()
+        return line
+    linecache.getline = getline
 
     server = main.HttpServer(ip=ip,
                              port=port,

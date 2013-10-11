@@ -44,6 +44,7 @@ defined_status = {
     416: 'REQUESTED RANGE NOT SATISFIABLE',
     417: 'EXPECTATION FAILED',
     422: 'UNPROCESSABLE ENTITY',
+    429: 'TOO MANY REQUESTS',
     451: 'UNAVAILABLE FOR LEGAL REASONS', # http://www.451unavailable.org/
     500: 'INTERNAL SERVER ERROR',
     501: 'NOT IMPLEMENTED',
@@ -53,8 +54,7 @@ defined_status = {
     505: 'HTTP VERSION NOT SUPPORTED',
 }
 
-regex_status = re.compile('^\d{3} \w+$')
-
+regex_status = re.compile('^\d{3} [0-9A-Z ]+$')
 
 class HTTP(Exception):
 

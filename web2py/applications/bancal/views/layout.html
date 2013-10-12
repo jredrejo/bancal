@@ -57,12 +57,22 @@
     (left_sidebar_enabled and 1 or 0)+(right_sidebar_enabled and 1 or 0)]
   }}
 
-  <!-- uncomment here to load jquery-ui
+  
        <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/ui-lightness/jquery-ui.css" type="text/css" media="all" />
        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js" type="text/javascript"></script>
-       uncomment to load jquery-ui //-->
+  
   <noscript><link href="{{=URL('static', 'css/web2py_bootstrap_nojs.css')}}" rel="stylesheet" type="text/css" /></noscript>
   {{block head}}{{end}}
+  <style>
+      #header {margin-top:0px;}
+      div .page-header {margin:5px 0 0}
+      .mastheader h1 {font-size:30px}
+      .main {padding: 5px 0 15px 0;}
+      .web2py_breadcrumbs ul {margin-bottom:10px;}
+      .web2py_grid .row_buttons a {padding: 0 5px 0 5px;}
+      .web2py_grid tbody td {padding: 0 5px 0 5px;}
+      .web2py_grid .row_buttons {min-height: 0;}
+  </style>
 </head>
 
 <body>
@@ -161,6 +171,13 @@
   {{pass}}
   <!-- 
   <script src="{{=URL('static','js/share.js',vars=dict(static=URL('static','images')))}}"></script>  -->
+   <!-- para colocar js al final del documento: -->
+   
+  {{block misjavascript}}
+
+
+  {{end}}
+
 </body>
 </html>
 

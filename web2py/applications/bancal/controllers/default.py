@@ -28,6 +28,9 @@ def index():
     #importacion.rellena_familias()
     #importacion.rellena_subfamilias()
     #importacion.rellena_alimentos()
+    #importacion.rellena_paises()
+    #importacion.rellena_provincias()
+    #importacion.rellena_localidades()
     return dict()
 
 

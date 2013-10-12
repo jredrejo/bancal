@@ -67,12 +67,6 @@ auth.settings.reset_password_requires_verification = True
 #########################################################################
 
 
-db.define_table('Almacen',
-    Field('Descripcion',label='Descripción'),
-    Field('Direccion', label='Dirección'),
-    Field('Activo','boolean',default=True)
-    )
-
 db.define_table('Familia',
     Field('Descripcion',label='Descripción'),format='%(Descripcion)s'
     )
@@ -106,4 +100,90 @@ tipo_empresa=("ACTUALIZACIÓN DE STOCK","MAYORISTAS Y DISTRIBUIDUIDORES","EMPRES
 tipo_procedencia=("REGULARIZACIÓN DE STOCK","DONACIONES","OPERACIÓN KILO","MERMAS","EXCEDENTES DE PRODUCCIÓN",
                   "DECOMISOS","AYUDAS PÚBLICAS","INVENTARIO","OTROS BANCOS","UNION EUROPEA")
 
-                    
+
+
+# Lista de paises, obtenida de http://dmnet.bitacoras.com/archivos/inclasificable/lista-de-paises-en-sql.php
+#
+# id: ID numérico según la ISO 3166-1 y la División Estadística de las Naciones Unidas
+# iso2: código de dos letras según la ISO 3166-1
+# iso3: código de tres letras según la ISO 3166-1
+# prefijo: prefijo telefónico según la recomendación E.164
+# nombre: nombre completo en español
+# continente: nombre del continente en español
+# subcontinente: nombre del subcontinente en español (para diferenciar América del Sur/Central/Norte/Caribe)
+# iso_moneda: código de tres letras de su moneda según la ISO 4217
+# nombre_moneda: nombre de la moneda en español
+
+db.define_table('pais',
+    Field('iso2', 'string',length=2,unique=True,notnull=True),
+    Field('iso3', 'string',length=3,unique=True,notnull=True),
+    Field('prefijo', 'string',length=5,notnull=True),
+    Field('pais',notnull=True,label='País'),
+    Field('continente', 'string',length=16),
+    Field('subcontinente', 'string',length=32),
+    Field('iso_moneda','string',length=3),
+    Field('nombre_moneda',label='Moneda'),
+    format='%(pais)s'
+
+)
+
+db.define_table('provincia',
+    Field('provincia',  notnull=True, unique=True),
+    Field('provinciaseo', notnull=True, unique=True),
+    Field('postal','string',length=2, notnull=True, unique=True),
+    Field('provincia3', 'string',length=3, notnull=True, unique=True),
+     Field('tabla_id','integer'),
+     format='%(provincia)s'
+
+)
+
+
+
+db.define_table('poblacion',
+    Field('provincia_id', db.provincia, label='Provincia'),
+    Field('poblacion',  notnull=True, unique=False,label='Nombre localidad'),
+    Field('poblacionseo', notnull=False, unique=True,readable=False,writable=False),
+    Field('postal', 'string',length=5,notnull=False,default=None, label='Cód. Postal') ,
+    Field('latitud', 'decimal(9,6)',notnull=False,default=None, label='Latitud (Coord)') ,
+    Field('longitud', 'decimal(9,6)',notnull=False,default=None,label='Longitud (Coord)'),
+    format='%(poblacion)s'
+
+
+)
+db.poblacion.postal.requires=IS_EMPTY_OR( IS_MATCH('^\d{5}(-\d{4})?$',error_message='El Código Postal deben ser 5 dígitos'))
+db.poblacion.provincia_id.requires = IS_IN_DB(db,'provincia.tabla_id','provincia.provincia',error_message='Debe asignar una provincia')
+
+
+########################################
+def ajax_autocomplete(f,v):
+    get_url = URL(r=request,f='get_items')
+    wrapper = DIV()
+    inp = SQLFORM.widgets.string.widget(f,v)
+    wrapper.append(inp)
+    return wrapper
+
+
+db.define_table('Sede',
+    Field('name',label='Nombre'),
+    Field('provincia', label='Provincia',default = 'Badajoz'),
+    Field('poblacion', label='Población', default='Badajoz'),
+    Field('direccion', label="Dirección", length=200,default="Ctra. Campomayor - Polígono Industrial El Nevero"),
+    Field('postal', label="Cód. Postal",length=5,default='06006'),
+    Field('CIF'),
+    Field('telefono', label='Teléfono 1',default='924259803'),
+    Field('telefono2', label='Teléfono 2',default='924259206'),
+    Field('movil', label='Móvil'),
+    Field('email', label='Correo electrónico', default='badajoz@bancodealimentos.info'),
+    Field('cuenta', label='Cuenta bancaria'),
+    format='%(name)s'
+    )
+db.Sede.id.readable=False
+db.Sede.postal.requires=IS_EMPTY_OR( IS_MATCH('^\d{5}(-\d{4})?$',error_message='El Código Postal deben ser 5 dígitos'))
+db.Sede.email.requires =IS_EMPTY_OR( IS_EMAIL(error_message=auth.messages.invalid_email))
+db.Sede.provincia.widget =ajax_autocomplete
+db.Sede.poblacion.widget =ajax_autocomplete
+
+db.define_table('Almacen',
+    Field('name', label='Nombre', default='El Nevero'),
+    Field('sede', db.Sede,label='Sede', default=1)
+    )

@@ -1,0 +1,102 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+
+
+  <style type="text/css">
+  
+  [type="text"], select {
+  width: 450px;
+}
+  </style>
+
+{{=form}}
+
+{{block misjavascript}}
+
+
+
+<script type="text/javascript">
+
+
+  function checkDNIData(value){ 
+      //Quita espacios iniciales y finales, un 0 al principio, . y -
+        var cadena;
+        if(value != ""){ 
+        //alert(value);
+        cadena=jQuery.trim(value).toUpperCase().replace(/\./g,'').replace(/-/g,'');
+        if (cadena.substring(0, 1) == '0') { 
+              cadena=cadena.substring(1);
+        }
+        return cadena;        
+        
+        } //fin de if value!=""
+        
+  } //fin de checkDNIData
+        
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }        
+    
+     
+
+jQuery(document).ready(function(){
+   // chrome fix.
+   document.onselectstart = function () { return false; };             
+
+
+
+  jQuery("#Sede_name").focus();
+
+   jQuery('#sede_CIF').change(function(){
+        var arr = $(this).val();
+        $(this).val(checkDNIData(arr));
+        });
+
+        
+   jQuery('#Sede_movil').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });        
+   jQuery('#Sede_telefono').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });       
+   jQuery('#Sede_telefono2').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });        
+   jQuery('#pareja_noviatelefono').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });          
+
+
+   jQuery('#Sede_provincia').autocomplete({
+      source: '/bancal/config/get_provincias',
+      minLength: 1
+    });
+	var cache = {};
+	jQuery('#Sede_poblacion').autocomplete({
+		minLength:2,
+		source: function( request, response ) {
+	        var term = request.term;
+	        if ( term in cache ) {
+	          response( cache[ term ] );
+	          return;
+	        }
+	        $.getJSON( '/bancal/config/get_poblacion/'+jQuery('#Sede_provincia').val(), 
+	          request, function( data, status, xhr ) {
+	          cache[ term ] = data;
+	          response( data );
+	        });
+	    }
+	      
+	});
+
+});
+
+
+
+</script>
+{{end}}

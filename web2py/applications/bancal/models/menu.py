@@ -22,8 +22,8 @@ response.google_analytics_id = None
 if session.auth:
     response.menu = [
         (T('Configuración'), False, None, [
-        (T('Datos de la sede'), False,  URL('default', 'index'), []),
-        (T('Almacenes'), False,  URL('default', 'index'), []),
+        (T('Datos de la sede'), False,  URL('config', 'sede'), []),
+        (T('Almacenes'), False,  URL('config', 'almacen'), []),
         (T('Alimentos'), False,  URL('config', 'alimentos'), []),
         ])
     ]

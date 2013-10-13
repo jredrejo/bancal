@@ -4,89 +4,86 @@
 def alimentos():
     import ui_def
     ui = ui_def.uidict()
-    db.Alimento.id.readable=False
-    search_text=request.get_vars.search_text 
-    query=search_query(db.Alimento.id,search_text, [db.Alimento.Descripcion]) 
+    db.Alimento.id.readable = False
+    search_text = request.get_vars.search_text
+    query = search_query(db.Alimento.id, search_text, [
+                         db.Alimento.Descripcion])
 
-    grid = SQLFORM.grid(query, ui=ui, search_widget=search_form,editable=False, deletable=False, create=False,details=False,maxtextlength=40, orderby=db.Alimento.Codigo)
+    grid = SQLFORM.grid(
+        query, ui=ui, search_widget=search_form, editable=False,
+        deletable=False, create=False, details=False, maxtextlength=40, orderby=db.Alimento.Codigo)
 
-    #grid = SQLFORM.smartgrid(db.Alimento,editable=False, deletable=False, create=False,details=False,maxtextlength=40)
-    #grid = SQLFORM.grid(db.Alimento)
+    # grid = SQLFORM.smartgrid(db.Alimento,editable=False, deletable=False, create=False,details=False,maxtextlength=40)
+    # grid = SQLFORM.grid(db.Alimento)
 
-    #from plugin_solidtable import SOLIDTABLE, OrderbySelector
-    #rows = db().select(db.Alimento.ALL)
-    #grid = SOLIDTABLE(rows,renderstyle=True, linkto=URL('show'))
-
+    # from plugin_solidtable import SOLIDTABLE, OrderbySelector
+    # rows = db().select(db.Alimento.ALL)
+    # grid = SOLIDTABLE(rows,renderstyle=True, linkto=URL('show'))
 
     return locals()
 
 
 def sede():
-    record= db().select(db.Sede.ALL, limitby=(0, 1))
+    record = db().select(db.Sede.ALL, limitby=(0, 1))
     if not record:
         id1 = db.Sede.insert()
-    record =db(db.Sede.id==1).select().first()
-    #db.Sede.provincia.widget = SQLFORM.widgets.autocomplete(request, db.provincia.provincia, limitby=(0,10), min_length=2)
-    form = SQLFORM(db.Sede,record)
+    record = db(db.Sede.id == 1).select().first()
+    # db.Sede.provincia.widget = SQLFORM.widgets.autocomplete(request,
+    # db.provincia.provincia, limitby=(0,10), min_length=2)
+    form = SQLFORM(db.Sede, record)
     if form.process().accepted:
         response.flash = 'Datos grabados'
     elif form.errors:
         response.flash = 'Hay errores en estos datos'
     else:
         response.flash = 'Rellene estos datos'
-    
+
     return dict(form=form)
 
+
 def almacen():
+    db.Almacen.id.readable = False
+    search_text = request.get_vars.search_text
+    query = search_query(db.Almacen.id, search_text, [db.Almacen.name])
 
-    db.Almacen.id.readable=False
-    search_text=request.get_vars.search_text 
-    query=search_query(db.Almacen.id,search_text, [db.Almacen.name]) 
-
-    grid = SQLFORM.grid(query, search_widget=search_form,csv=False,details=False,maxtextlength=40, orderby=db.Almacen.name)
+    grid = SQLFORM.grid(query, search_widget=search_form, csv=False,
+                        details=False, maxtextlength=40, orderby=db.Almacen.name)
 
     return locals()
 
+
 def get_provincias():
-    q=request.vars.term
-    #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+    q = request.vars.term
+    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
     if q:
-        search_term=q.lower().replace(" ","-")
-        fld = 'provincia'
-        tabl=fld
-        fld_search="provinciaseo"
-        
-        rows = db(db[tabl][fld_search].contains(search_term)).select(db[tabl][fld])
-        match = '\n'.join([s[fld] for s in rows])
-        #print match
-        #match = '\n'.join([s for s in states if q.lower() in s.lower()])
-        #return match
-        return response.json([s[fld] for s in rows])
+        search_term = q.lower().replace(" ", "-")
+        rows = db(db.provincia.provinciaseo.contains(
+            search_term)).select(db.provincia.provincia)
+        match = '\n'.join([s['provincia'] for s in rows])
+
+        return response.json([s['provincia'] for s in rows])
     return ''
 
+
 def get_poblacion():
-    q=request.vars.term
-    #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+    q = request.vars.term
+    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
     if q:
-        search_term=q.lower().replace(" ","-")
-        fld = 'poblacion'
+        search_term = q.lower().replace(" ", "-")
         provincia = request.args[0]
-        print provincia
-        tabl='poblacion'
-        fld_search = "poblacionseo"
-        provincia_id=db(db.provincia.provincia==provincia).select().first()
+        provincia_id = db(db.provincia.provincia == provincia).select().first()
         if not provincia_id:
-            rows = db(db[tabl][fld_search].contains(search_term)).select(db[tabl][fld])
+            rows = db(db.poblacion.poblacionseo.contains(
+                search_term)).select(db.poblacion.poblacion)
         else:
             query = (db.poblacion.poblacionseo.contains(search_term))
-            query = query & (db.poblacion.provincia_id==provincia_id.id)
-            rows = db(query).select(db[tabl][fld])
-        match = '\n'.join([s[fld] for s in rows])
-        
-        #match = '\n'.join([s for s in states if q.lower() in s.lower()])
-        #return match
-        return response.json([s[fld] for s in rows])
+            query = query & (db.poblacion.provincia_id == provincia_id.id)
+            rows = db(query).select(db.poblacion.poblacion)
+        match = '\n'.join([s['poblacion'] for s in rows])
+
+        return response.json([s['poblacion'] for s in rows])
     return ''
+
 
 @cache.action()
 def download():
@@ -125,28 +122,28 @@ def data():
     return dict(form=crud())
 
 
-def search_form(self,url): 
-    form = FORM('', 
-  
-INPUT(_name='search_text',_value=request.get_vars.keywords, 
+def search_form(self, url):
+    form = FORM('',
 
-               _style='width:200px;', 
-               _id='searchText'), 
-         INPUT(_type='submit',_value=T('Search')), 
-         INPUT(_type='submit',_value=T('Clear'), 
-         _onclick="jQuery('#keywords').val('');"), 
+                INPUT(_name='search_text', _value=request.get_vars.keywords,
 
-         _method="GET",_action=url) 
+                      _style='width:200px;',
+                      _id='searchText'),
+                INPUT(_type='submit', _value=T('Search')),
+                INPUT(_type='submit', _value=T('Clear'),
+                      _onclick="jQuery('#keywords').val('');"),
 
-    return form 
+                _method="GET", _action=url)
 
-def search_query(tableid,search_text,fields): 
-    words= search_text.split(' ') if search_text else [] 
-    query=tableid<0 #empty query 
-    for field in fields: 
-        new_query=tableid>0 
-        for word in words: 
-            new_query=new_query&field.contains(word) 
-        query=query|new_query 
-    return query 
+    return form
 
+
+def search_query(tableid, search_text, fields):
+    words = search_text.split(' ') if search_text else []
+    query = tableid < 0  # empty query
+    for field in fields:
+        new_query = tableid > 0
+        for word in words:
+            new_query = new_query & field.contains(word)
+        query = query | new_query
+    return query

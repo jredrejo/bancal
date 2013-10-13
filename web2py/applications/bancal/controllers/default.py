@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # this file is released under public domain and you can use without limitations
 
-#########################################################################
-## This is a sample controller
-## - index is the default action of any application
-## - user is required for authentication and authorization
-## - download is for downloading files uploaded in the db (does streaming)
-## - call exposes all registered services (none by default)
-#########################################################################
+#
+# This is a sample controller
+# - index is the default action of any application
+# - user is required for authentication and authorization
+# - download is for downloading files uploaded in the db (does streaming)
+# - call exposes all registered services (none by default)
+#
 
 
 def index():
@@ -22,15 +22,14 @@ def index():
         response.title = None
     response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
 
-
-    ### Temporal, para importar datos de bb.dd. anterior ###
+    # Temporal, para importar datos de bb.dd. anterior ###
     import importacion
-    #importacion.rellena_familias()
-    #importacion.rellena_subfamilias()
-    #importacion.rellena_alimentos()
-    #importacion.rellena_paises()
-    #importacion.rellena_provincias()
-    #importacion.rellena_localidades()
+    # importacion.rellena_familias()
+    # importacion.rellena_subfamilias()
+    # importacion.rellena_alimentos()
+    # importacion.rellena_paises()
+    # importacion.rellena_provincias()
+    # importacion.rellena_localidades()
     return dict()
 
 
@@ -50,6 +49,7 @@ def user():
     to decorate functions that need access control
     """
     return dict(form=auth())
+
 
 @cache.action()
 def download():

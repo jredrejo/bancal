@@ -71,11 +71,27 @@ jQuery(document).ready(function(){
         $(this).val(removeSpaces(arr));
         });          
 
-
+   var cacheprovincias={}
    jQuery('#Sede_provincia').autocomplete({
+      minLength: 1,
       source: '/bancal/config/get_provincias',
-      minLength: 1
+      source: function( request, response ) {
+            var term = request.term;
+            if ( term in cacheprovincias ) {
+              response( cacheprovincias[ term ] );
+              return;
+            }
+            $.getJSON( '/bancal/config/get_provincias', 
+              request, function( data, status, xhr ) {
+              cacheprovincias[ term ] = data;
+              response( data );
+            });
+        }
+
     });
+
+
+
 	var cache = {};
 	jQuery('#Sede_poblacion').autocomplete({
 		minLength:2,

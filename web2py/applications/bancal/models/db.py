@@ -166,67 +166,134 @@ db.define_table('Sede',
                 Field('poblacion', label='Población', default='Badajoz'),
                 Field('direccion', label="Dirección", length=200,
                       default="Ctra. Campomayor - Polígono Industrial El Nevero"),
-                Field('postal', label="Cód. Postal", length=5, default='06006'),
-    Field('CIF'),
-    Field('telefono', label='Teléfono 1', default='924259803'),
-    Field('telefono2', label='Teléfono 2', default='924259206'),
-    Field('movil', label='Móvil'),
-    Field('email', label='Correo electrónico',
-          default='badajoz@bancodealimentos.info'),
-    Field('cuenta', label='Cuenta bancaria'),
-    format='%(name)s'
-    )
+                Field(
+                    'postal', label="Cód. Postal", length=5, default='06006'),
+                Field('CIF'),
+                Field('telefono', label='Teléfono 1', default='924259803'),
+                Field('telefono2', label='Teléfono 2', default='924259206'),
+                Field('movil', label='Móvil'),
+                Field('email', label='Correo electrónico',
+                      default='badajoz@bancodealimentos.info'),
+                Field('cuenta', label='Cuenta bancaria'),
+                format='%(name)s'
+                )
 db.Sede.id.readable = False
 db.Sede.postal.requires = IS_EMPTY_OR(IS_MATCH(
     '^\d{5}(-\d{4})?$', error_message='El Código Postal deben ser 5 dígitos'))
 db.Sede.email.requires = IS_EMPTY_OR(IS_EMAIL(
-    error_message=auth.messages.invalid_email))
+    error_message=T('Invalid email!')))
 db.Sede.provincia.widget = ajax_autocomplete
 db.Sede.poblacion.widget = ajax_autocomplete
 
 db.define_table('Almacen',
-    Field('name', label='Nombre', default='El Nevero'),
-    Field('sede', db.Sede, label='Sede', default=1)
-    )
+                Field('name', label='Nombre', default='El Nevero'),
+                Field('sede', db.Sede, label='Sede', default=1)
+                )
 
-tipo_beneficiario = (
-    "TODOS", "Residencia de Ancianos", "Guarderias", "Comedores Sociales", "Caritas",
-                    "Centros de Reinserción", "Centros de Acogida", "Conventos", "Asociaciones Asistenciales",
-                    "Banco Alimentos", "Regularizacion de existencias", "Iglesias Evangelistas", "Ayuntamientos",
-                    "Otras Asociaciones", "Otras Confesiones Religiosas", "Otros Organismos Publicos")
+
 tipo_empresa = (
     "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
-              "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
-              "DONACIONES PARTICULARES", "ORGANISMOS PÚBLICOS", "FEGA")
-tipo_procedencia = (
-    "REGULARIZACIÓN DE STOCK", "DONACIONES", "OPERACIÓN KILO", "MERMAS", "EXCEDENTES DE PRODUCCIÓN",
-                  "DECOMISOS", "AYUDAS PÚBLICAS", "INVENTARIO", "OTROS BANCOS", "UNION EUROPEA")
-grupo_recogida = ("PRIMER DÍA", "SEGUNDO DÍA",
-                  "TERCER DÍA", "CUARTO DÍA", "QUINTO DÍA")
+    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
+    "DONACIONES PARTICULARES", "ORGANISMOS PÚBLICOS", "FEGA")
+
 tipo_colaboracion = ("Miembro del equipo directivo",
                      "Voluntario en banco", "Otro modo de voluntariado")
 
 db.define_table('Colaborador',
-    Field('name', label='Nombre'),
-    Field('provincia', label='Provincia', default='Badajoz'),
-    Field('poblacion', label='Población', default='Badajoz'),
-    Field('direccion', label="Dirección", length=200,
-          default="Ctra. Campomayor - Polígono Industrial El Nevero"),
-    Field('postal', label="Cód. Postal", length=5, default='06006'),
-    Field('nif', label="CIF/NIF"),
-    Field('telefono', label='Teléfono 1', default='924259803'),
-    Field('telefono2', label='Teléfono 2', default='924259206'),
-    Field('movil', label='Móvil'),
-    Field('email', label='Correo electrónico',
-          default='badajoz@bancodealimentos.info'),
-    Field('cuenta', label='Cuenta bancaria'),
+                Field('name', label='Nombre'),
+                Field('apellido1', label="Apellido 1"),
+                Field('apellido2', label='Apellido 2'),
+                Field('provincia', label='Provincia', default='Badajoz'),
+                Field('poblacion', label='Población'),
+                Field('direccion', label="Dirección", length=200),
+                Field('postal', label="Cód. Postal", length=5),
+                Field('nif', label="CIF/NIF", requires=IS_NOT_IN_DB(
+                      db, 'Colaborador.nif')),
+                Field('telefono', label='Teléfono 1'),
+                Field('telefono2', label='Fax/Teléfono 2'),
+                Field('movil', label='Móvil'),
+                Field('email', label='Correo electrónico'),
+                Field('cuenta', label='Cuenta bancaria'),
+                Field('contacto', label='Persona contacto'),
+                Field('fechalta', 'date', label='Fecha Alta'),
+                Field('fechabaja', 'date', label='Fecha Baja'),
+                Field('Donante', 'boolean', default=False),
+                Field('Voluntario', 'boolean', default=False),
+                Field('Patroncinador', 'boolean', default=False),
+                Field('Socio', 'boolean', default=False),
+                Field('soccuota', 'double', label='Cuota',
+                      readable=False, writable=False),
+                Field('soccuenta', length=20, label='Cuenta bancaria',
+                      readable=False, writable=False),
+                Field('volprofesion', label='Profesión',
+                      readable=False, writable=False),
+                Field('volcargo', label='Cargo',
+                      readable=False, writable=False),
+                Field('voltipo', label='Tipo colaboración', readable=False,
+                      writable=False, requires=IS_EMPTY_OR(
+                      IS_IN_SET(tipo_colaboracion))),
+                Field('volarea', label='Área de servicio',
+                      readable=False, writable=False),
+                Field('dontipo', label='Tipo de empresa', readable=False,
+                      writable=False, requires=IS_EMPTY_OR(
+                          IS_IN_SET(tipo_empresa))),
+                Field('pattipo', label='Tipo de patrocinador',
+                      readable=False, writable=False),
+                format='%(name)s %(apellido1)s %(apellido2)s'
 
-
-    )
+                )
 db.Colaborador.id.readable = False
 db.Colaborador.postal.requires = IS_EMPTY_OR(IS_MATCH(
     '^\d{5}(-\d{4})?$', error_message='El Código Postal deben ser 5 dígitos'))
 db.Colaborador.email.requires = IS_EMPTY_OR(
-    IS_EMAIL(error_message=auth.messages.invalid_email))
+    IS_EMAIL(error_message=T('Invalid email!')))
 db.Colaborador.provincia.widget = ajax_autocomplete
 db.Colaborador.poblacion.widget = ajax_autocomplete
+db.Colaborador.pattipo.widget = ajax_autocomplete
+db.Colaborador.volarea.widget = ajax_autocomplete
+
+
+tipo_beneficiario = (
+    "TODOS", "Residencia de Ancianos", "Guarderias", "Comedores Sociales", "Caritas",
+    "Centros de Reinserción", "Centros de Acogida", "Conventos", "Asociaciones Asistenciales",
+    "Banco Alimentos", "Regularizacion de existencias", "Iglesias Evangelistas", "Ayuntamientos",
+    "Otras Asociaciones", "Otras Confesiones Religiosas", "Otros Organismos Publicos")
+
+grupo_recogida = ("PRIMER DÍA", "SEGUNDO DÍA",
+                  "TERCER DÍA", "CUARTO DÍA", "QUINTO DÍA")
+db.define_table('Beneficiario',
+                Field('name', label='Nombre'),
+                Field('apellido1', label="Apellido 1"),
+                Field('apellido2', label='Apellido 2'),
+                Field('provincia', label='Provincia', default='Badajoz'),
+                Field('poblacion', label='Población'),
+                Field('direccion', label="Dirección", length=200),
+                Field('postal', label="Cód. Postal", length=5),
+                Field('nif', label="CIF/NIF", requires=IS_NOT_IN_DB(
+                      db, 'Beneficiario.nif')),
+                Field('telefono', label='Teléfono 1'),
+                Field('telefono2', label='Fax/Teléfono 2'),
+                Field('movil', label='Móvil'),
+                Field('email', label='Correo electrónico'),
+                Field('contacto', label='Persona contacto'),
+                Field(
+                    'tipobeneficiario', label='Tipo beneficiario', default="Banco Alimentos"),
+                Field(
+                    'gruporecogida', label='Grupo recogida', default="SEGUNDO DÍA"),
+                Field('FAGA', 'boolean', default=False),
+                format='%(name)s %(apellido1)s %(apellido2)s'
+                )
+db.Beneficiario.id.readable = False
+db.Beneficiario.postal.requires = IS_EMPTY_OR(IS_MATCH(
+    '^\d{5}(-\d{4})?$', error_message='El Código Postal deben ser 5 dígitos'))
+db.Beneficiario.email.requires = IS_EMPTY_OR(
+    IS_EMAIL(error_message=T('Invalid email!')))
+db.Beneficiario.tipobeneficiario.requires = IS_EMPTY_OR(
+    IS_IN_SET(tipo_beneficiario))
+db.Beneficiario.gruporecogida.requires = IS_EMPTY_OR(IS_IN_SET(grupo_recogida))
+db.Beneficiario.provincia.widget = ajax_autocomplete
+db.Beneficiario.poblacion.widget = ajax_autocomplete
+
+tipo_procedencia = (
+    "REGULARIZACIÓN DE STOCK", "DONACIONES", "OPERACIÓN KILO", "MERMAS", "EXCEDENTES DE PRODUCCIÓN",
+    "DECOMISOS", "AYUDAS PÚBLICAS", "INVENTARIO", "OTROS BANCOS", "UNION EUROPEA")

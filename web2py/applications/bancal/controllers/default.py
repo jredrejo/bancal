@@ -30,6 +30,8 @@ def index():
     # importacion.rellena_paises()
     # importacion.rellena_provincias()
     # importacion.rellena_localidades()
+    # importacion.rellena_colaboradores()
+    #importacion.rellena_beneficiarios()
     return dict()
 
 

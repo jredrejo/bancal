@@ -22,6 +22,8 @@ from cStringIO import StringIO
 from gluon.utils import simple_hash, web2py_uuid, DIGEST_ALG_BY_SIZE
 from gluon.dal import FieldVirtual, FieldMethod
 
+regex_isint = re.compile('^[+-]?\d+$')
+
 JSONErrors = (NameError, TypeError, ValueError, AttributeError,
               KeyError)
 try:
@@ -175,14 +177,15 @@ class IS_MATCH(Validator):
 
     def __init__(self, expression, error_message='invalid expression',
                  strict=False, search=False, extract=False,
-                 unicode=False):
+                 is_unicode=False):
+
         if strict or not search:
             if not expression.startswith('^'):
                 expression = '^(%s)' % expression
         if strict:
             if not expression.endswith('$'):
                 expression = '(%s)$' % expression
-        if unicode:
+        if is_unicode:
             if not isinstance(expression,unicode):
                 expression = expression.decode('utf8')
             self.regex = re.compile(expression,re.UNICODE)
@@ -190,10 +193,10 @@ class IS_MATCH(Validator):
             self.regex = re.compile(expression)
         self.error_message = error_message
         self.extract = extract
-        self.unicode = unicode
+        self.is_unicode = is_unicode
 
     def __call__(self, value):
-        if self.unicode and not isinstance(value,unicode):
+        if self.is_unicode and not isinstance(value,unicode):
             match = self.regex.search(str(value).decode('utf8'))
         else:
             match = self.regex.search(str(value))
@@ -668,6 +671,21 @@ class IS_NOT_IN_DB(Validator):
         return (value, None)
 
 
+def range_error_message(error_message, what_to_enter, minimum, maximum):
+    "build the error message for the number range validators"
+    if error_message is None:
+        error_message = 'enter ' + what_to_enter
+        if minimum is not None and maximum is not None:
+            error_message += ' between %(min)g and %(max)g'
+        elif minimum is not None:
+            error_message += ' greater than or equal to %(min)g'
+        elif maximum is not None:
+            error_message += ' less than or equal to %(max)g'
+    if type(maximum) in [int, long]:
+        maximum -= 1
+    return translate(error_message) % dict(min=minimum, max=maximum)
+
+
 class IS_INT_IN_RANGE(Validator):
     """
     Determine that the argument is (or can be represented as) an int,
@@ -692,15 +710,15 @@ class IS_INT_IN_RANGE(Validator):
         >>> IS_INT_IN_RANGE(1,5)(5)
         (5, 'enter an integer between 1 and 4')
         >>> IS_INT_IN_RANGE(1,5)(3.5)
-        (3, 'enter an integer between 1 and 4')
+        (3.5, 'enter an integer between 1 and 4')
         >>> IS_INT_IN_RANGE(None,5)('4')
         (4, None)
         >>> IS_INT_IN_RANGE(None,5)('6')
-        (6, 'enter an integer less than or equal to 4')
+        ('6', 'enter an integer less than or equal to 4')
         >>> IS_INT_IN_RANGE(1,None)('4')
         (4, None)
         >>> IS_INT_IN_RANGE(1,None)('0')
-        (0, 'enter an integer greater than or equal to 1')
+        ('0', 'enter an integer greater than or equal to 1')
         >>> IS_INT_IN_RANGE()(6)
         (6, None)
         >>> IS_INT_IN_RANGE()('abc')
@@ -713,49 +731,17 @@ class IS_INT_IN_RANGE(Validator):
         maximum=None,
         error_message=None,
     ):
-        self.minimum = self.maximum = None
-        if minimum is None:
-            if maximum is None:
-                self.error_message = translate(
-                    error_message or 'enter an integer')
-            else:
-                self.maximum = int(maximum)
-                if error_message is None:
-                    error_message = \
-                        'enter an integer less than or equal to %(max)g'
-                self.error_message = translate(
-                    error_message) % dict(max=self.maximum - 1)
-        elif maximum is None:
-            self.minimum = int(minimum)
-            if error_message is None:
-                error_message = \
-                    'enter an integer greater than or equal to %(min)g'
-            self.error_message = translate(
-                error_message) % dict(min=self.minimum)
-        else:
-            self.minimum = int(minimum)
-            self.maximum = int(maximum)
-            if error_message is None:
-                error_message = 'enter an integer between %(min)g and %(max)g'
-            self.error_message = translate(error_message) \
-                % dict(min=self.minimum, max=self.maximum - 1)
+        self.minimum = int(minimum) if minimum is not None else None
+        self.maximum = int(maximum) if maximum is not None else None
+        self.error_message = range_error_message(
+            error_message, 'an integer', self.minimum, self.maximum)
 
     def __call__(self, value):
-        try:
-            fvalue = float(value)
-            value = int(value)
-            if value != fvalue:
-                return (value, self.error_message)
-            if self.minimum is None:
-                if self.maximum is None or value < self.maximum:
-                    return (value, None)
-            elif self.maximum is None:
-                if value >= self.minimum:
-                    return (value, None)
-            elif self.minimum <= value < self.maximum:
-                    return (value, None)
-        except ValueError:
-            pass
+        if regex_isint.match(str(value)):
+            v = int(value)
+            if ((self.minimum is None or v >= self.minimum) and
+                (self.maximum is None or v < self.maximum)):
+                return (v, None)
         return (value, self.error_message)
 
 
@@ -814,42 +800,21 @@ class IS_FLOAT_IN_RANGE(Validator):
         error_message=None,
         dot='.'
     ):
-        self.minimum = self.maximum = None
+        self.minimum = float(minimum) if minimum is not None else None
+        self.maximum = float(maximum) if maximum is not None else None
         self.dot = str(dot)
-        if minimum is None:
-            if maximum is None:
-                if error_message is None:
-                    error_message = 'enter a number'
-            else:
-                self.maximum = float(maximum)
-                if error_message is None:
-                    error_message = 'enter a number less than or equal to %(max)g'
-        elif maximum is None:
-            self.minimum = float(minimum)
-            if error_message is None:
-                error_message = 'enter a number greater than or equal to %(min)g'
-        else:
-            self.minimum = float(minimum)
-            self.maximum = float(maximum)
-            if error_message is None:
-                error_message = 'enter a number between %(min)g and %(max)g'
-        self.error_message = translate(error_message) \
-            % dict(min=self.minimum, max=self.maximum)
+        self.error_message = range_error_message(
+            error_message, 'a number', self.minimum, self.maximum)
 
     def __call__(self, value):
         try:
             if self.dot == '.':
-                fvalue = float(value)
+                v = float(value)
             else:
-                fvalue = float(str(value).replace(self.dot, '.'))
-            if self.minimum is None:
-                if self.maximum is None or fvalue <= self.maximum:
-                    return (fvalue, None)
-            elif self.maximum is None:
-                if fvalue >= self.minimum:
-                    return (fvalue, None)
-            elif self.minimum <= fvalue <= self.maximum:
-                    return (fvalue, None)
+                v = float(str(value).replace(self.dot, '.'))
+            if ((self.minimum is None or v >= self.minimum) and
+                (self.maximum is None or v <= self.maximum)):
+                return (v, None)
         except (ValueError, TypeError):
             pass
         return (value, self.error_message)
@@ -910,7 +875,7 @@ class IS_DECIMAL_IN_RANGE(Validator):
         >>> IS_DECIMAL_IN_RANGE(0,99)('12.34')
         (Decimal('12.34'), None)
         >>> IS_DECIMAL_IN_RANGE()('abc')
-        ('abc', 'enter a decimal number')
+        ('abc', 'enter a number')
     """
 
     def __init__(
@@ -920,27 +885,11 @@ class IS_DECIMAL_IN_RANGE(Validator):
         error_message=None,
         dot='.'
     ):
-        self.minimum = self.maximum = None
+        self.minimum = decimal.Decimal(str(minimum)) if minimum is not None else None
+        self.maximum = decimal.Decimal(str(maximum)) if maximum is not None else None
         self.dot = str(dot)
-        if minimum is None:
-            if maximum is None:
-                if error_message is None:
-                    error_message = 'enter a decimal number'
-            else:
-                self.maximum = decimal.Decimal(str(maximum))
-                if error_message is None:
-                    error_message = 'enter a number less than or equal to %(max)g'
-        elif maximum is None:
-            self.minimum = decimal.Decimal(str(minimum))
-            if error_message is None:
-                error_message = 'enter a number greater than or equal to %(min)g'
-        else:
-            self.minimum = decimal.Decimal(str(minimum))
-            self.maximum = decimal.Decimal(str(maximum))
-            if error_message is None:
-                error_message = 'enter a number between %(min)g and %(max)g'
-        self.error_message = translate(error_message) \
-            % dict(min=self.minimum, max=self.maximum)
+        self.error_message = range_error_message(
+            error_message, 'a number', self.minimum, self.maximum)
 
     def __call__(self, value):
         try:
@@ -948,14 +897,9 @@ class IS_DECIMAL_IN_RANGE(Validator):
                 v = value
             else:
                 v = decimal.Decimal(str(value).replace(self.dot, '.'))
-            if self.minimum is None:
-                if self.maximum is None or v <= self.maximum:
-                    return (v, None)
-            elif self.maximum is None:
-                if v >= self.minimum:
-                    return (v, None)
-            elif self.minimum <= v <= self.maximum:
-                    return (v, None)
+            if ((self.minimum is None or v >= self.minimum) and
+                (self.maximum is None or v <= self.maximum)):
+                return (v, None)
         except (ValueError, TypeError, decimal.InvalidOperation):
             pass
         return (value, self.error_message)
@@ -1206,12 +1150,12 @@ class IS_LIST_OF_EMAILS(object):
         if not bad_emails:
             return (value, None)
         else:
-            return (value, 
+            return (value,
                     translate(self.error_message) % ', '.join(bad_emails))
 
     def formatter(self,value,row=None):
         return ', '.join(value or [])
-    
+
 
 # URL scheme source:
 # <http://en.wikipedia.org/wiki/URI_scheme> obtained on 2008-Nov-10
@@ -3820,9 +3764,3 @@ class IS_IPADDRESS(Validator):
             retval = (value, translate(self.error_message))
 
         return retval
-
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(
-        optionflags=doctest.NORMALIZE_WHITESPACE | doctest.ELLIPSIS)

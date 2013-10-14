@@ -315,6 +315,7 @@
 'shell': 'terminal',
 'site': 'sitio',
 'Size of cache:': 'Tamaño del Cache:',
+'Socios': 'Socios',
 'some files could not be removed': 'algunos archivos no pudieron ser removidos',
 'starts with': 'empieza con',
 'state': 'estado',

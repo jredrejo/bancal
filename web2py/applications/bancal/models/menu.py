@@ -28,13 +28,15 @@ if session.auth:
         ])
     ]
 
-    response.menu += [(T('Colaboradores'), False, None, [
-        (T('Donantes'), False,  URL('default', 'index'), []),
-        (T('Beneficiarios'), False,  URL('default', 'index'), []),
-        (T('Voluntarios'), False,  URL('default', 'index'), []),
-        (T('Patrocinadores'), False,  URL('default', 'index'), [])
+    response.menu += [(T('Colaboradores'), False,URL('colaboradores','index'), [
+        (T('Donantes'), False,  URL('colaboradores', 'donantes'), []),        
+        (T('Voluntarios'), False,  URL('colaboradores', 'voluntarios'), []),
+        (T('Patrocinadores'), False,  URL('colaboradores', 'patrocinadores'), []),
+        (T('Socios'), False,  URL('colaboradores', 'socios'), [])
 
     ])]
+
+    response.menu += [(T('Beneficiarios'),False, URL('beneficiarios','index'),[])]
 
     response.menu += [(T('Almacen'), False, None, [
         (T('Entradas'), False,  URL('default', 'index'), []),

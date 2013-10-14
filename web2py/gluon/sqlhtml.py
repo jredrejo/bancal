@@ -1913,22 +1913,26 @@ class SQLFORM(FORM):
                 tablenames += db._adapter.tables(join)
         tables = [db[tablename] for tablename in tablenames]
         if fields:
+            #add missing tablename to virtual fields
+            for table in tables:
+                for k,f in table.iteritems():
+                    if isinstance(f,Field.Virtual):
+                        f.tablename = table._tablename
             columns = [f for f in fields if f.tablename in tablenames]
         else:
             fields = []
             columns = []
+            filter1 = lambda f:isinstance(f,Field)
+            filter2 = lambda f:isinstance(f,Field) and f.readable
             for table in tables:
+                fields += filter(filter1, table)
+                columns += filter(filter2, table)
                 for k,f in table.iteritems():
                     if not k.startswith('_'):
-                        if isinstance(f,Field):
-                            fields.append(f) # these are selected
-                            if f.readable:
-                                columns.append(f) # these are displayed
-                        elif isinstance(f,Field.Virtual) and f.readable:
+                        if isinstance(f,Field.Virtual) and f.readable:
                             f.tablename = table._tablename
-                            columns.append(f)
                             fields.append(f)
-                        
+                            columns.append(f)
         if not field_id:
             if groupby is None:
                 field_id = tables[0]._id
@@ -2271,9 +2275,9 @@ class SQLFORM(FORM):
             limitby = (paginate*page,paginate*(page+1))
         else:
             limitby = None
-
         try:
-            table_fields = filter(lambda f: f.tablename in tablenames, fields)
+            table_fields = [field for field in fields
+                            if (field.tablename in tablenames and not(isinstance(field,Field.Virtual)))]
             if dbset._db._adapter.dbengine=='google:datastore':
                 rows = dbset.select(left=left,orderby=orderby,
                                     groupby=groupby,limitby=limitby,
@@ -2366,6 +2370,7 @@ class SQLFORM(FORM):
                         continue
                     if field.type == 'blob':
                         continue
+                    print row
                     value = row[str(field)]
                     maxlength = maxtextlengths.get(str(field), maxtextlength)
                     if field.represent:

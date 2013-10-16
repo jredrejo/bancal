@@ -7,15 +7,103 @@
 {{=grid}}
 
 <script type="text/javascript">
+  function checkDNIData(value){ 
+      //Quita espacios iniciales y finales, un 0 al principio, . y -
+        var cadena;
+        if(value != ""){ 
+        //alert(value);
+        cadena=jQuery.trim(value).toUpperCase().replace(/\./g,'').replace(/-/g,'');
+        if (cadena.substring(0, 1) == '0') { 
+              cadena=cadena.substring(1);
+        }
+        return cadena;        
+        
+        } //fin de if value!=""
+        
+  } //fin de checkDNIData
+        
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }        
+    
+
+    
 
  $(document).ready(function() {
    // chrome fix.
    document.onselectstart = function () { return false; };             
 
+	{{if grid.create_form or grid.update_form:}}
+		jQuery("#Colaborador_name").focus();
 
 
-  jQuery("#searchText").focus();
+	{{else:}}
+
+	  	jQuery("#searchText").focus();
+	{{pass}}
+  
+
+   var cacheprovincias={}
+   jQuery('#Colaborador_provincia').autocomplete({
+      minLength: 1,
+      source: '/bancal/config/get_provincias',
+      source: function( request, response ) {
+            var term = request.term;
+            if ( term in cacheprovincias ) {
+              response( cacheprovincias[ term ] );
+              return;
+            }
+            $.getJSON( '/bancal/config/get_provincias', 
+              request, function( data, status, xhr ) {
+              cacheprovincias[ term ] = data;
+              response( data );
+            });
+        }
+
+    });
+
+  var cache = {};
+  jQuery('#Colaborador_poblacion').autocomplete({
+    minLength:2,
+    source: function( request, response ) {
+          var term = request.term;
+          if ( term in cache ) {
+            response( cache[ term ] );
+            return;
+          }
+          $.getJSON( '/bancal/config/get_poblacion/'+jQuery('#Colaborador_provincia').val(), 
+            request, function( data, status, xhr ) {
+            cache[ term ] = data;
+            response( data );
+          });
+      }
+        
+  });
+
+  jQuery('#Colaborador_nif').change(function(){
+        var arr = $(this).val();
+        $(this).val(checkDNIData(arr));
+        });
+
+        
+   jQuery('#Colaborador_movil').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });        
+   jQuery('#Colaborador_telefono').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });       
+   jQuery('#Colaborador_telefono2').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });      
+
+
+
 
   });
 
 </script>
+

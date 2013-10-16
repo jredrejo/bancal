@@ -201,25 +201,24 @@ tipo_colaboracion = ("Miembro del equipo directivo",
 
 db.define_table('Colaborador',
                 Field('name', label='Nombre'),
-                Field('apellido1', label="Apellido 1"),
-                Field('apellido2', label='Apellido 2'),
+                Field('apellido1', label="Apellido 1",readable=False),
+                Field('apellido2', label='Apellido 2',readable=False),
                 Field('provincia', label='Provincia', default='Badajoz'),
                 Field('poblacion', label='Población'),
                 Field('direccion', label="Dirección", length=200),
                 Field('postal', label="Cód. Postal", length=5),
-                Field('nif', label="CIF/NIF", requires=IS_NOT_IN_DB(
-                      db, 'Colaborador.nif')),
+                Field('nif', label="CIF/NIF", requires=IS_EMPTY_OR(IS_NOT_IN_DB(
+                      db, 'Colaborador.nif'))),
                 Field('telefono', label='Teléfono 1'),
                 Field('telefono2', label='Fax/Teléfono 2'),
                 Field('movil', label='Móvil'),
                 Field('email', label='Correo electrónico'),
-                Field('cuenta', label='Cuenta bancaria'),
                 Field('contacto', label='Persona contacto'),
                 Field('fechalta', 'date', label='Fecha Alta'),
                 Field('fechabaja', 'date', label='Fecha Baja'),
                 Field('Donante', 'boolean', default=False),
                 Field('Voluntario', 'boolean', default=False),
-                Field('Patroncinador', 'boolean', default=False),
+                Field('Patrocinador', 'boolean', default=False),
                 Field('Socio', 'boolean', default=False),
                 Field('soccuota', 'double', label='Cuota',
                       readable=False, writable=False),
@@ -251,6 +250,21 @@ db.Colaborador.provincia.widget = ajax_autocomplete
 db.Colaborador.poblacion.widget = ajax_autocomplete
 db.Colaborador.pattipo.widget = ajax_autocomplete
 db.Colaborador.volarea.widget = ajax_autocomplete
+db.Colaborador.movil.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.telefono.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.poblacion.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.contacto.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.apellido1.represent = lambda value, row: XML(value) if value is not None else 'N/A'
+db.Colaborador.apellido2.represent = lambda value, row: XML(value) if value is not None else 'N/A'
+db.Colaborador.postal.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.telefono2.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.email.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.nif.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.fechabaja.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.direccion.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.dontipo.represent = lambda value, row: XML(value) if value is not None else ''
+db.Colaborador.name.represent = lambda value, row:(value if value is not None else '') + ((' ' +row.apellido1) if row.apellido1 is not None else '')
+
 
 
 tipo_beneficiario = (
@@ -263,8 +277,8 @@ grupo_recogida = ("PRIMER DÍA", "SEGUNDO DÍA",
                   "TERCER DÍA", "CUARTO DÍA", "QUINTO DÍA")
 db.define_table('Beneficiario',
                 Field('name', label='Nombre'),
-                Field('apellido1', label="Apellido 1"),
-                Field('apellido2', label='Apellido 2'),
+                Field('apellido1', label="Apellido 1", default="N/A"),
+                Field('apellido2', label='Apellido 2',default="N/A"),
                 Field('provincia', label='Provincia', default='Badajoz'),
                 Field('poblacion', label='Población'),
                 Field('direccion', label="Dirección", length=200),
@@ -281,6 +295,8 @@ db.define_table('Beneficiario',
                 Field(
                     'gruporecogida', label='Grupo recogida', default="SEGUNDO DÍA"),
                 Field('FAGA', 'boolean', default=False),
+                
+
                 format='%(name)s %(apellido1)s %(apellido2)s'
                 )
 db.Beneficiario.id.readable = False
@@ -293,7 +309,18 @@ db.Beneficiario.tipobeneficiario.requires = IS_EMPTY_OR(
 db.Beneficiario.gruporecogida.requires = IS_EMPTY_OR(IS_IN_SET(grupo_recogida))
 db.Beneficiario.provincia.widget = ajax_autocomplete
 db.Beneficiario.poblacion.widget = ajax_autocomplete
-
+db.Beneficiario.movil.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.telefono.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.poblacion.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.contacto.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.apellido1.represent = lambda value, row: XML(value) if value is not None else 'N/A'
+db.Beneficiario.apellido2.represent = lambda value, row: XML(value) if value is not None else 'N/A'
+db.Beneficiario.postal.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.telefono2.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.email.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.nif.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.direccion.represent = lambda value, row: XML(value) if value is not None else ''
+#db.Beneficiario.name.represent = lambda value, row:(value if value is not None else '') + ((' ' +row.apellido1) if row.apellido1 is not None else '')
 tipo_procedencia = (
     "REGULARIZACIÓN DE STOCK", "DONACIONES", "OPERACIÓN KILO", "MERMAS", "EXCEDENTES DE PRODUCCIÓN",
     "DECOMISOS", "AYUDAS PÚBLICAS", "INVENTARIO", "OTROS BANCOS", "UNION EUROPEA")

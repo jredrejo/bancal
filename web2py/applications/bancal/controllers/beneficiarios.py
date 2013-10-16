@@ -1,25 +1,19 @@
 # -*- coding: utf-8 -*-
 
 
-def alimentos():
+def index():
     import ui_def
     ui = ui_def.uidict()
     
-    db.Alimento.id.readable = False
+    
     search_text = request.get_vars.search_text
-    query = search_query(db.Alimento.id, search_text, [
-                         db.Alimento.Descripcion])
+    query = search_query(db.Beneficiario.id, search_text, [
+                         db.Beneficiario.name])
 
-    grid = SQLFORM.grid(
-        query, ui=ui, search_widget=search_form, editable=False,
-        deletable=False, create=False, details=False, maxtextlength=40, orderby=db.Alimento.Codigo)
-
-    # grid = SQLFORM.smartgrid(db.Alimento,editable=False, deletable=False, create=False,details=False,maxtextlength=40)
-    # grid = SQLFORM.grid(db.Alimento)
-
-    # from plugin_solidtable import SOLIDTABLE, OrderbySelector
-    # rows = db().select(db.Alimento.ALL)
-    # grid = SOLIDTABLE(rows,renderstyle=True, linkto=URL('show'))
+    grid = SQLFORM.grid(query, ui=ui, search_widget=search_form, maxtextlength=40,
+        fields = [db.Beneficiario.name,db.Beneficiario.poblacion,db.Beneficiario.telefono,
+        db.Beneficiario.movil,db.Beneficiario.contacto,db.Beneficiario.tipobeneficiario],
+        orderby=db.Beneficiario.name)
 
     return locals()
 
@@ -40,17 +34,6 @@ def sede():
         response.flash = 'Rellene estos datos'
 
     return dict(form=form)
-
-
-def almacen():
-    db.Almacen.id.readable = False
-    search_text = request.get_vars.search_text
-    query = search_query(db.Almacen.id, search_text, [db.Almacen.name])
-
-    grid = SQLFORM.grid(query, search_widget=search_form, csv=False,
-                        details=False, maxtextlength=40, orderby=db.Almacen.name)
-
-    return locals()
 
 
 def get_provincias():

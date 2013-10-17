@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+@auth.requires_login()
 def alimentos():
     import ui_def
     ui = ui_def.uidict()
@@ -23,7 +23,7 @@ def alimentos():
 
     return locals()
 
-
+@auth.requires_login()
 def sede():
     record = db().select(db.Sede.ALL, limitby=(0, 1))
     if not record:
@@ -41,7 +41,7 @@ def sede():
 
     return dict(form=form)
 
-
+@auth.requires_login()
 def almacen():
     db.Almacen.id.readable = False
     search_text = request.get_vars.search_text

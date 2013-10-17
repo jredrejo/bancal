@@ -48,6 +48,7 @@
 'application "%s" uninstalled': 'aplicación "%s" desinstalada',
 'application compiled': 'aplicación compilada',
 'application is compiled and cannot be designed': 'la aplicación está compilada y no puede ser modificada',
+'Apply changes': 'Apply changes',
 'Are you sure you want to delete file "%s"?': '¿Está seguro que desea eliminar el archivo "%s"?',
 'Are you sure you want to delete this object?': '¿Está seguro que desea borrar este objeto?',
 'Are you sure you want to uninstall application "%s"': '¿Está seguro que desea desinstalar la aplicación "%s"',

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+@auth.requires_login()
 def index():
     import ui_def
     ui = ui_def.uidict()
@@ -20,6 +20,7 @@ def index():
     return locals()
 
 
+@auth.requires_login()
 def donantes():
     import ui_def
     ui = ui_def.uidict()
@@ -39,6 +40,8 @@ def donantes():
 
     return locals()
 
+
+@auth.requires_login()
 def voluntarios():
     import ui_def
     ui = ui_def.uidict()
@@ -62,6 +65,8 @@ def voluntarios():
 
     return locals()  
 
+
+@auth.requires_login()
 def socios():
     import ui_def
     ui = ui_def.uidict()
@@ -87,7 +92,7 @@ def socios():
 
 
 
-
+@auth.requires_login()
 def patrocinadores():
     import ui_def
     ui = ui_def.uidict()
@@ -107,8 +112,10 @@ def patrocinadores():
         db.Colaborador.apellido1,db.Colaborador.apellido2],
         orderby=db.Colaborador.name)
 
-    return locals()     
+    return locals()   
 
+
+@auth.requires_login()
 def sede():
     record = db().select(db.Sede.ALL, limitby=(0, 1))
     if not record:
@@ -127,37 +134,6 @@ def sede():
     return dict(form=form)
 
 
-def get_provincias():
-    q = request.vars.term
-    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-    if q:
-        search_term = q.lower().replace(" ", "-")
-        rows = db(db.provincia.provinciaseo.contains(
-            search_term)).select(db.provincia.provincia)
-        match = '\n'.join([s['provincia'] for s in rows])
-
-        return response.json([s['provincia'] for s in rows])
-    return ''
-
-
-def get_poblacion():
-    q = request.vars.term
-    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-    if q:
-        search_term = q.lower().replace(" ", "-")
-        provincia = request.args[0]
-        provincia_id = db(db.provincia.provincia == provincia).select().first()
-        if not provincia_id:
-            rows = db(db.poblacion.poblacionseo.contains(
-                search_term)).select(db.poblacion.poblacion)
-        else:
-            query = (db.poblacion.poblacionseo.contains(search_term))
-            query = query & (db.poblacion.provincia_id == provincia_id.id)
-            rows = db(query).select(db.poblacion.poblacion)
-        match = '\n'.join([s['poblacion'] for s in rows])
-
-        return response.json([s['poblacion'] for s in rows])
-    return ''
 
 
 @cache.action()

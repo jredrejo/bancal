@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+@auth.requires_login()
 def index():
     import ui_def
     ui = ui_def.uidict()
@@ -16,57 +16,6 @@ def index():
         orderby=db.Beneficiario.name)
 
     return locals()
-
-
-def sede():
-    record = db().select(db.Sede.ALL, limitby=(0, 1))
-    if not record:
-        id1 = db.Sede.insert()
-    record = db(db.Sede.id == 1).select().first()
-    # db.Sede.provincia.widget = SQLFORM.widgets.autocomplete(request,
-    # db.provincia.provincia, limitby=(0,10), min_length=2)
-    form = SQLFORM(db.Sede, record)
-    if form.process().accepted:
-        response.flash = 'Datos grabados'
-    elif form.errors:
-        response.flash = 'Hay errores en estos datos'
-    else:
-        response.flash = 'Rellene estos datos'
-
-    return dict(form=form)
-
-
-def get_provincias():
-    q = request.vars.term
-    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-    if q:
-        search_term = q.lower().replace(" ", "-")
-        rows = db(db.provincia.provinciaseo.contains(
-            search_term)).select(db.provincia.provincia)
-        match = '\n'.join([s['provincia'] for s in rows])
-
-        return response.json([s['provincia'] for s in rows])
-    return ''
-
-
-def get_poblacion():
-    q = request.vars.term
-    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-    if q:
-        search_term = q.lower().replace(" ", "-")
-        provincia = request.args[0]
-        provincia_id = db(db.provincia.provincia == provincia).select().first()
-        if not provincia_id:
-            rows = db(db.poblacion.poblacionseo.contains(
-                search_term)).select(db.poblacion.poblacion)
-        else:
-            query = (db.poblacion.poblacionseo.contains(search_term))
-            query = query & (db.poblacion.provincia_id == provincia_id.id)
-            rows = db(query).select(db.poblacion.poblacion)
-        match = '\n'.join([s['poblacion'] for s in rows])
-
-        return response.json([s['poblacion'] for s in rows])
-    return ''
 
 
 @cache.action()

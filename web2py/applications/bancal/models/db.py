@@ -190,6 +190,10 @@ db.define_table('Almacen',
                 Field('sede', db.Sede, label='Sede', default=1)
                 )
 
+db.define_table('Estanteria',
+                Field('name', label='Nombre', default='Estantería A'),
+                Field('almacen', db.Almacen, label='Almacén', default=1)
+                )
 
 tipo_empresa = (
     "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
@@ -321,6 +325,59 @@ db.Beneficiario.email.represent = lambda value, row: XML(value) if value is not 
 db.Beneficiario.nif.represent = lambda value, row: XML(value) if value is not None else ''
 db.Beneficiario.direccion.represent = lambda value, row: XML(value) if value is not None else ''
 #db.Beneficiario.name.represent = lambda value, row:(value if value is not None else '') + ((' ' +row.apellido1) if row.apellido1 is not None else '')
+
+
+db.define_table('CabeceraAlmacen',
+               Field('almacen', db.Almacen, label='Almacén', default=1),
+               Field('alimento', db.Alimento)
+                )
+db.define_table('LineaAlmacen',
+               Field('cabecera', db.CabeceraAlmacen),
+               Field('Stock', "double",default=0),
+               Field('stockinicial',"double",default=0,label="Stock Inicial"),
+               Field('Caducidad','date'),
+               Field('Lote'),
+               Field('estanteria',db.Estanteria, label="Estantería"),
+               Field('PesoUnidad','double',default=1.0),
+               Field('Palets','integer',default=0)
+                )
+
 tipo_procedencia = (
     "REGULARIZACIÓN DE STOCK", "DONACIONES", "OPERACIÓN KILO", "MERMAS", "EXCEDENTES DE PRODUCCIÓN",
     "DECOMISOS", "AYUDAS PÚBLICAS", "INVENTARIO", "OTROS BANCOS", "UNION EUROPEA")
+
+db.define_table('CabeceraEntrada',
+               Field('almacen', db.Almacen, label='Almacén', default=1),
+               Field('tipoProcedencia',requires=IS_EMPTY_OR(
+                      IS_IN_SET(tipo_procedencia)),label="Procendencia"),
+               Field('Donante',db.Colaborador),
+               Field('Fecha','date')
+                )
+db.define_table('LineaEntrada',
+                Field('cabecera',db.CabeceraEntrada),
+                Field('alimento',db.Alimento),
+                Field('Unidades','double',default=1.0),
+                Field('PesoUnidad','double',default=1.0),
+                Field('Caducidad','date'),
+                Field('Lote'),
+                Field('estanteria',db.Estanteria, label="Estantería",default=1),
+                Field('LineaAlmacen',db.LineaAlmacen),
+                Field('PrecioKg','double',default=0)              
+            )
+
+db.define_table('CabeceraSalida',
+               Field('almacen', db.Almacen, label='Almacén', default=1),
+               Field('Beneficiario',db.Beneficiario),
+               Field('Fecha','date')
+                )
+db.define_table('LineaSalida',
+                Field('cabecera',db.CabeceraEntrada),
+                Field('alimento',db.Alimento),
+                Field('Unidades','double',default=1.0),
+                Field('PesoUnidad','double',default=1.0),
+                Field('Caducidad','date'),
+                Field('Lote'),
+                Field('estanteria',db.Estanteria, label="Estantería",default=1),
+                Field('LineaAlmacen',db.LineaAlmacen),
+                Field('PrecioKg','double',default=0)              
+            )                

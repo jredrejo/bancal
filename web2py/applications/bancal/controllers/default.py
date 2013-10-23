@@ -32,6 +32,14 @@ def index():
     # importacion.rellena_localidades()
     # importacion.rellena_colaboradores()
     #importacion.rellena_beneficiarios()
+    #importacion.rellena_estanterias()
+    #importacion.rellena_cabecerasalmacen()
+    #importacion.rellena_lineasalmacen()
+    #importacion.rellena_cabecerasentradas()
+    #importacion.rellena_lineasentradas()
+    #importacion.rellena_cabecerasalidas()
+    #importacion.rellena_lineasalidas()
+
     return dict()
 
 

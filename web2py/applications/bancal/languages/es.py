@@ -261,6 +261,7 @@
 'next 100 rows': '100 filas siguientes',
 'NO': 'NO',
 'No databases in this application': 'No hay bases de datos en esta aplicación',
+'No puede estar vacío': 'No puede estar vacío',
 'No records found': 'No se encontraron registros',
 'Nombre': 'Nombre',
 'None': 'Ninguno',

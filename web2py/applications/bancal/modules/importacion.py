@@ -81,6 +81,44 @@ def rellena_alimentos():
     current.db.Alimento.bulk_insert(listado)
 
 
+
+def rellena_estanterias():
+    datos = devuelve_datos(
+        r"select  idEstanteria,Descripcion from Estanteria", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        estante = {'id': dato[0],'name':dato[1]}
+        listado.append(estante)
+
+    current.db.Estanteria.bulk_insert(listado)
+
+def rellena_cabecerasalmacen():
+
+    datos = devuelve_datos(
+        r"select  idCabecera,idAlimento from AlmacenCabecera", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        estante = {'id': dato[0],'alimento':dato[1]}
+        listado.append(estante)
+
+    current.db.CabeceraAlmacen.bulk_insert(listado)
+
+def rellena_lineasalmacen():
+
+    datos = devuelve_datos(
+        r"select  idAlmacenCabecera,idAlmacenLinea,Unidadesiniciales,UnidadesStock,FechaCaducidad,NombreLote,idEstanteria,PesoUnidad,NumPalet from AlmacenLinea", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        linea = {'id': dato[1],'cabecera':dato[0],'Stock':float(dato[3]),
+        'stockinicial':float(dato[2]),'Lote':dato[5],'estanteria':dato[6],
+        'PesoUnidad':float(dato[7]),'Palets':dato[8]}
+        linea['Caducidad'] = datetime.datetime.strptime(
+                dato[4][:10], '%Y-%m-%d').date()
+
+        listado.append(linea)
+
+    current.db.LineaAlmacen.bulk_insert(listado)
+
 def xstr(s):
     return None if s == '' else str(s)
 
@@ -148,3 +186,67 @@ def rellena_beneficiarios():
 
         listado.append(beneficiario)
     current.db.Beneficiario.bulk_insert(listado)
+
+def rellena_cabecerasentradas():
+    tipo_procedencia = {
+    0:"REGULARIZACIÓN DE STOCK",1: "DONACIONES", 2:"OPERACIÓN KILO", 3:"MERMAS", 4:"EXCEDENTES DE PRODUCCIÓN",
+    5:"DECOMISOS", 6:"AYUDAS PÚBLICAS", 7:"INVENTARIO", 8:"OTROS BANCOS", 9:"UNION EUROPEA"}
+
+    datos = devuelve_datos(
+        r"select  idEntradaCabecera,idTipoProcedencia,idDonante,FechaEntrada from EntradaCabecera", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        estante = {'id': dato[0],'Donante':dato[2]}
+        estante['Fecha'] = datetime.datetime.strptime(
+                dato[3][:10], '%Y-%m-%d').date()
+        if dato[1]:
+            estante['tipoProcedencia']=tipo_procedencia[int(dato[1])]
+        listado.append(estante)
+
+    current.db.CabeceraEntrada.bulk_insert(listado)
+
+def rellena_lineasentradas():
+
+    datos = devuelve_datos(
+        r"select IdEntradaLinea,idEntradaCabecera,idAlimento,NumUnidades,PesoUnidad,FechaCaducidad,NOMBRELOTE,idEstanteria,idAlmacenLinea,preciokg from EntradaLinea", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        estante = {'id': dato[0],'cabecera':dato[1],'alimento':dato[2],
+        'Unidades':float(dato[3]),'PesoUnidad':float(dato[4]),
+        'Lote':dato[6],'estanteria':dato[7],'LineaAlmacen':dato[8],
+        'PrecioKg':float(dato[9])}
+        estante['Caducidad'] = datetime.datetime.strptime(
+                dato[5][:10], '%Y-%m-%d').date()
+
+        listado.append(estante)
+
+    current.db.LineaEntrada.bulk_insert(listado)
+
+def rellena_cabecerasalidas(): 
+    datos = devuelve_datos(
+        r"select IdSalidaCabecera,idBeneficiario,FechaSalida from SalidaCabecera", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        estante = {'id': dato[0],'Beneficiario':dato[1]}
+        estante['Fecha'] = datetime.datetime.strptime(
+                dato[2][:10], '%Y-%m-%d').date()
+        listado.append(estante)
+
+    current.db.CabeceraSalida.bulk_insert(listado)
+
+def rellena_lineasalidas():
+
+    datos = devuelve_datos(
+        r"select IdSalidaLinea,idSalidaCabecera,idAlimento,NumUnidades,PesoUnidad,FechaCaducidad,NOMBRELOTE,idEstanteria,idAlmacenLinea,preciokg from SalidaLinea", "SigabaCliente.sqlite")
+    listado = []
+    for dato in datos:
+        estante = {'id': dato[0],'cabecera':dato[1],'alimento':dato[2],
+        'Unidades':float(dato[3]),'PesoUnidad':float(dato[4]),
+        'Lote':dato[6],'estanteria':dato[7],'LineaAlmacen':dato[8],
+        'PrecioKg':float(dato[9])}
+        estante['Caducidad'] = datetime.datetime.strptime(
+                dato[5][:10], '%Y-%m-%d').date()
+
+        listado.append(estante)
+
+    current.db.LineaSalida.bulk_insert(listado)    

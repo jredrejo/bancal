@@ -41,7 +41,8 @@ if session.auth:
     response.menu += [(T('Almacen'), False, None, [
         (T('Entradas'), False,  URL('default', 'index'), []),
         (T('Salidas'), False,  URL('default', 'index'), []),
-        (T('Stock'), False,  URL('default', 'index'), [])])]
+        (T('Stock'), False,  URL('almacen', 'stock'), [])])]
+        #(T('Incidencias'), False,  URL('almacen', 'incidencias'), [])])]
 
 else:
     response.menu = []

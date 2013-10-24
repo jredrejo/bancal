@@ -2,3 +2,162 @@
 {{extend 'layout.html'}}
 {{block right_sidebar}}
 {{pass}}
+
+
+<div class="container-fluid">
+  {{=form.custom.begin}}
+
+    <div class="row-fluid">
+      <div class="span3">Familia: {{=form.custom.widget.Familia}}</div>
+      <div class="span3" id="subfamilias">Subfamilia: {{=form.custom.widget.SubFamilia}}</div>
+      <div class="span3">Alimento: {{=form.custom.widget.Descripcion}}</div>
+  </div>
+  {{=form.custom.end}}
+
+  <div class="row-fluid">
+    <h4>Líneas de almacén:</h4>
+
+   
+    <table id="list"></table>
+    <div id="pager"></div>
+
+
+  </div>  
+ 
+
+</div>
+
+ <style>
+      
+      .ui-pg-input{width:30px;}
+      .ui-pg-selbox{width:60px;padding-top: 0px;}
+
+  </style>
+
+
+
+<script type="text/javascript">
+  function checkDNIData(value){ 
+      //Quita espacios iniciales y finales, un 0 al principio, . y -
+        var cadena;
+        if(value != ""){ 
+        //alert(value);
+        cadena=jQuery.trim(value).toUpperCase().replace(/\./g,'').replace(/-/g,'');
+        if (cadena.substring(0, 1) == '0') { 
+              cadena=cadena.substring(1);
+        }
+        return cadena;        
+        
+        } //fin de if value!=""
+        
+  } //fin de checkDNIData
+        
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }        
+    
+
+
+
+
+ $(document).ready(function() {
+   // chrome fix.
+   document.onselectstart = function () { return false; };             
+
+   jQuery("#Alimento_Familia").focus();
+   
+   jQuery("#Alimento_Familia").change(function() {
+      jQuery("#Alimento_SubFamilia").empty();
+      ajax("get_subfamilias",["Familia"],"subfamilias");
+      jQuery("#list").jqGrid().trigger("reloadGrid");
+   });
+    
+   jQuery("#Alimento_SubFamilia").change(function() {
+      var jsonString={'subfamilia':  jQuery("#Alimento_SubFamilia").val() };
+      jQuery.post('set_subfamilia.json', jsonString, {contentType: 'application/json'} )
+            .success(function(data) {           
+                  jQuery("#list").jqGrid().trigger("reloadGrid");     
+            });
+      
+   });
+
+
+
+   //var cachealimentos={}
+
+   jQuery('#Alimento_Descripcion').autocomplete({
+      minLength: 2,
+      source: function( request, response ) {
+            /*var term = request.term;
+            if ( term in cachealimentos ) {
+              response( cachealimentos[ term ] );
+              return;
+            }*/
+            jQuery.getJSON( 'get_alimentos?subf='+ jQuery("#Alimento_SubFamilia").val() + '&fam=' + jQuery("#Alimento_Familia").val(), 
+              request, function( data, status, xhr ) {
+              //cachealimentos[ term ] = data;
+              response( data );
+            });
+        },
+    select: function( event, ui ) {
+      var jsonString={'alimento':  ui.item.value};
+      jQuery.post('set_alimento.json', jsonString, {contentType: 'application/json;charset=utf-8'} )
+            .success(function(data) {           
+                  jQuery("#list").jqGrid().trigger("reloadGrid");     
+            });
+
+    }        
+
+    });
+
+
+
+
+
+  jQuery("#list").jqGrid({
+    url:'{{=URL(r=request,f="call",args=["json","get_rows"])}}',
+    data: "{}",
+    datatype: 'json',
+    mtype: 'GET',
+    contentType: "application/json; charset=utf-8",
+    cellEdit: true,
+    cellsubmit:'remote',
+    cellurl: '{{=URL(r=request,f="call",args=["json","save_cell"])}}',
+    complete: function(jsondata, stat) {
+        if (stat == "success") {
+            var thegrid = jQuery("#list")[0];
+            thegrid.addJSONData(JSON.parse(jsondata.responseText).d);
+        }
+    },
+    colNames:['Nombre','Familia', 'Subfamilia','Conservación','Stock','Unidades'],
+    colModel :[
+      
+      {name:'Nombre', index:'Descripcion',width:230},
+      {name:'Familia', index:'Familia',width:170},
+      {name:'SubFamilia', index:'SubFamilia',width:170},
+      {name:'Conservación', index:'Conservacion',width:90,align:"center"},
+      {name:'Stock', index:'Stock',width:60,align:"center"},
+      {name:'Unidades', index:'Unidades',width:60,align:"center"},
+    ],
+    pager: '#pager',
+    rowNum:10,
+    rowList:[10,20,30],
+    sortname: 'Descripcion',
+    sortorder: 'asc',
+    viewrecords: true,
+    caption: 'Haga clic en el + para ver las líneas de almacén',
+    altRows:true,
+    height: 'auto',
+    width: 'auto',
+  subGrid : true,
+  subGridUrl: 'get_lineas.json',
+    subGridModel: [{ name  : ['Stock','Fecha caducidad','Peso/Unidad','Stock Inicial','Lote'], 
+                    width : [55,80,80,80,80,80] } ]
+ 
+  });
+
+
+  });
+
+</script>

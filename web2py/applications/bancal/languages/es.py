@@ -399,6 +399,7 @@
 'Use (...)&(...) for AND, (...)|(...) for OR, and ~(...)  for NOT to build more complex queries.': 'Use (...)&(...) para AND, (...)|(...) para OR, y ~(...) para NOT, para crear consultas más complejas.',
 'User ID': 'ID de Usuario',
 'value already in database or empty': 'value already in database or empty',
+'value not allowed': 'value not allowed',
 'value not in database': 'value not in database',
 'Verify Password': 'Verificar contraseña',
 'versioning': 'versiones',

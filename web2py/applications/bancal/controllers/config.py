@@ -60,7 +60,7 @@ def get_provincias():
         search_term = q.lower().replace(" ", "-")
         rows = db(db.provincia.provinciaseo.contains(
             search_term)).select(db.provincia.provincia)
-        match = '\n'.join([s['provincia'] for s in rows])
+        #match = '\n'.join([s['provincia'] for s in rows])
 
         return response.json([s['provincia'] for s in rows])
     return ''
@@ -80,7 +80,7 @@ def get_poblacion():
             query = (db.poblacion.poblacionseo.contains(search_term))
             query = query & (db.poblacion.provincia_id == provincia_id.id)
             rows = db(query).select(db.poblacion.poblacion)
-        match = '\n'.join([s['poblacion'] for s in rows])
+        #match = '\n'.join([s['poblacion'] for s in rows])
 
         return response.json([s['poblacion'] for s in rows])
     return ''

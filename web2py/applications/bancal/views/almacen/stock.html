@@ -75,7 +75,7 @@
     
    jQuery("#Alimento_SubFamilia").change(function() {
       var jsonString={'subfamilia':  jQuery("#Alimento_SubFamilia").val() };
-      jQuery.post('set_subfamilia.json', jsonString, {contentType: 'application/json'} )
+      jQuery.post('set_subfamilia', jsonString, {contentType: 'application/json'} )
             .success(function(data) {           
                   jQuery("#list").jqGrid().trigger("reloadGrid");     
             });
@@ -102,7 +102,7 @@
         },
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
-      jQuery.post('set_alimento.json', jsonString, {contentType: 'application/json;charset=utf-8'} )
+      jQuery.post('set_alimento', jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {           
                   jQuery("#list").jqGrid().trigger("reloadGrid");     
             });
@@ -151,7 +151,7 @@
     height: 'auto',
     width: 'auto',
   subGrid : true,
-  subGridUrl: 'get_lineas.json',
+  subGridUrl: 'get_lineas',
     subGridModel: [{ name  : ['Stock','Fecha caducidad','Peso/Unidad','Stock Inicial','Lote'], 
                     width : [55,80,80,80,80,80] } ]
  

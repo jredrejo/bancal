@@ -68,7 +68,7 @@ def stock():
 def get_rows():
     """ this gets passed a few URL arguments: page number, and rows per page, and sort column, and sort desc or asc
     """
-    
+
     fields = ['Alimento.Descripcion', 'Alimento.Familia',
             'Alimento.SubFamilia', 'Alimento.Conservacion', 'Stock','Alimento.Unidades']
     rows = []
@@ -76,7 +76,7 @@ def get_rows():
     pagesize = int(request.vars.rows)
 
     limitby = (page * pagesize - pagesize, page * pagesize)
-    
+
     if request.vars.sidx == 'Stock':
         orderby =db.LineaAlmacen.Stock.sum()
     else:
@@ -84,7 +84,7 @@ def get_rows():
     if request.vars.sord == 'desc':
         orderby = ~orderby
     query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (db.CabeceraAlmacen.id==db.LineaAlmacen.cabecera)
-    
+
     if session.AlmacenFamilia:
         query  =query & (db.Alimento.Familia==session.AlmacenFamilia)
     if session.AlmacenSubFamilia:
@@ -94,7 +94,7 @@ def get_rows():
     for r in db(query).select(db.CabeceraAlmacen.id,db.Alimento.Descripcion,db.Alimento.Familia,
         db.Alimento.SubFamilia,db.Alimento.Conservacion,db.Alimento.Unidades,db.LineaAlmacen.Stock.sum(),
         limitby=limitby, orderby=orderby,groupby=db.CabeceraAlmacen.alimento):
-        print db._lastsql
+        #print db._lastsql
         vals = []
         for f in fields:
             #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
@@ -103,12 +103,12 @@ def get_rows():
             elif f == 'Alimento.SubFamilia':
                 vals.append(db.Alimento['SubFamilia'].represent(    r(f)))
             elif f == 'Stock':
-                vals.append(r["_extra"]['SUM(LineaAlmacen.Stock)'])        
+                vals.append(r["_extra"]['SUM(LineaAlmacen.Stock)'])
             else:
                 vals.append(r[f])
-        
+
         rows.append(dict(id=r.CabeceraAlmacen.id, cell=vals))
-    
+
 
     total = db(db.CabeceraAlmacen.alimento == db.Alimento.id).count()
     pages = math.ceil(1.0 * total / pagesize)
@@ -133,7 +133,7 @@ def get_lineas():
             else:
                 vals.append(str(r[f]))
         rows.append(dict(id=r.id,cell=vals))
-    return dict(rows=rows)
+    return response.json(dict(rows=rows))
 
 
 
@@ -145,19 +145,23 @@ def incidencias():
 
     return locals()
 
+
+@service.json
 def set_subfamilia():
     if len(request.vars) > 0:
         session.AlmacenSubFamilia = request.vars.subfamilia
 
-    return {}    
+    return {}
 
+
+@service.json
 def set_alimento():
     #import pdb;pdb.set_trace()
     print request.vars
     if len(request.vars) > 0:
         session.AlmacenAlimento = request.vars.alimento
 
-    return {}    
+    return {}
 
 def get_subfamilias():
     familia_id=request.vars.Familia
@@ -187,7 +191,7 @@ def get_alimentos():
             query = query & (db.Alimento.SubFamilia==subf)
         rows = db(query).select(db.Alimento.Descripcion)
         return response.json([s['Descripcion'] for s in rows])
-        
+
     return ''
 
 

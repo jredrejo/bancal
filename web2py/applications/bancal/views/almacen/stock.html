@@ -37,29 +37,6 @@
 
 
 <script type="text/javascript">
-  function checkDNIData(value){ 
-      //Quita espacios iniciales y finales, un 0 al principio, . y -
-        var cadena;
-        if(value != ""){ 
-        //alert(value);
-        cadena=jQuery.trim(value).toUpperCase().replace(/\./g,'').replace(/-/g,'');
-        if (cadena.substring(0, 1) == '0') { 
-              cadena=cadena.substring(1);
-        }
-        return cadena;        
-        
-        } //fin de if value!=""
-        
-  } //fin de checkDNIData
-        
-    function removeSpaces(string) {
-    // quita los espacios y todos los caraceres que no son un número
-         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
-    }        
-    
-
-
-
 
  $(document).ready(function() {
    // chrome fix.
@@ -73,14 +50,15 @@
       jQuery("#list").jqGrid().trigger("reloadGrid");
    });
     
-   jQuery("#Alimento_SubFamilia").change(function() {
-      var jsonString={'subfamilia':  jQuery("#Alimento_SubFamilia").val() };
-      jQuery.post('set_subfamilia', jsonString, {contentType: 'application/json'} )
-            .success(function(data) {           
-                  jQuery("#list").jqGrid().trigger("reloadGrid");     
-            });
-      
-   });
+   jQuery("#subfamilias").on('change',"#Alimento_SubFamilia",function() {
+        var jsonString={'subfamilia':  jQuery("#Alimento_SubFamilia").val() };
+        jQuery.post('set_subfamilia', jsonString, {contentType: 'application/json'} )
+              .success(function(data) {           
+                    jQuery("#list").jqGrid().trigger("reloadGrid");     
+              });
+        
+      });
+
 
 
 

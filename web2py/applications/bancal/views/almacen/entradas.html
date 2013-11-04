@@ -1,0 +1,87 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+{{block right_sidebar}}
+{{pass}}
+
+
+<div class="container-fluid">
+
+
+  <div class="row-fluid">
+    <h4>Entradas de almacén:</h4>
+
+   
+    <table id="list"></table>
+    <div id="pager"></div>
+
+
+  </div>  
+ 
+
+</div>
+
+ <style>
+      
+      .ui-pg-input{width:30px;}
+      .ui-pg-selbox{width:60px;padding-top: 0px;}
+
+  </style>
+
+
+
+<script type="text/javascript">
+
+    
+
+
+
+
+ $(document).ready(function() {
+   // chrome fix.
+   document.onselectstart = function () { return false; };             
+
+
+  jQuery("#list").jqGrid({
+    url:'{{=URL(r=request,f="call",args=["json","get_rows_entradas"])}}',
+    data: "{}",
+    datatype: 'json',
+    mtype: 'GET',
+    contentType: "application/json; charset=utf-8",
+    cellEdit: true,
+    cellsubmit:'remote',
+    cellurl: '{{=URL(r=request,f="call",args=["json","save_cell"])}}',
+    complete: function(jsondata, stat) {
+        if (stat == "success") {
+            var thegrid = jQuery("#list")[0];
+            thegrid.addJSONData(JSON.parse(jsondata.responseText).d);
+        }
+    },
+    colNames:['Donante','Fecha', 'Procedencia'],
+    colModel :[
+      
+      {name:'Donante', index:'Donante',width:230},
+      {name:'Fecha', index:'Fecha',width:170, formatter:'date',formatoptions:{
+       srcformat: 'Y-m-d', newformat: 'd/m/Y'}},
+      {name:'Procedencia', index:'Procedencia',width:170,align:"center"},
+    ],
+    pager: '#pager',
+    rowNum:10,
+    rowList:[10,20,30],
+    sortname: 'Descripcion',
+    sortorder: 'asc',
+    viewrecords: true,
+    caption: 'Haga clic en el + para ver las líneas de las entradas',
+    altRows:true,
+    height: 'auto',
+    width: 'auto',
+  subGrid : true,
+  subGridUrl: 'get_lineas_entradas',
+    subGridModel: [{ name  : ['Alimento','Unidades','Peso/Unidad','Caducidad','Lote'], 
+                    width : [200,70,70,70,70] } ]
+ 
+  });
+
+
+  });
+
+</script>

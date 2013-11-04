@@ -84,7 +84,8 @@ db.define_table('Alimento',
                 Field('SubFamilia', db.SubFamilia),
                 Field('Conservacion', label='Conservación', default=T(
                     'Calor')),
-                Field('Unidades', default='Kg.')
+                Field('Unidades', default='Kg.'),
+                format='%(Descripcion)s'
                 )
 db.Alimento.Conservacion.requires = IS_IN_SET((T('Calor'), T('Frío')))
 db.Alimento.Unidades.requires = IS_IN_SET(('Kg.', 'L.'))
@@ -242,7 +243,9 @@ db.define_table('Colaborador',
                           IS_IN_SET(tipo_empresa))),
                 Field('pattipo', label='Tipo de patrocinador',
                       readable=False, writable=False),
-                format='%(name)s %(apellido1)s %(apellido2)s'
+                #format='%(name)s %(apellido1)s %(apellido2)s'
+                format=lambda r: str(r.name) +  ('' if not r.apellido1 else ' ' + r.apellido1) +  ('' if not r.apellido2 else ' ' + r.apellido2)
+
 
                 )
 db.Colaborador.id.readable = False
@@ -349,7 +352,7 @@ tipo_procedencia = (
 db.define_table('CabeceraEntrada',
                Field('almacen', db.Almacen, label='Almacén', default=1),
                Field('tipoProcedencia',requires=IS_EMPTY_OR(
-                      IS_IN_SET(tipo_procedencia)),label="Procendencia"),
+                      IS_IN_SET(tipo_procedencia)),label="Procedencia"),
                Field('Donante',db.Colaborador),
                Field('Fecha','date')
                 )

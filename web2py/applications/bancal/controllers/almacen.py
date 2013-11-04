@@ -64,6 +64,31 @@ def stock():
     return locals()
 
 
+
+@auth.requires_login()
+def entradas():
+    import ui_def
+    ui = ui_def.uidict()
+    session.AlmacenFamilia=None
+    session.AlmacenSubFamilia=None
+    session.AlmacenAlimento=None
+    db.Alimento.Descripcion.widget = ajax_autocomplete
+    form = SQLFORM(db.CabeceraEntrada)
+    #if request.vars.Descripcion:
+    #    session.AlmacenAlimento=request.vars.Descripcion
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+
+    
+
+    return locals()
+
+
+
 @service.json
 def get_rows():
     """ this gets passed a few URL arguments: page number, and rows per page, and sort column, and sort desc or asc
@@ -101,7 +126,7 @@ def get_rows():
             if f == 'Alimento.Familia':
                 vals.append(db.Alimento['Familia'].represent(r(f)))
             elif f == 'Alimento.SubFamilia':
-                vals.append(db.Alimento['SubFamilia'].represent(    r(f)))
+                vals.append(db.Alimento['SubFamilia'].represent(r(f)))
             elif f == 'Stock':
                 vals.append(r["_extra"]['SUM(LineaAlmacen.Stock)'])
             else:
@@ -115,6 +140,45 @@ def get_rows():
     data = dict(records=total, total=pages, page=page, rows=rows)
 
     return data
+
+
+
+
+@service.json
+def get_rows_entradas():
+    """ this gets passed a few URL arguments: page number, and rows per page, and sort column, and sort desc or asc
+    """
+
+    fields = ['Donante', 'Fecha','tipoProcedencia']
+    rows = []
+    page = int(request.vars.page)  # the page number
+    pagesize = int(request.vars.rows)
+     
+    limitby = (page * pagesize - pagesize, page * pagesize)
+    orderby=~db.CabeceraEntrada.Fecha
+    query=""
+    
+    for r in db(query).select(db.CabeceraEntrada.ALL,limitby=limitby, orderby=orderby):
+        #print db._lastsql
+        vals = []
+        for f in fields:
+            #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+            if f == 'Donante':
+                #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+                vals.append(db.CabeceraEntrada['Donante'].represent(r(f)))            
+            else:
+                vals.append(r[f])
+
+        rows.append(dict(id=r.id, cell=vals))
+
+    
+    total = db(db.CabeceraEntrada.id>0).count()
+    pages = math.ceil(1.0 * total / pagesize)
+    data = dict(records=total, total=pages, page=page, rows=rows)
+
+    return data
+
+
 
 
 @service.json
@@ -135,7 +199,29 @@ def get_lineas():
         rows.append(dict(id=r.id,cell=vals))
     return response.json(dict(rows=rows))
 
+@service.json
+def get_lineas_entradas():
 
+    fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad','Lote']
+    rows = []
+    cabecera_id = request.vars.id
+    query = (db.LineaEntrada.cabecera == cabecera_id)
+    for r in db(query).select():
+        vals = []
+        for f in fields:
+            if f == 'Caducidad':
+                k = r(f).strftime('%d/%m/%Y')
+                vals.append(k)
+                print k
+            elif f == 'alimento':
+                k=db.LineaEntrada['alimento'].represent(r(f))
+                vals.append(k)
+            elif f== 'Lote':
+                vals.append(r[f] or '')
+            else:
+                vals.append(str(r[f]))
+        rows.append(dict(id=r.id,cell=vals))
+    return response.json(dict(rows=rows))
 
 
 
@@ -150,6 +236,7 @@ def incidencias():
 def set_subfamilia():
     if len(request.vars) > 0:
         session.AlmacenSubFamilia = request.vars.subfamilia
+        session.AlmacenAlimento=None
 
     return {}
 
@@ -166,6 +253,8 @@ def set_alimento():
 def get_subfamilias():
     familia_id=request.vars.Familia
     session.AlmacenFamilia=familia_id
+    session.AlmacenSubFamilia=None
+    session.AlmacenAlimento=None
     rows = db(db.SubFamilia.Familia==familia_id).select(db.SubFamilia.ALL)
     optsf=[OPTION(row.Descripcion, _value=row.id) for row in rows]
     optsf.insert(0,OPTION(""))

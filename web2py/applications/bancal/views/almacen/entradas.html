@@ -6,6 +6,17 @@
 
 <div class="container-fluid">
 
+  {{=form.custom.begin}}
+
+    <div class="row-fluid">
+      <h4>Buscar en las entradas:</h4>
+      <div class="span1">Fecha: {{=form.custom.widget.Fecha}}</div>
+      <div class="span3" id="subfamilias">Donante: {{=form.custom.widget.Donante}}</div>
+      <div class="span3">Procedencia: {{=form.custom.widget.tipoProcedencia}}</div>
+  </div>
+  {{=form.custom.end}}
+
+
 
   <div class="row-fluid">
     <h4>Entradas de almacén:</h4>
@@ -22,9 +33,9 @@
 
  <style>
       
-      .ui-pg-input{width:30px;}
-      .ui-pg-selbox{width:60px;padding-top: 0px;}
-
+      .ui-pg-input{width:20px;}
+      .ui-pg-selbox{width:40px;padding-top: 0px;}
+    #CabeceraEntrada_Fecha{ width: 80px;}
   </style>
 
 

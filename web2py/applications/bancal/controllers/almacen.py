@@ -43,8 +43,6 @@ def stock2():
 
 @auth.requires_login()
 def stock():
-    import ui_def
-    ui = ui_def.uidict()
     session.AlmacenFamilia=None
     session.AlmacenSubFamilia=None
     session.AlmacenAlimento=None
@@ -67,8 +65,16 @@ def stock():
 
 @auth.requires_login()
 def entradas():
-    import ui_def
-    ui = ui_def.uidict()
+
+    form = SQLFORM.factory(
+    Field('your_name', requires=IS_NOT_EMPTY()),
+    Field('your_image', 'upload'))
+    form = SQLFORM(db.CabeceraEntrada)
+    alimentos = TR(LABEL('I agree to the terms and conditions'), \
+    INPUT(_name='alimentos',value=True,_type='checkbox'))
+    form[0].insert(-1,alimentos)
+
+
     session.AlmacenFamilia=None
     session.AlmacenSubFamilia=None
     session.AlmacenAlimento=None

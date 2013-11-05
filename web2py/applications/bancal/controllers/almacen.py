@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import math
+from datetime import datetime
 if 0:
     from gluon import *
+
+
 
 @auth.requires_login()
 def stock():
@@ -26,12 +29,33 @@ def stock():
 
 @auth.requires_login()
 def entradas():
+    session.Entradas = True
     session.FechaAlmacen = None
     session.DonanteAlmacen =None
     session.ProcedenciaAlmacen = None
     session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.CabeceraEntrada)
+    
+    # if request.vars.Descripcion:
+    #    session.AlmacenAlimento=request.vars.Descripcion
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+
+    return locals()
+
+@auth.requires_login()
+def salidas():
+    session.Entradas = None
+    session.FechaAlmacen = None
+    session.BeneficiarioAlmacen =None
+    session.AlmacenAlimento = None
+    db.Alimento.Descripcion.widget = ajax_autocomplete
+    form = SQLFORM(db.CabeceraSalida)
     
     # if request.vars.Descripcion:
     #    session.AlmacenAlimento=request.vars.Descripcion
@@ -71,9 +95,6 @@ def set_alimento():
 
 @service.json
 def get_rows():
-    """ this gets passed a few URL arguments: page number, and rows per page, and sort column, and sort desc or asc
-    """
-
     fields = ['Alimento.Descripcion', 'Alimento.Familia',
               'Alimento.SubFamilia', 'Alimento.Conservacion', 'Stock', 'Alimento.Unidades']
     rows = []
@@ -126,20 +147,27 @@ def get_rows():
 
 @service.json
 def get_rows_entradas():
-    """ this gets passed a few URL arguments: page number, and rows per page, and sort column, and sort desc or asc
-    """
-
     fields = ['Donante', 'Fecha', 'tipoProcedencia']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
 
     limitby = (page * pagesize - pagesize, page * pagesize)
-    orderby = ~db.CabeceraEntrada.Fecha
-    #query = ""
+    
+    if request.vars.sidx == 'Procedencia':
+        orderby = db.CabeceraEntrada.tipoProcedencia
+    elif request.vars.sidx == 'Donante':
+        orderby=db.CabeceraEntrada.Donante
+    elif request.vars.sidx =='Fecha':
+        orderby = db.CabeceraEntrada.Fecha
+    else:
+        orderby = ~db.CabeceraEntrada.Fecha
+    if request.vars.sord == 'desc':
+        orderby = ~orderby
+
     query = (db.CabeceraEntrada.id>0)
     if session.FechaAlmacen:
-        query = query & (db.CabeceraEntrada.FechaAlmacen==session.FechaAlmacen)
+        query = query & (db.CabeceraEntrada.Fecha==session.FechaAlmacen)
     if session.DonanteAlmacen:
         query = query & (db.CabeceraEntrada.Donante==session.DonanteAlmacen)
     if session.ProcedenciaAlmacen:
@@ -148,7 +176,7 @@ def get_rows_entradas():
         query = query & (db.CabeceraEntrada.id==db.LineaEntrada.cabecera)
         query = query & (db.LineaEntrada.alimento ==session.AlmacenAlimento)
     rowsentradas = db(query).select(db.CabeceraEntrada.ALL, limitby=limitby, orderby=orderby)
-    print db._lastsql
+    #print db._lastsql
     for r in rowsentradas:
         # print db._lastsql
         vals = []
@@ -168,6 +196,50 @@ def get_rows_entradas():
 
     return data
 
+@service.json
+def get_rows_salidas():
+    fields = ['Beneficiario', 'Fecha']
+    rows = []
+    page = int(request.vars.page)  # the page number
+    pagesize = int(request.vars.rows)
+
+    limitby = (page * pagesize - pagesize, page * pagesize)
+    if request.vars.sidx == 'Beneficiario':
+        orderby=db.CabeceraSalida.Beneficiario
+    elif request.vars.sidx =='Fecha':
+        orderby = db.CabeceraSalida.Fecha
+    else:
+        orderby = ~db.CabeceraSalida.Fecha
+    if request.vars.sord == 'desc':
+        orderby = ~orderby
+    #query = ""
+    query = (db.CabeceraSalida.id>0)
+    if session.FechaAlmacen:
+        query = query & (db.CabeceraSalida.Fecha==session.FechaAlmacen)
+    if session.BeneficiarioAlmacen:
+        query = query & (db.CabeceraSalida.Beneficiario==session.BeneficiarioAlmacen)
+    if session.AlmacenAlimento:
+        query = query & (db.CabeceraSalida.id==db.LineaSalida.cabecera)
+        query = query & (db.LineaSalida.alimento ==session.AlmacenAlimento)
+    rowssalidas = db(query).select(db.CabeceraSalida.ALL, limitby=limitby, orderby=orderby)
+    
+    for r in rowssalidas:
+        # print db._lastsql
+        vals = []
+        for f in fields:
+            if f == 'Beneficiario':
+                # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+                vals.append(db.CabeceraSalida['Beneficiario'].represent(r(f)))
+            else:
+                vals.append(r[f])
+
+        rows.append(dict(id=r.id, cell=vals))
+
+    total = db(db.CabeceraSalida.id > 0).count()
+    pages = math.ceil(1.0 * total / pagesize)
+    data = dict(records=total, total=pages, page=page, rows=rows)
+
+    return data
 
 @service.json
 def get_lineas():
@@ -194,7 +266,10 @@ def get_lineas_entradas():
     fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad', 'Lote']
     rows = []
     cabecera_id = request.vars.id
-    query = (db.LineaEntrada.cabecera == cabecera_id)
+    if session.Entradas:
+        query = (db.LineaEntrada.cabecera == cabecera_id)
+    else:
+        query = (db.LineaSalida.cabecera == cabecera_id)
     for r in db(query).select():
         vals = []
         for f in fields:
@@ -232,11 +307,17 @@ def set_subfamilia():
 def set_parametros():
     if len(request.vars) > 0:
         parametro=request.vars.param
-        valor = request.vars.objeto    
+        valor = request.vars.objeto
+        if valor == '': valor = None  
         if parametro == 'fecha':
-            session.FechaAlmacen= valor
+            if valor:
+                session.FechaAlmacen= datetime.date(datetime.strptime(valor,'%d-%m-%Y'))
+            else:
+                session.FechaAlmacen = None
         elif parametro == 'donante':
             session.DonanteAlmacen= valor
+        elif parametro == 'beneficiario':
+            session.BeneficiarioAlmacen= valor            
         elif parametro == 'procedencia':
             session.ProcedenciaAlmacen = valor
     return {} 

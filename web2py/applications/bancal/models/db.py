@@ -306,7 +306,7 @@ db.define_table('Beneficiario',
                 Field('FAGA', 'boolean', default=False),
                 
 
-                format='%(name)s %(apellido1)s %(apellido2)s'
+                format=lambda r: str(r.name) +  ('' if not r.apellido1 else ' ' + r.apellido1) +  ('' if not r.apellido2 else ' ' + r.apellido2)
                 )
 db.Beneficiario.id.readable = False
 db.Beneficiario.postal.requires = IS_EMPTY_OR(IS_MATCH(

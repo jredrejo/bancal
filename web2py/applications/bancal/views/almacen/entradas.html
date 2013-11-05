@@ -10,12 +10,21 @@
 
     <div class="row-fluid">
       <h4>Buscar en las entradas:</h4>
-      <div class="span1">Fecha: {{=form.custom.widget.Fecha}}</div>
-      <div class="span3" id="subfamilias">Donante: {{=form.custom.widget.Donante}}</div>
-      <div class="span3">Procedencia: {{=form.custom.widget.tipoProcedencia}}</div>
+      <div class="row-fluid">
+        <div class="span1">Código: 
+        <input class="integer" id="Alimento_Codigo" name="Codigo" type="text" value="" style="width:50px">
+      </div>
+        <div class="span4">Alimento: 
+           <input class="string ui-autocomplete-input" id="Alimento_Descripcion" name="Descripcion" type="text" value="" autocomplete="off">
+        </div>    
+      </div>
+       <div class="row-fluid">
+        <div class="span1" id="fechas">Fecha: {{=form.custom.widget.Fecha}}</div>
+        <div class="span3">Donante: {{=form.custom.widget.Donante}}</div>
+        <div class="span3">Procedencia: {{=form.custom.widget.tipoProcedencia}}</div>
+    </div>
   </div>
   {{=form.custom.end}}
-
 
 
   <div class="row-fluid">
@@ -41,15 +50,98 @@
 
 
 <script type="text/javascript">
-
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }   
     
-
-
+    function buscar_alimento() {
+        var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
+        var data= {"codigo":codigo};
+            jQuery.getJSON( 'get_codigo', 
+              data, function( data, status, xhr ) {
+              if (data['alimento']=='') {
+                jQuery("#Alimento_Descripcion").val("");
+                jQuery("#Alimento_Codigo").val("");
+              } else {
+                jQuery("#Alimento_Descripcion").val(data['alimento']);}
+              jQuery("#list").jqGrid().trigger("reloadGrid");
+            });        
+        
+    }   
+    
+    function set_parametros(param,obj) {
+          var jsonString={objeto:  obj.val(),param:param };
+          jQuery.post('set_parametros', jsonString, {contentType: 'application/json'} )
+                .success(function(data) {           
+                      jQuery("#list").jqGrid().trigger("reloadGrid");     
+                });
+     }
 
 
  $(document).ready(function() {
    // chrome fix.
    document.onselectstart = function () { return false; };             
+  jQuery("#Alimento_Codigo").focus();
+
+    jQuery('#Alimento_Codigo').keyup(function(e){
+        if(e.keyCode == 13)
+        {
+            buscar_alimento();
+        }
+    });
+    jQuery('#Alimento_Codigo').change(function(){
+            buscar_alimento();
+    });
+
+   jQuery('#Alimento_Descripcion').autocomplete({
+      minLength: 2,
+      source: function( request, response ) {
+            jQuery.getJSON( 'get_alimentos', 
+              request, function( data, status, xhr ) {
+              response( data );
+            });
+        },
+    select: function( event, ui ) {
+      var jsonString={'alimento':  ui.item.value};
+      jQuery.post('set_alimento', jsonString, {contentType: 'application/json;charset=utf-8'} )
+            .success(function(data) {
+                if (data =='') {
+                  jQuery("#Alimento_Descripcion").val("");
+                  jQuery("#Alimento_Codigo").val("");
+                } else {
+                  jQuery("#Alimento_Codigo").val(data);
+                }    
+                  jQuery("#list").jqGrid().trigger("reloadGrid");   
+            });
+
+    }        
+
+    });
+
+
+   jQuery("#CabeceraEntrada_Fecha").focusout(function() {
+       set_parametros('fecha',jQuery(this));
+   });
+    
+    //jQuery("#CabeceraEntrada_Fecha").bind('input', function() { 
+     //   set_parametros('fechachange',jQuery(this));
+    //});
+
+   jQuery("#CabeceraEntrada_Donante").change(function() {
+        set_parametros('donante',jQuery(this));
+   });
+
+   jQuery("#CabeceraEntrada_tipoProcedencia").change(function() {
+        set_parametros('procedencia',jQuery(this));
+   });
+
+
+    jQuery('#Alimento_Codigo').change(function(){
+  set_parametros('codigo',jQuery("#CabeceraEntrada_Fecha"));
+    });
+
+$("#CabeceraEntrada_Fecha").on("change", function(){set_parametros('procedencia',jQuery("#CabeceraEntrada_Fecha")); });
 
 
   jQuery("#list").jqGrid({

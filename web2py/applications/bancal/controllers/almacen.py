@@ -1,54 +1,16 @@
 # -*- coding: utf-8 -*-
 import math
-
-@auth.requires_login()
-def stock2():
-    import ui_def
-    ui = ui_def.uidict()
-    db.Alimento.Descripcion.widget = ajax_autocomplete
-    form = SQLFORM(db.Alimento)
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
-
-    response.flash = 'Escriba el alimento o elija la familia o subfamilia'
-    if request.vars.Descripcion:
-        # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-        pass
-
-    query = ""
-    search_text = request.get_vars.search_text
-    query = search_query(db.CabeceraAlmacen.id, search_text, [
-                         db.Alimento.Descripcion])
-    query = query & (db.CabeceraAlmacen.alimento == db.Alimento.id)
-    almacen = db(query).select()
-    db.CabeceraAlmacen.id.readable = False
-    fields = [
-        db.CabeceraAlmacen.id, db.Alimento.Descripcion, db.Alimento.Familia, db.Alimento.SubFamilia,
-                db.Alimento.Conservacion, db.Alimento.Unidades]
-
-    links = [
-    dict(header='Líneas',
-           body=lambda row: A('Ver', _class='btn', _href='#', callback=URL(
-               'check_to_true', args=row.CabeceraAlmacen.id))
-          )]
-    grid = SQLFORM.grid(
-        query, ui=ui, fields=fields, search_widget=search_form, editable=False,
-        deletable=False, create=False, details=False, maxtextlength=40, links=links, orderby=db.Alimento.Codigo)
-    return locals()
-
+if 0:
+    from gluon import *
 
 @auth.requires_login()
 def stock():
-    session.AlmacenFamilia=None
-    session.AlmacenSubFamilia=None
-    session.AlmacenAlimento=None
+    session.AlmacenFamilia = None
+    session.AlmacenSubFamilia = None
+    session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.Alimento)
-    #if request.vars.Descripcion:
+    # if request.vars.Descripcion:
     #    session.AlmacenAlimento=request.vars.Descripcion
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
@@ -60,27 +22,18 @@ def stock():
     response.flash = 'Escriba el alimento o elija la familia o subfamilia'
 
     return locals()
-
 
 
 @auth.requires_login()
 def entradas():
-
-    form = SQLFORM.factory(
-    Field('your_name', requires=IS_NOT_EMPTY()),
-    Field('your_image', 'upload'))
-    form = SQLFORM(db.CabeceraEntrada)
-    alimentos = TR(LABEL('I agree to the terms and conditions'), \
-    INPUT(_name='alimentos',value=True,_type='checkbox'))
-    form[0].insert(-1,alimentos)
-
-
-    session.AlmacenFamilia=None
-    session.AlmacenSubFamilia=None
-    session.AlmacenAlimento=None
+    session.FechaAlmacen = None
+    session.DonanteAlmacen =None
+    session.ProcedenciaAlmacen = None
+    session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.CabeceraEntrada)
-    #if request.vars.Descripcion:
+    
+    # if request.vars.Descripcion:
     #    session.AlmacenAlimento=request.vars.Descripcion
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
@@ -89,11 +42,32 @@ def entradas():
     response.files.append(
         URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
 
-    
-
     return locals()
 
 
+@service.json
+def get_codigo():
+    codigo=request.vars.codigo
+    alimento=db(db.Alimento.Codigo==codigo).select().first()
+    if alimento:
+        data = {"alimento":alimento.Descripcion}
+        session.AlmacenAlimento = alimento.id
+    else:
+        data ={"alimento":''}
+    return response.json(data)
+
+
+@service.json
+def set_alimento():
+    codigo=''
+    if len(request.vars) > 0:
+        session.AlmacenAlimento = request.vars.alimento        
+        alimento=db(db.Alimento.Descripcion==request.vars.alimento).select().first()
+        if alimento:
+            codigo=alimento.Codigo
+            session.AlmacenAlimento =alimento.id
+    if codigo =='': session.AlmacenAlimento=None
+    return response.json(codigo)  
 
 @service.json
 def get_rows():
@@ -101,7 +75,7 @@ def get_rows():
     """
 
     fields = ['Alimento.Descripcion', 'Alimento.Familia',
-            'Alimento.SubFamilia', 'Alimento.Conservacion', 'Stock','Alimento.Unidades']
+              'Alimento.SubFamilia', 'Alimento.Conservacion', 'Stock', 'Alimento.Unidades']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
@@ -109,26 +83,29 @@ def get_rows():
     limitby = (page * pagesize - pagesize, page * pagesize)
 
     if request.vars.sidx == 'Stock':
-        orderby =db.LineaAlmacen.Stock.sum()
+        orderby = db.LineaAlmacen.Stock.sum()
     else:
         orderby = db.Alimento[request.vars.sidx]
     if request.vars.sord == 'desc':
         orderby = ~orderby
-    query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (db.CabeceraAlmacen.id==db.LineaAlmacen.cabecera)
+    query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
+        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
 
     if session.AlmacenFamilia:
-        query  =query & (db.Alimento.Familia==session.AlmacenFamilia)
+        query = query & (db.Alimento.Familia == session.AlmacenFamilia)
     if session.AlmacenSubFamilia:
-        query  =query & (db.Alimento.SubFamilia==session.AlmacenSubFamilia)
+        query = query & (db.Alimento.SubFamilia == session.AlmacenSubFamilia)
     if session.AlmacenAlimento:
-        query  =query & (db.Alimento.Descripcion==session.AlmacenAlimento)
-    for r in db(query).select(db.CabeceraAlmacen.id,db.Alimento.Descripcion,db.Alimento.Familia,
-        db.Alimento.SubFamilia,db.Alimento.Conservacion,db.Alimento.Unidades,db.LineaAlmacen.Stock.sum(),
-        limitby=limitby, orderby=orderby,groupby=db.CabeceraAlmacen.alimento):
-        #print db._lastsql
+        query = query & (db.Alimento.Descripcion == session.AlmacenAlimento)
+    for r in db(
+        query).select(db.CabeceraAlmacen.id, db.Alimento.Descripcion, db.Alimento.Familia,
+                      db.Alimento.SubFamilia, db.Alimento.Conservacion, db.Alimento.Unidades, db.LineaAlmacen.Stock.sum(
+                      ),
+                      limitby=limitby, orderby=orderby, groupby=db.CabeceraAlmacen.alimento):
+        # print db._lastsql
         vals = []
         for f in fields:
-            #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+            # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
             if f == 'Alimento.Familia':
                 vals.append(db.Alimento['Familia'].represent(r(f)))
             elif f == 'Alimento.SubFamilia':
@@ -140,7 +117,6 @@ def get_rows():
 
         rows.append(dict(id=r.CabeceraAlmacen.id, cell=vals))
 
-
     total = db(db.CabeceraAlmacen.alimento == db.Alimento.id).count()
     pages = math.ceil(1.0 * total / pagesize)
     data = dict(records=total, total=pages, page=page, rows=rows)
@@ -148,53 +124,59 @@ def get_rows():
     return data
 
 
-
-
 @service.json
 def get_rows_entradas():
     """ this gets passed a few URL arguments: page number, and rows per page, and sort column, and sort desc or asc
     """
 
-    fields = ['Donante', 'Fecha','tipoProcedencia']
+    fields = ['Donante', 'Fecha', 'tipoProcedencia']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
-     
+
     limitby = (page * pagesize - pagesize, page * pagesize)
-    orderby=~db.CabeceraEntrada.Fecha
-    query=""
-    
-    for r in db(query).select(db.CabeceraEntrada.ALL,limitby=limitby, orderby=orderby):
-        #print db._lastsql
+    orderby = ~db.CabeceraEntrada.Fecha
+    #query = ""
+    query = (db.CabeceraEntrada.id>0)
+    if session.FechaAlmacen:
+        query = query & (db.CabeceraEntrada.FechaAlmacen==session.FechaAlmacen)
+    if session.DonanteAlmacen:
+        query = query & (db.CabeceraEntrada.Donante==session.DonanteAlmacen)
+    if session.ProcedenciaAlmacen:
+        query = query & (db.CabeceraEntrada.tipoProcedencia== session.ProcedenciaAlmacen)
+    if session.AlmacenAlimento:
+        query = query & (db.CabeceraEntrada.id==db.LineaEntrada.cabecera)
+        query = query & (db.LineaEntrada.alimento ==session.AlmacenAlimento)
+    rowsentradas = db(query).select(db.CabeceraEntrada.ALL, limitby=limitby, orderby=orderby)
+    print db._lastsql
+    for r in rowsentradas:
+        # print db._lastsql
         vals = []
         for f in fields:
-            #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+            # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
             if f == 'Donante':
-                #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-                vals.append(db.CabeceraEntrada['Donante'].represent(r(f)))            
+                # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+                vals.append(db.CabeceraEntrada['Donante'].represent(r(f)))
             else:
                 vals.append(r[f])
 
         rows.append(dict(id=r.id, cell=vals))
 
-    
-    total = db(db.CabeceraEntrada.id>0).count()
+    total = db(db.CabeceraEntrada.id > 0).count()
     pages = math.ceil(1.0 * total / pagesize)
     data = dict(records=total, total=pages, page=page, rows=rows)
 
     return data
 
 
-
-
 @service.json
 def get_lineas():
 
-    fields = ['Stock', 'Caducidad', 'PesoUnidad', 'stockinicial','Lote']
+    fields = ['Stock', 'Caducidad', 'PesoUnidad', 'stockinicial', 'Lote']
     rows = []
     cabecera_id = request.vars.id
     query = (db.LineaAlmacen.cabecera == cabecera_id)
-    for r in db(query).select(orderby=db.LineaAlmacen.Caducidad ):
+    for r in db(query).select(orderby=db.LineaAlmacen.Caducidad):
         vals = []
         for f in fields:
             if f == 'Caducidad':
@@ -202,13 +184,14 @@ def get_lineas():
                 vals.append(k)
             else:
                 vals.append(str(r[f]))
-        rows.append(dict(id=r.id,cell=vals))
+        rows.append(dict(id=r.id, cell=vals))
     return response.json(dict(rows=rows))
+
 
 @service.json
 def get_lineas_entradas():
 
-    fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad','Lote']
+    fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad', 'Lote']
     rows = []
     cabecera_id = request.vars.id
     query = (db.LineaEntrada.cabecera == cabecera_id)
@@ -220,20 +203,18 @@ def get_lineas_entradas():
                 vals.append(k)
                 print k
             elif f == 'alimento':
-                k=db.LineaEntrada['alimento'].represent(r(f))
+                k = db.LineaEntrada['alimento'].represent(r(f))
                 vals.append(k)
-            elif f== 'Lote':
+            elif f == 'Lote':
                 vals.append(r[f] or '')
             else:
                 vals.append(str(r[f]))
-        rows.append(dict(id=r.id,cell=vals))
+        rows.append(dict(id=r.id, cell=vals))
     return response.json(dict(rows=rows))
-
 
 
 @auth.requires_login()
 def incidencias():
-
 
     return locals()
 
@@ -242,48 +223,56 @@ def incidencias():
 def set_subfamilia():
     if len(request.vars) > 0:
         session.AlmacenSubFamilia = request.vars.subfamilia
-        session.AlmacenAlimento=None
+        session.AlmacenAlimento = None
 
     return {}
 
 
 @service.json
-def set_alimento():
-    #import pdb;pdb.set_trace()
-    print request.vars
+def set_parametros():
     if len(request.vars) > 0:
-        session.AlmacenAlimento = request.vars.alimento
+        parametro=request.vars.param
+        valor = request.vars.objeto    
+        if parametro == 'fecha':
+            session.FechaAlmacen= valor
+        elif parametro == 'donante':
+            session.DonanteAlmacen= valor
+        elif parametro == 'procedencia':
+            session.ProcedenciaAlmacen = valor
+    return {} 
 
-    return {}
 
 def get_subfamilias():
-    familia_id=request.vars.Familia
-    session.AlmacenFamilia=familia_id
-    session.AlmacenSubFamilia=None
-    session.AlmacenAlimento=None
-    rows = db(db.SubFamilia.Familia==familia_id).select(db.SubFamilia.ALL)
-    optsf=[OPTION(row.Descripcion, _value=row.id) for row in rows]
-    optsf.insert(0,OPTION(""))
+    familia_id = request.vars.Familia
+    session.AlmacenFamilia = familia_id
+    session.AlmacenSubFamilia = None
+    session.AlmacenAlimento = None
+    rows = db(db.SubFamilia.Familia == familia_id).select(db.SubFamilia.ALL)
+    optsf = [OPTION(row.Descripcion, _value=row.id) for row in rows]
+    optsf.insert(0, OPTION(""))
     #import pdb;pdb.set_trace()
-    subfamilias=XML("Subfamilia: ") + SELECT(
-        optsf,_id="Alimento_SubFamilia",_name="SubFamilia",_class="generic-widget")
-
-
+    subfamilias = XML("Subfamilia: ") + SELECT(
+        optsf, _id="Alimento_SubFamilia", _name="SubFamilia", _class="generic-widget")
 
     return subfamilias
 
+
 def get_alimentos():
     q = request.vars.term
-    fam= request.vars.fam
-    subf=request.vars.subf
+    fam = ''
+    subf = ''
+    if request.vars.fam:
+        fam = request.vars.fam
+    if request.vars.subf:
+        subf = request.vars.subf
     # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
     if q:
         search_term = q.lower().replace(" ", "-")
         query = (db.Alimento.Descripcion.contains(search_term))
         if fam != '':
-            query = query & (db.Alimento.Familia==fam)
+            query = query & (db.Alimento.Familia == fam)
         if subf != '':
-            query = query & (db.Alimento.SubFamilia==subf)
+            query = query & (db.Alimento.SubFamilia == subf)
         rows = db(query).select(db.Alimento.Descripcion)
         return response.json([s['Descripcion'] for s in rows])
 

@@ -9,6 +9,8 @@
 # be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
 from gluon import current
+if 0:
+    from gluon import *
 
 db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'])
 current.db = db
@@ -30,7 +32,7 @@ response.generic_patterns = ['*'] if request.is_local else []
 # (more options discussed in gluon/tools.py)
 #
 
-from gluon.tools import Auth, Crud, Service, PluginManager, prettydate
+from gluon.tools import Auth, Crud, Service, PluginManager
 auth = Auth(db)
 crud, service, plugins = Crud(db), Service(), PluginManager()
 

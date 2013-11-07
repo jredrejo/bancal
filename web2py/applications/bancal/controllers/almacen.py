@@ -36,9 +36,7 @@ def entradas():
     session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.CabeceraEntrada)
-    
-    # if request.vars.Descripcion:
-    #    session.AlmacenAlimento=request.vars.Descripcion
+
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
     response.files.append(
@@ -69,6 +67,27 @@ def salidas():
     return locals()
 
 
+@auth.requires_login()
+def nueva_entrada():
+    session.Entradas = True
+    session.FechaAlmacen = None
+    session.DonanteAlmacen =None
+    session.ProcedenciaAlmacen = None
+    session.AlmacenAlimento = None
+    
+    db.CabeceraEntrada.almacen.writable=False
+    db.CabeceraEntrada.almacen.readable=False
+    form = SQLFORM(db.CabeceraEntrada, submit_button = 'Grabar estos datos')
+    frmlineas= SQLFORM(db.LineaEntrada, submit_button = 'Añadir esta línea')
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+
+    return locals()
+
 @service.json
 def get_codigo():
     codigo=request.vars.codigo
@@ -93,6 +112,8 @@ def set_alimento():
     if codigo =='': session.AlmacenAlimento=None
     return response.json(codigo)  
 
+
+@auth.requires_login()
 @service.json
 def get_rows():
     fields = ['Alimento.Descripcion', 'Alimento.Familia',
@@ -145,6 +166,7 @@ def get_rows():
     return data
 
 
+@auth.requires_login()
 @service.json
 def get_rows_entradas():
     fields = ['Donante', 'Fecha', 'tipoProcedencia']
@@ -196,6 +218,8 @@ def get_rows_entradas():
 
     return data
 
+
+@auth.requires_login()
 @service.json
 def get_rows_salidas():
     fields = ['Beneficiario', 'Fecha']
@@ -241,6 +265,8 @@ def get_rows_salidas():
 
     return data
 
+
+@auth.requires_login()
 @service.json
 def get_lineas():
 
@@ -260,6 +286,7 @@ def get_lineas():
     return response.json(dict(rows=rows))
 
 
+@auth.requires_login()
 @service.json
 def get_lineas_entradas():
 
@@ -290,7 +317,6 @@ def get_lineas_entradas():
 
 @auth.requires_login()
 def incidencias():
-
     return locals()
 
 
@@ -303,6 +329,7 @@ def set_subfamilia():
     return {}
 
 
+@auth.requires_login()
 @service.json
 def set_parametros():
     if len(request.vars) > 0:
@@ -362,38 +389,15 @@ def get_alimentos():
 
 @cache.action()
 def download():
-    """
-    allows downloading of uploaded files
-    http://..../[app]/default/download/[filename]
-    """
     return response.download(request, db)
 
 
 def call():
-    """
-    exposes services. for example:
-    http://..../[app]/default/call/jsonrpc
-    decorate with @services.jsonrpc the functions to expose
-    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
-    """
     return service()
 
 
 @auth.requires_signature()
 def data():
-    """
-    http://..../[app]/default/data/tables
-    http://..../[app]/default/data/create/[table]
-    http://..../[app]/default/data/read/[table]/[id]
-    http://..../[app]/default/data/update/[table]/[id]
-    http://..../[app]/default/data/delete/[table]/[id]
-    http://..../[app]/default/data/select/[table]
-    http://..../[app]/default/data/search/[table]
-    but URLs must be signed, i.e. linked with
-      A('table',_href=URL('data/tables',user_signature=True))
-    or with the signed load operator
-      LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
-    """
     return dict(form=crud())
 
 

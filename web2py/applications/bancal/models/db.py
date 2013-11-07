@@ -9,6 +9,7 @@
 # be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
 from gluon import current
+import datetime
 if 0:
     from gluon import *
 
@@ -208,8 +209,8 @@ tipo_colaboracion = ("Miembro del equipo directivo",
 
 db.define_table('Colaborador',
                 Field('name', label='Nombre'),
-                Field('apellido1', label="Apellido 1",readable=False),
-                Field('apellido2', label='Apellido 2',readable=False),
+                Field('apellido1', label="Apellido 1", readable=False),
+                Field('apellido2', label='Apellido 2', readable=False),
                 Field('provincia', label='Provincia', default='Badajoz'),
                 Field('poblacion', label='Población'),
                 Field('direccion', label="Dirección", length=200),
@@ -237,7 +238,7 @@ db.define_table('Colaborador',
                       readable=False, writable=False),
                 Field('voltipo', label='Tipo colaboración', readable=False,
                       writable=False, requires=IS_EMPTY_OR(
-                      IS_IN_SET(tipo_colaboracion))),
+                          IS_IN_SET(tipo_colaboracion))),
                 Field('volarea', label='Área de servicio',
                       readable=False, writable=False),
                 Field('dontipo', label='Tipo de empresa', readable=False,
@@ -246,7 +247,8 @@ db.define_table('Colaborador',
                 Field('pattipo', label='Tipo de patrocinador',
                       readable=False, writable=False),
                 #format='%(name)s %(apellido1)s %(apellido2)s'
-                format=lambda r: str(r.name) +  ('' if not r.apellido1 else ' ' + r.apellido1) +  ('' if not r.apellido2 else ' ' + r.apellido2)
+                format=lambda r: str(r.name) + ('' if not r.apellido1 else ' ' + r.apellido1) + (
+                    '' if not r.apellido2 else ' ' + r.apellido2)
 
 
                 )
@@ -259,21 +261,34 @@ db.Colaborador.provincia.widget = ajax_autocomplete
 db.Colaborador.poblacion.widget = ajax_autocomplete
 db.Colaborador.pattipo.widget = ajax_autocomplete
 db.Colaborador.volarea.widget = ajax_autocomplete
-db.Colaborador.movil.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.telefono.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.poblacion.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.contacto.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.apellido1.represent = lambda value, row: XML(value) if value is not None else 'N/A'
-db.Colaborador.apellido2.represent = lambda value, row: XML(value) if value is not None else 'N/A'
-db.Colaborador.postal.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.telefono2.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.email.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.nif.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.fechabaja.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.direccion.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.dontipo.represent = lambda value, row: XML(value) if value is not None else ''
-db.Colaborador.name.represent = lambda value, row:(value if value is not None else '') + ((' ' +row.apellido1) if row.apellido1 is not None else '')
-
+db.Colaborador.movil.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.telefono.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.poblacion.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.contacto.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.apellido1.represent = lambda value, row: XML(
+    value) if value is not None else 'N/A'
+db.Colaborador.apellido2.represent = lambda value, row: XML(
+    value) if value is not None else 'N/A'
+db.Colaborador.postal.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.telefono2.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.email.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.nif.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.fechabaja.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.direccion.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.dontipo.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Colaborador.name.represent = lambda value, row: (
+    value if value is not None else '') + ((' ' + row.apellido1) if row.apellido1 is not None else '')
 
 
 tipo_beneficiario = (
@@ -287,7 +302,7 @@ grupo_recogida = ("PRIMER DÍA", "SEGUNDO DÍA",
 db.define_table('Beneficiario',
                 Field('name', label='Nombre'),
                 Field('apellido1', label="Apellido 1", default="N/A"),
-                Field('apellido2', label='Apellido 2',default="N/A"),
+                Field('apellido2', label='Apellido 2', default="N/A"),
                 Field('provincia', label='Provincia', default='Badajoz'),
                 Field('poblacion', label='Población'),
                 Field('direccion', label="Dirección", length=200),
@@ -304,9 +319,10 @@ db.define_table('Beneficiario',
                 Field(
                     'gruporecogida', label='Grupo recogida', default="SEGUNDO DÍA"),
                 Field('FAGA', 'boolean', default=False),
-                
 
-                format=lambda r: str(r.name) +  ('' if not r.apellido1 else ' ' + r.apellido1) +  ('' if not r.apellido2 else ' ' + r.apellido2)
+
+                format=lambda r: str(r.name) + ('' if not r.apellido1 else ' ' + r.apellido1) + (
+                    '' if not r.apellido2 else ' ' + r.apellido2)
                 )
 db.Beneficiario.id.readable = False
 db.Beneficiario.postal.requires = IS_EMPTY_OR(IS_MATCH(
@@ -318,71 +334,101 @@ db.Beneficiario.tipobeneficiario.requires = IS_EMPTY_OR(
 db.Beneficiario.gruporecogida.requires = IS_EMPTY_OR(IS_IN_SET(grupo_recogida))
 db.Beneficiario.provincia.widget = ajax_autocomplete
 db.Beneficiario.poblacion.widget = ajax_autocomplete
-db.Beneficiario.movil.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.telefono.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.poblacion.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.contacto.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.apellido1.represent = lambda value, row: XML(value) if value is not None else 'N/A'
-db.Beneficiario.apellido2.represent = lambda value, row: XML(value) if value is not None else 'N/A'
-db.Beneficiario.postal.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.telefono2.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.email.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.nif.represent = lambda value, row: XML(value) if value is not None else ''
-db.Beneficiario.direccion.represent = lambda value, row: XML(value) if value is not None else ''
+db.Beneficiario.movil.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.telefono.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.poblacion.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.contacto.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.apellido1.represent = lambda value, row: XML(
+    value) if value is not None else 'N/A'
+db.Beneficiario.apellido2.represent = lambda value, row: XML(
+    value) if value is not None else 'N/A'
+db.Beneficiario.postal.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.telefono2.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.email.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.nif.represent = lambda value, row: XML(
+    value) if value is not None else ''
+db.Beneficiario.direccion.represent = lambda value, row: XML(
+    value) if value is not None else ''
 #db.Beneficiario.name.represent = lambda value, row:(value if value is not None else '') + ((' ' +row.apellido1) if row.apellido1 is not None else '')
 
 
 db.define_table('CabeceraAlmacen',
-               Field('almacen', db.Almacen, label='Almacén', default=1),
-               Field('alimento', db.Alimento)
+                Field('almacen', db.Almacen, label='Almacén', default=1),
+                Field('alimento', db.Alimento)
                 )
 db.define_table('LineaAlmacen',
-               Field('cabecera', db.CabeceraAlmacen),
-               Field('Stock', "double",default=0),
-               Field('stockinicial',"double",default=0,label="Stock Inicial"),
-               Field('Caducidad','date'),
-               Field('Lote'),
-               Field('estanteria',db.Estanteria, label="Estantería"),
-               Field('PesoUnidad','double',default=1.0),
-               Field('Palets','integer',default=0)
+                Field('cabecera', db.CabeceraAlmacen),
+                Field('Stock', "double", default=0),
+                Field('stockinicial', "double",
+                      default=0, label="Stock Inicial"),
+                Field('Caducidad', 'date'),
+                Field('Lote'),
+                Field('estanteria', db.Estanteria, label="Estantería"),
+                Field('PesoUnidad', 'double', default=1.0),
+                Field('Palets', 'integer', default=0)
                 )
 
 tipo_procedencia = (
-    "REGULARIZACIÓN DE STOCK", "DONACIONES", "OPERACIÓN KILO", "MERMAS", "EXCEDENTES DE PRODUCCIÓN",
-    "DECOMISOS", "AYUDAS PÚBLICAS", "INVENTARIO", "OTROS BANCOS", "UNION EUROPEA")
+    "AYUDAS PÚBLICAS", "DECOMISOS", "DONACIONES", "EXCEDENTES DE PRODUCCIÓN",
+    "INVENTARIO", "MERMAS", "OPERACIÓN KILO", "OTROS BANCOS", "REGULARIZACIÓN DE STOCK",
+    "UNION EUROPEA")
 
 db.define_table('CabeceraEntrada',
-               Field('almacen', db.Almacen, label='Almacén', default=1),
-               Field('tipoProcedencia',requires=IS_EMPTY_OR(
-                      IS_IN_SET(tipo_procedencia)),label="Procedencia"),
-               Field('Donante',db.Colaborador),
-               Field('Fecha','date')
+                Field('almacen', db.Almacen, label='Almacén', default=1),
+                Field('tipoProcedencia', requires=IS_EMPTY_OR(
+                      IS_IN_SET(tipo_procedencia)), label="Procedencia"),
+                Field('Donante', db.Colaborador),
+                Field('Fecha', 'date', default=datetime.date.today())
                 )
+db.CabeceraEntrada.Donante.requires = IS_IN_DB(db(db.Colaborador.Donante == True), 'Colaborador.id', lambda r: str(r.name) + (
+    '' if not r.apellido1 else ' ' + r.apellido1) + ('' if not r.apellido2 else ' ' + r.apellido2), orderby=db.Colaborador.name)
+
 db.define_table('LineaEntrada',
-                Field('cabecera',db.CabeceraEntrada),
-                Field('alimento',db.Alimento),
-                Field('Unidades','double',default=1.0),
-                Field('PesoUnidad','double',default=1.0),
-                Field('Caducidad','date'),
+                Field('cabecera', db.CabeceraEntrada,
+                      readable=False, writable=False),
+                Field('alimento', db.Alimento, widget=ajax_autocomplete),
+                Field('Unidades', 'double', default=1.0),
+                Field('PesoUnidad', 'double',
+                      default=1.0, label="Peso/Unidad"),
+                Field(
+                    'Caducidad', 'date', default=datetime.date(9999, 12, 31)),
                 Field('Lote'),
-                Field('estanteria',db.Estanteria, label="Estantería",default=1),
-                Field('LineaAlmacen',db.LineaAlmacen),
-                Field('PrecioKg','double',default=0)              
-            )
+                Field('estanteria', db.Estanteria,
+                      label="Estantería", default=1),
+                Field('LineaAlmacen', db.LineaAlmacen,
+                      readable=False, writable=False),
+                Field('PrecioKg', 'double', default=0, label="Precio Kg.")
+                )
 
 db.define_table('CabeceraSalida',
-               Field('almacen', db.Almacen, label='Almacén', default=1),
-               Field('Beneficiario',db.Beneficiario),
-               Field('Fecha','date')
+                Field('almacen', db.Almacen, label='Almacén', default=1),
+                Field('Beneficiario', db.Beneficiario),
+                Field('Fecha', 'date', default=datetime.date.today())
                 )
+db.CabeceraSalida.Beneficiario.requires = IS_IN_DB(db, 'Beneficiario.id', lambda r: str(r.name) + (
+    '' if not r.apellido1 else ' ' + r.apellido1) + ('' if not r.apellido2 else ' ' + r.apellido2), orderby=db.Beneficiario.name)
+
+
 db.define_table('LineaSalida',
-                Field('cabecera',db.CabeceraEntrada),
-                Field('alimento',db.Alimento),
-                Field('Unidades','double',default=1.0),
-                Field('PesoUnidad','double',default=1.0),
-                Field('Caducidad','date'),
+                Field('cabecera', db.CabeceraSalida,
+                      readable=False, writable=False),
+                Field('alimento', db.Alimento, widget=ajax_autocomplete),
+                Field('Unidades', 'double', default=1.0),
+                Field('PesoUnidad', 'double',
+                      default=1.0, label="Peso/Unidad"),
+                Field(
+                    'Caducidad', 'date', default=datetime.date(9999, 12, 31)),
                 Field('Lote'),
-                Field('estanteria',db.Estanteria, label="Estantería",default=1),
-                Field('LineaAlmacen',db.LineaAlmacen),
-                Field('PrecioKg','double',default=0)              
-            )                
+                Field('estanteria', db.Estanteria,
+                      label="Estantería", default=1),
+                Field('LineaAlmacen', db.LineaAlmacen,
+                      label="Línea Almacén", readable=False, writable=False),
+                Field('PrecioKg', 'double', default=0, label="Precio Kg.")
+                )

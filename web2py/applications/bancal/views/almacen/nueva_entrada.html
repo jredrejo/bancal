@@ -111,7 +111,7 @@
     function buscar_alimento() {
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
-            jQuery.getJSON( 'get_codigo', 
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}", 
               data, function( data, status, xhr ) {
               if (data['alimento']=='') {
                 jQuery("#LineaEntrada_alimento").val("");
@@ -127,7 +127,7 @@
       if (r==true)
       {
             var jsonString={'linea_id':  id };
-            jQuery.post('borra_linea', jsonString, {contentType: 'application/json'} )
+            jQuery.post("{{=URL(c='almacen',f='borra_linea')}}", jsonString, {contentType: 'application/json'} )
                   .success(function(data) {           
                   jQuery("#list").jqGrid().trigger("reloadGrid");     
             }); 
@@ -157,14 +157,14 @@
    jQuery('#LineaEntrada_alimento').autocomplete({
       minLength: 2,
       source: function( request, response ) {
-            jQuery.getJSON( 'get_alimentos', 
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_alimentos')}}", 
               request, function( data, status, xhr ) {
               response( data );
             });
         },
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
-      jQuery.post('set_alimento', jsonString, {contentType: 'application/json;charset=utf-8'} )
+      jQuery.post("{{=URL(c='almacen',f='set_alimento')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
                 if (data =='') {
                   jQuery("#LineaEntrada_alimento").val("");
@@ -224,7 +224,7 @@
     }, // fin del evento gridComplete
     ondblClickRow: function (id){
       
-      window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '?id={{=session.current_entrada}}&lid=' + id;
+      window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/{{=session.current_entrada}}?lid=' + id;
       
     } // fin del evento dblclick
 

@@ -81,6 +81,18 @@
      }
 
 
+    function borra_linea(id) {
+      var r = confirm("¿Seguro que quiere borrar esta entrada?");
+      if (r==true)
+      {
+            var jsonString={'entrada_id':  id };
+            jQuery.post("{{=URL(c='almacen',f='borra_entrada')}}", jsonString, {contentType: 'application/json'} )
+                  .success(function(data) {           
+                  jQuery("#list").jqGrid().trigger("reloadGrid");     
+            }); 
+      }
+    }
+
  $(document).ready(function() {
    // chrome fix.
    document.onselectstart = function () { return false; };             
@@ -154,9 +166,9 @@
             thegrid.addJSONData(JSON.parse(jsondata.responseText).d);
         }
     },
-    colNames:['Donante','Fecha', 'Procedencia'],
+    colNames:[' ','Donante','Fecha', 'Procedencia'],
     colModel :[
-      
+      {name:'action', width:30, sortable:false,align:"center" },
       {name:'Donante', index:'Donante',width:250},
       {name:'Fecha', index:'Fecha',width:170, align:"center", formatter:'date',formatoptions:{
        srcformat: 'Y-m-d', newformat: 'd/m/Y'}},
@@ -184,8 +196,19 @@
     }, //fin del evento loadcomplete
   ondblClickRow: function (id){
 
-    window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '?id=' + id;
-  } // fin del evento dblclick
+    window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/' + id;
+  }, // fin del evento dblclick
+  gridComplete: function() {
+       var thegrid =jQuery("#list")
+       var ids = thegrid.jqGrid("getDataIDs");
+        for(var i=0;i < ids.length;i++){
+          var cl = ids[i];
+          //be = "<input style='height:22px;width:20px;' type='button' value='Borrar' onclick=\"jQuery('#list').editRow('"+cl+"');\"  />"; 
+          //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
+          be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
+          thegrid.jqGrid('setRowData',ids[i],{action:be});
+        }
+  }, // fin del evento gridComplete  
   });
  
 

@@ -5,6 +5,10 @@ if 0:
     from gluon import *
 
 
+@auth.requires_login()
+def index():
+    redirect(URL('entradas'))
+
 
 @auth.requires_login()
 def stock():
@@ -31,7 +35,7 @@ def stock():
 def entradas():
     session.Entradas = True
     session.FechaAlmacen = None
-    session.DonanteAlmacen =None
+    session.DonanteAlmacen = None
     session.ProcedenciaAlmacen = None
     session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
@@ -46,15 +50,16 @@ def entradas():
 
     return locals()
 
+
 @auth.requires_login()
 def salidas():
     session.Entradas = None
     session.FechaAlmacen = None
-    session.BeneficiarioAlmacen =None
+    session.BeneficiarioAlmacen = None
     session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.CabeceraSalida)
-    
+
     # if request.vars.Descripcion:
     #    session.AlmacenAlimento=request.vars.Descripcion
     response.files.append(
@@ -71,46 +76,58 @@ def salidas():
 def nueva_entrada():
     session.Entradas = True
     session.NuevaLinea = None
-    if 'id' in request.vars:
-        session.current_entrada=request.vars.id
+    if len(request.args) > 0:
+        session.current_entrada = request.args[0]
     else:
-        session.current_entrada=None
-    db.CabeceraEntrada.almacen.writable=False
-    db.CabeceraEntrada.almacen.readable=False
+        session.current_entrada = None
+    db.CabeceraEntrada.almacen.writable = False
+    db.CabeceraEntrada.almacen.readable = False
     registro = None
     if session.current_entrada:
-        registro=db.CabeceraEntrada(session.current_entrada)
-        session.NuevaLinea=True
-    form = SQLFORM(db.CabeceraEntrada, record=registro, submit_button = 'Grabar estos datos',keepvalues=True)
-    if form.accepts(request.vars,session):
+        registro = db.CabeceraEntrada(session.current_entrada)
+        session.NuevaLinea = True
+    form = SQLFORM(db.CabeceraEntrada, record=registro,
+                   submit_button='Grabar estos datos', keepvalues=True)
+    if form.accepts(request.vars, session):
         response.flash = 'Nueva entrada grabada'
-        session.current_entrada=form.vars.id
-        redirect(URL('nueva_entrada',vars={'id':form.vars.id}))
+        session.current_entrada = form.vars.id
+        redirect(URL('nueva_entrada', args=[form.vars.id]))
     elif form.errors:
         response.flash = 'Error en los datos'
-    
+
     if session.current_entrada:
+        valor_antiguo_uds = None
         if 'lid' in request.vars:
-            registro_linea=db.LineaEntrada(request.vars.lid)
-            registro_alimento=db.Alimento(registro_linea.alimento)
-            codigo_alimento=registro_alimento.Codigo
-            session.NuevaLinea=True
+            registro_linea = db.LineaEntrada(request.vars.lid)
+            registro_alimento = db.Alimento(registro_linea.alimento)
+            codigo_alimento = registro_alimento.Codigo
+            session.AlmacenAlimento = registro_alimento.id
+            session.NuevaLinea = True
+            if request.vars.Unidades:
+                if float(request.vars.Unidades) != registro_linea.Unidades:
+                    valor_antiguo_uds = registro_linea.Unidades
         else:
-            registro_linea=None
-            codigo_alimento=XML('""')
-        db.LineaEntrada.cabecera.default=session.current_entrada
-        frmlineas= SQLFORM(db.LineaEntrada, registro_linea,submit_button = 'Añadir esta línea')
+            registro_linea = None
+            codigo_alimento = XML('""')
+        db.LineaEntrada.cabecera.default = session.current_entrada
+        frmlineas = SQLFORM(
+            db.LineaEntrada, registro_linea, submit_button='Guardar esta línea')
         if 'lid' in request.vars:
             frmlineas.vars.alimento = registro_alimento.Descripcion
         if "alimento" in request.vars:
             if session.AlmacenAlimento:
                 request.vars.alimento = session.AlmacenAlimento
-        #session.AlmacenAlimento 
-        if frmlineas.accepts(request.vars,session):
-            ###PENDIENTE: METER ESTOS DATOS EN LAS LINEASALMACEN
-            session.NuevaLinea=True
+        # session.AlmacenAlimento
+        if frmlineas.accepts(request.vars, session):
+            # PENDIENTE: METER ESTOS DATOS EN LAS LINEASALMACEN
+            session.NuevaLinea = True
+            if valor_antiguo_uds:
+                actualiza_lineaalmacen(
+                    registro_linea.LineaAlmacen, float(request.vars.Unidades), valor_antiguo_uds)
+            else:
+                nueva_lineaalmacen(request.vars)
         elif frmlineas.errors:
-            response.flash = 'Error en los datos'    
+            response.flash = 'Error en los datos'
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
     response.files.append(
@@ -118,31 +135,63 @@ def nueva_entrada():
     response.files.append(
         URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
 
-    return locals()
+    return dict(form=form, frmlineas=frmlineas, codigo_alimento=codigo_alimento)
+
+
+def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
+    registro = db.LineaAlmacen(linea)
+    total = float(registro.Stock)
+    registro.Stock = total + (valornuevo - valorprevio)
+    registro.update_record()
+
+
+def nueva_lineaalmacen(valores):
+    cabecera = db(
+        db.CabeceraAlmacen.alimento == valores.alimento).select().first()
+    if not cabecera:
+        cid = db.CabeceraAlmacen.insert(alimento=valores.alimento)
+    else:
+        cid = cabecera.id
+    fecha_caducidad = datetime.strptime(valores.Caducidad, '%d-%m-%Y')
+    query = (db.LineaAlmacen.cabecera == cid) & (
+        db.LineaAlmacen.PesoUnidad == valores.PesoUnidad)
+    query = query & (db.LineaAlmacen.Caducidad == fecha_caducidad)
+    query = query & (db.LineaAlmacen.estanteria == valores.estanteria)
+    query = query & (db.LineaAlmacen.Lote == valores.Lote)
+    linea = db(query).select().first()
+    if linea:
+        actualiza_lineaalmacen(linea.id, float(valores.Unidades), 0)
+    else:
+        db.LineaAlmacen.insert(cabecera=cid, PesoUnidad=valores.PesoUnidad,
+                               Caducidad=fecha_caducidad, estanteria=valores.estanteria,
+                               Lote=valores.Lote, Stock=float(valores.Unidades))
+
 
 @service.json
 def get_codigo():
-    codigo=request.vars.codigo
-    alimento=db(db.Alimento.Codigo==codigo).select().first()
+    codigo = request.vars.codigo
+    alimento = db(db.Alimento.Codigo == codigo).select().first()
     if alimento:
-        data = {"alimento":alimento.Descripcion}
+        data = {"alimento": alimento.Descripcion}
         session.AlmacenAlimento = alimento.id
     else:
-        data ={"alimento":''}
+        data = {"alimento": ''}
     return response.json(data)
 
 
 @service.json
 def set_alimento():
-    codigo=''
+    codigo = ''
     if len(request.vars) > 0:
-        session.AlmacenAlimento = request.vars.alimento        
-        alimento=db(db.Alimento.Descripcion==request.vars.alimento).select().first()
+        session.AlmacenAlimento = request.vars.alimento
+        alimento = db(
+            db.Alimento.Descripcion == request.vars.alimento).select().first()
         if alimento:
-            codigo=alimento.Codigo
-            session.AlmacenAlimento =alimento.id
-    if codigo =='': session.AlmacenAlimento=None
-    return response.json(codigo)  
+            codigo = alimento.Codigo
+            session.AlmacenAlimento = alimento.id
+    if codigo == '':
+        session.AlmacenAlimento = None
+    return response.json(codigo)
 
 
 @auth.requires_login()
@@ -201,42 +250,45 @@ def get_rows():
 @auth.requires_login()
 @service.json
 def get_rows_entradas():
-    fields = ['Donante', 'Fecha', 'tipoProcedencia']
+    fields = ['nada', 'Donante', 'Fecha', 'tipoProcedencia']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
 
     limitby = (page * pagesize - pagesize, page * pagesize)
-    
+
     if request.vars.sidx == 'Procedencia':
         orderby = db.CabeceraEntrada.tipoProcedencia
     elif request.vars.sidx == 'Donante':
-        orderby=db.CabeceraEntrada.Donante
-    elif request.vars.sidx =='Fecha':
+        orderby = db.CabeceraEntrada.Donante
+    elif request.vars.sidx == 'Fecha':
         orderby = db.CabeceraEntrada.Fecha
     else:
         orderby = ~db.CabeceraEntrada.Fecha
     if request.vars.sord == 'desc':
         orderby = ~orderby
 
-    query = (db.CabeceraEntrada.id>0)
+    query = (db.CabeceraEntrada.id > 0)
     if session.FechaAlmacen:
-        query = query & (db.CabeceraEntrada.Fecha==session.FechaAlmacen)
+        query = query & (db.CabeceraEntrada.Fecha == session.FechaAlmacen)
     if session.DonanteAlmacen:
-        query = query & (db.CabeceraEntrada.Donante==session.DonanteAlmacen)
+        query = query & (db.CabeceraEntrada.Donante == session.DonanteAlmacen)
     if session.ProcedenciaAlmacen:
-        query = query & (db.CabeceraEntrada.tipoProcedencia== session.ProcedenciaAlmacen)
+        query = query & (
+            db.CabeceraEntrada.tipoProcedencia == session.ProcedenciaAlmacen)
     if session.AlmacenAlimento:
-        query = query & (db.CabeceraEntrada.id==db.LineaEntrada.cabecera)
-        query = query & (db.LineaEntrada.alimento ==session.AlmacenAlimento)
-    rowsentradas = db(query).select(db.CabeceraEntrada.ALL, limitby=limitby, orderby=orderby)
-    #print db._lastsql
+        query = query & (db.CabeceraEntrada.id == db.LineaEntrada.cabecera)
+        query = query & (db.LineaEntrada.alimento == session.AlmacenAlimento)
+    rowsentradas = db(query).select(
+        db.CabeceraEntrada.ALL, limitby=limitby, orderby=orderby)
+    # print db._lastsql
     for r in rowsentradas:
         # print db._lastsql
         vals = []
         for f in fields:
-            # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-            if f == 'Donante':
+            if f == 'nada':
+                vals.append("")
+            elif f == 'Donante':
                 # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
                 vals.append(db.CabeceraEntrada['Donante'].represent(r(f)))
             else:
@@ -261,24 +313,26 @@ def get_rows_salidas():
 
     limitby = (page * pagesize - pagesize, page * pagesize)
     if request.vars.sidx == 'Beneficiario':
-        orderby=db.CabeceraSalida.Beneficiario
-    elif request.vars.sidx =='Fecha':
+        orderby = db.CabeceraSalida.Beneficiario
+    elif request.vars.sidx == 'Fecha':
         orderby = db.CabeceraSalida.Fecha
     else:
         orderby = ~db.CabeceraSalida.Fecha
     if request.vars.sord == 'desc':
         orderby = ~orderby
     #query = ""
-    query = (db.CabeceraSalida.id>0)
+    query = (db.CabeceraSalida.id > 0)
     if session.FechaAlmacen:
-        query = query & (db.CabeceraSalida.Fecha==session.FechaAlmacen)
+        query = query & (db.CabeceraSalida.Fecha == session.FechaAlmacen)
     if session.BeneficiarioAlmacen:
-        query = query & (db.CabeceraSalida.Beneficiario==session.BeneficiarioAlmacen)
+        query = query & (
+            db.CabeceraSalida.Beneficiario == session.BeneficiarioAlmacen)
     if session.AlmacenAlimento:
-        query = query & (db.CabeceraSalida.id==db.LineaSalida.cabecera)
-        query = query & (db.LineaSalida.alimento ==session.AlmacenAlimento)
-    rowssalidas = db(query).select(db.CabeceraSalida.ALL, limitby=limitby, orderby=orderby)
-    
+        query = query & (db.CabeceraSalida.id == db.LineaSalida.cabecera)
+        query = query & (db.LineaSalida.alimento == session.AlmacenAlimento)
+    rowssalidas = db(query).select(
+        db.CabeceraSalida.ALL, limitby=limitby, orderby=orderby)
+
     for r in rowssalidas:
         # print db._lastsql
         vals = []
@@ -324,19 +378,19 @@ def get_lineas_entradas():
 
     fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad', 'Lote']
     rows = []
-    EnDetalle=False
-    limitby=None
+    EnDetalle = False
+    limitby = None
     if 'id' in request.vars:
         cabecera_id = request.vars.id
     elif "current_entrada" in session.keys():
         if session.current_entrada:
-            cabecera_id=session.current_entrada
+            cabecera_id = session.current_entrada
             page = int(request.vars.page)  # the page number
-            pagesize = int(request.vars.rows)        
+            pagesize = int(request.vars.rows)
             limitby = (page * pagesize - pagesize, page * pagesize)
-            EnDetalle=True
-            fields= ["nada",] + fields + ["estanteria",]
-            
+            EnDetalle = True
+            fields = ["nada", ] + fields + ["estanteria", ]
+
     if session.Entradas:
         query = (db.LineaEntrada.cabecera == cabecera_id)
     else:
@@ -363,7 +417,7 @@ def get_lineas_entradas():
         pages = math.ceil(1.0 * total / pagesize)
         data = dict(records=total, total=pages, page=page, rows=rows)
         return data
-    else:        
+    else:
         return response.json(dict(rows=rows))
 
 
@@ -376,13 +430,22 @@ def incidencias():
 @service.json
 def borra_linea():
     if 'linea_id' in request.vars:
-        registro=db(db.LineaEntrada.id==request.vars.linea_id).select().first()
-        if registro.LineaAlmacen>0:
-            en_almacen=db(db.LineaAlmacen.id==registro.LineaAlmacen).select().first()
-            en_almacen.Stock=en_almacen.Stock - registro.Unidades
-            en_almacen.update_record()
-        #PENDIENTE: descontar cantidad de la linea de almacen
-        db(db.LineaEntrada.id==request.vars.linea_id).delete()
+        registro = db.LineaEntrada(request.vars.linea_id)
+        if registro.LineaAlmacen > 0:
+            actualiza_lineaalmacen(registro.LineaAlmacen, 0, registro.Unidades)
+        db(db.LineaEntrada.id == request.vars.linea_id).delete()
+
+@auth.requires_login()
+@service.json
+def borra_entrada():
+    if 'entrada_id' in request.vars:
+        registro = db.CabeceraEntrada(request.vars.entrada_id)
+        rows = db(db.LineaEntrada.cabecera==registro.id).select()
+        for row in rows:        
+            if row.LineaAlmacen > 0:
+                actualiza_lineaalmacen(row.LineaAlmacen, 0, row.Unidades)
+            db(db.LineaEntrada.id == row.id).delete()
+        db(db.CabeceraEntrada.id==request.vars.entrada_id).delete()
 
 
 @service.json
@@ -398,21 +461,23 @@ def set_subfamilia():
 @service.json
 def set_parametros():
     if len(request.vars) > 0:
-        parametro=request.vars.param
+        parametro = request.vars.param
         valor = request.vars.objeto
-        if valor == '': valor = None  
+        if valor == '':
+            valor = None
         if parametro == 'fecha':
             if valor:
-                session.FechaAlmacen= datetime.date(datetime.strptime(valor,'%d-%m-%Y'))
+                session.FechaAlmacen = datetime.date(
+                    datetime.strptime(valor, '%d-%m-%Y'))
             else:
                 session.FechaAlmacen = None
         elif parametro == 'donante':
-            session.DonanteAlmacen= valor
+            session.DonanteAlmacen = valor
         elif parametro == 'beneficiario':
-            session.BeneficiarioAlmacen= valor            
+            session.BeneficiarioAlmacen = valor
         elif parametro == 'procedencia':
             session.ProcedenciaAlmacen = valor
-    return {} 
+    return {}
 
 
 def get_subfamilias():

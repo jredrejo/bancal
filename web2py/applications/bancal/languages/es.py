@@ -190,6 +190,7 @@
 'Group uniquely assigned to user %(id)s': 'Group uniquely assigned to user %(id)s',
 'Groups': 'Groupos',
 'Grupo recogida': 'Grupo recogida',
+'Guardar esta línea': 'Guardar esta línea',
 'Hello World': 'Hola Mundo',
 'help': 'ayuda',
 'Home': 'Inicio',

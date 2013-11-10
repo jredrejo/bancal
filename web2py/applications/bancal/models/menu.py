@@ -39,11 +39,14 @@ if session.auth:
     response.menu += [(T('Beneficiarios'),False, URL('beneficiarios','index'),[])]
 
     response.menu += [(T('Almacen'), False, None, [
-        (T('Entradas'), False,  URL('almacen', 'entradas'), [
-            (T('Nueva Entrada'), False,  URL('almacen', 'nueva_entrada'), [])]),
-        (T('Salidas'), False,  URL('almacen', 'salidas'), [
-            (T('Nueva Salida'), False,  URL('almacen', 'nueva_salida'), [])]),
+        (T('Entradas'), False,  URL('almacen', 'entradas'), []),
+        (T('Nueva Entrada'), False,  URL('almacen', 'nueva_entrada'), []),
+        (LI(  _class='divider'),False, None,[]),
+        (T('Salidas'), False,  URL('almacen', 'salidas'), []),
+        (T('Nueva Salida'), False,  URL('almacen', 'nueva_salida'), []),
+        (LI(  _class='divider'),False, None,[]),
         (T('Stock'), False,  URL('almacen', 'stock'), [])])]
+
         #(T('Incidencias'), False,  URL('almacen', 'incidencias'), [])])]
 
 else:

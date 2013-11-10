@@ -145,9 +145,9 @@
     datatype: 'json',
     mtype: 'GET',
     contentType: "application/json; charset=utf-8",
-    cellEdit: true,
+    cellEdit: false,
     cellsubmit:'remote',
-    cellurl: '{{=URL(r=request,f="call",args=["json","save_cell"])}}',
+    multiselection: false,
     complete: function(jsondata, stat) {
         if (stat == "success") {
             var thegrid = jQuery("#list")[0];
@@ -168,17 +168,26 @@
     sortname: 'Descripcion',
     sortorder: 'asc',
     viewrecords: true,
-    caption: 'Haga clic en el + para ver las líneas de las entradas',
+    caption: 'Clic en "+" para ver las líneas de las entradas y doble clic para editar una entrada',
     altRows:true,
     height: 'auto',
     width: 'auto',
   subGrid : true,
   subGridUrl: 'get_lineas_entradas',
     subGridModel: [{ name  : ['Alimento','Unidades','Peso/Unidad','Caducidad','Lote'], 
-                    width : [200,70,70,70,70] } ]
- 
-  });
+                    width : [200,70,70,70,70] } ],
+    loadComplete: function(data){
+         var grid =jQuery("#list")
+         var ids = grid.jqGrid("getDataIDs");
+         if(ids && ids.length > 0)
+            grid.jqGrid("setSelection", ids[0]);       
+    }, //fin del evento loadcomplete
+  ondblClickRow: function (id){
 
+    window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '?id=' + id;
+  } // fin del evento dblclick
+  });
+ 
 
   });
 

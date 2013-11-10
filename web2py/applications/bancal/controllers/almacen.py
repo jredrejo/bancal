@@ -70,15 +70,47 @@ def salidas():
 @auth.requires_login()
 def nueva_entrada():
     session.Entradas = True
-    session.FechaAlmacen = None
-    session.DonanteAlmacen =None
-    session.ProcedenciaAlmacen = None
-    session.AlmacenAlimento = None
-    
+    session.NuevaLinea = None
+    if 'id' in request.vars:
+        session.current_entrada=request.vars.id
+    else:
+        session.current_entrada=None
     db.CabeceraEntrada.almacen.writable=False
     db.CabeceraEntrada.almacen.readable=False
-    form = SQLFORM(db.CabeceraEntrada, submit_button = 'Grabar estos datos')
-    frmlineas= SQLFORM(db.LineaEntrada, submit_button = 'Añadir esta línea')
+    registro = None
+    if session.current_entrada:
+        registro=db.CabeceraEntrada(session.current_entrada)
+        session.NuevaLinea=True
+    form = SQLFORM(db.CabeceraEntrada, record=registro, submit_button = 'Grabar estos datos',keepvalues=True)
+    if form.accepts(request.vars,session):
+        response.flash = 'Nueva entrada grabada'
+        session.current_entrada=form.vars.id
+        redirect(URL('nueva_entrada',vars={'id':form.vars.id}))
+    elif form.errors:
+        response.flash = 'Error en los datos'
+    
+    if session.current_entrada:
+        if 'lid' in request.vars:
+            registro_linea=db.LineaEntrada(request.vars.lid)
+            registro_alimento=db.Alimento(registro_linea.alimento)
+            codigo_alimento=registro_alimento.Codigo
+            session.NuevaLinea=True
+        else:
+            registro_linea=None
+            codigo_alimento=XML('""')
+        db.LineaEntrada.cabecera.default=session.current_entrada
+        frmlineas= SQLFORM(db.LineaEntrada, registro_linea,submit_button = 'Añadir esta línea')
+        if 'lid' in request.vars:
+            frmlineas.vars.alimento = registro_alimento.Descripcion
+        if "alimento" in request.vars:
+            if session.AlmacenAlimento:
+                request.vars.alimento = session.AlmacenAlimento
+        #session.AlmacenAlimento 
+        if frmlineas.accepts(request.vars,session):
+            ###PENDIENTE: METER ESTOS DATOS EN LAS LINEASALMACEN
+            session.NuevaLinea=True
+        elif frmlineas.errors:
+            response.flash = 'Error en los datos'    
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
     response.files.append(
@@ -292,18 +324,31 @@ def get_lineas_entradas():
 
     fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad', 'Lote']
     rows = []
-    cabecera_id = request.vars.id
+    EnDetalle=False
+    limitby=None
+    if 'id' in request.vars:
+        cabecera_id = request.vars.id
+    elif "current_entrada" in session.keys():
+        if session.current_entrada:
+            cabecera_id=session.current_entrada
+            page = int(request.vars.page)  # the page number
+            pagesize = int(request.vars.rows)        
+            limitby = (page * pagesize - pagesize, page * pagesize)
+            EnDetalle=True
+            fields= ["nada",] + fields + ["estanteria",]
+            
     if session.Entradas:
         query = (db.LineaEntrada.cabecera == cabecera_id)
     else:
         query = (db.LineaSalida.cabecera == cabecera_id)
-    for r in db(query).select():
+    for r in db(query).select(limitby=limitby):
         vals = []
         for f in fields:
-            if f == 'Caducidad':
+            if f == 'nada':
+                vals.append("")
+            elif f == 'Caducidad':
                 k = r(f).strftime('%d/%m/%Y')
                 vals.append(k)
-                print k
             elif f == 'alimento':
                 k = db.LineaEntrada['alimento'].represent(r(f))
                 vals.append(k)
@@ -312,12 +357,32 @@ def get_lineas_entradas():
             else:
                 vals.append(str(r[f]))
         rows.append(dict(id=r.id, cell=vals))
-    return response.json(dict(rows=rows))
+
+    if EnDetalle:
+        total = db(query).count()
+        pages = math.ceil(1.0 * total / pagesize)
+        data = dict(records=total, total=pages, page=page, rows=rows)
+        return data
+    else:        
+        return response.json(dict(rows=rows))
 
 
 @auth.requires_login()
 def incidencias():
     return locals()
+
+
+@auth.requires_login()
+@service.json
+def borra_linea():
+    if 'linea_id' in request.vars:
+        registro=db(db.LineaEntrada.id==request.vars.linea_id).select().first()
+        if registro.LineaAlmacen>0:
+            en_almacen=db(db.LineaAlmacen.id==registro.LineaAlmacen).select().first()
+            en_almacen.Stock=en_almacen.Stock - registro.Unidades
+            en_almacen.update_record()
+        #PENDIENTE: descontar cantidad de la linea de almacen
+        db(db.LineaEntrada.id==request.vars.linea_id).delete()
 
 
 @service.json

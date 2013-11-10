@@ -405,6 +405,8 @@
 'value already in database or empty': 'value already in database or empty',
 'value not allowed': 'value not allowed',
 'value not in database': 'value not in database',
+'Ver Entradas': 'Ver Entradas',
+'Ver Salidas': 'Ver Salidas',
 'Verify Password': 'Verificar contraseña',
 'versioning': 'versiones',
 'Videos': 'Videos',

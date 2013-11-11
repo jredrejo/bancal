@@ -1,0 +1,236 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+{{block right_sidebar}}
+{{pass}}
+
+<h4>Nueva entrada</h4>
+
+<div class="container-fluid">
+  <div class="well well-small">
+      {{=form.custom.begin}}
+
+        <div class="row-fluid">
+
+          <div class="row-fluid">
+            <div class="span1" id="fechas">Fecha: {{=form.custom.widget.Fecha}}</div>
+            <div class="span3">Donante: {{=form.custom.widget.Donante}}</div>
+            <div class="span3">Procedencia: {{=form.custom.widget.tipoProcedencia}}</div>
+           
+          </div>
+           <div class="row-fluid">
+             {{=form.custom.submit}}
+           </div>
+        </div>
+      {{=form.custom.end}}
+  </div>
+
+{{if session.current_entrada:}}
+
+          <div class="row-fluid">
+            <h5>Líneas:</h5>
+              <div class="well well-small">
+
+
+
+
+
+                <div class="row-fluid">
+                      <div class="span1">Código: 
+                        <input class="integer" id="Alimento_Codigo" name="Codigo" type="text" value={{=codigo_alimento}} style="width:50px">
+                      </div>
+        {{=frmlineas.custom.begin}}
+                      <div class="span3">{{=frmlineas.custom.label.alimento}}:
+                        {{=frmlineas.custom.widget.alimento}}
+                       </div> 
+                        <div class="span1">{{=frmlineas.custom.label.Unidades}}:
+                        {{=frmlineas.custom.widget.Unidades}}
+                       </div>  
+                        <div class="span1">{{=frmlineas.custom.label.PesoUnidad}}:
+                        {{=frmlineas.custom.widget.PesoUnidad}}
+                       </div>
+                        <div class="span2">{{=frmlineas.custom.label.PrecioKg}}:
+                        {{=frmlineas.custom.widget.PrecioKg}}
+                       </div> 
+                </div>
+               <div class="row-fluid">
+                      <div class="span1">{{=frmlineas.custom.label.Caducidad}}:
+                        {{=frmlineas.custom.widget.Caducidad}}
+                       </div> 
+                        <div class="span1">{{=frmlineas.custom.label.Lote}}:
+                        {{=frmlineas.custom.widget.Lote}}
+                       </div>  
+                        <div class="span1">{{=frmlineas.custom.label.estanteria}}:
+                        {{=frmlineas.custom.widget.estanteria}}
+                       </div>
+                        <div class="span3">
+                        {{=frmlineas.custom.submit}} 
+                       </div> 
+               </div>
+               <div class="row-fluid">
+                              
+               </div>        
+        {{=frmlineas.custom.end}}
+
+              </div> <!-- fin del well lineas-->
+
+            <table id="list"></table>
+            <div id="pager"></div>
+
+
+          </div>  
+{{pass}} 
+
+</div>
+
+
+ <style>
+      
+      .ui-pg-input{width:20px;}
+      .ui-pg-selbox{width:50px;padding-top: 0px;}
+    #CabeceraEntrada_Fecha{ width: 80px;}
+    #CabeceraEntrada_Donante{ width: 280px;}
+    #LineaEntrada_Unidades{ width: 80px;}
+    #LineaEntrada_PesoUnidad{ width: 80px;}
+    #LineaEntrada_PrecioKg{ width: 80px;}
+    #LineaEntrada_alimento{ width: 260px;}
+    #LineaEntrada_Caducidad{ width: 80px;}
+    #LineaEntrada_Lote{ width: 80px;}
+    #LineaEntrada_estanteria{ width: 80px;}
+    #LineaEntrada_LineaAlmacen{ width: 80px;}
+    #pager_left{width:10px;}
+    .well {margin-bottom:2px;}
+  </style>
+
+
+<script type="text/javascript">
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }   
+
+    function buscar_alimento() {
+        var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
+        var data= {"codigo":codigo};
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}", 
+              data, function( data, status, xhr ) {
+              if (data['alimento']=='') {
+                jQuery("#LineaEntrada_alimento").val("");
+                jQuery("#Alimento_Codigo").val("");
+              } else {
+                jQuery("#LineaEntrada_alimento").val(data['alimento']);}
+                jQuery("#LineaEntrada_Unidades").focus();
+            });        
+    }   
+
+    function borra_linea(id) {
+      var r = confirm("¿Seguro que quiere borrar esta línea?");
+      if (r==true)
+      {
+            var jsonString={'linea_id':  id };
+            jQuery.post("{{=URL(c='almacen',f='borra_linea')}}", jsonString, {contentType: 'application/json'} )
+                  .success(function(data) {           
+                  jQuery("#list").jqGrid().trigger("reloadGrid");     
+            }); 
+      }
+    }
+
+
+ $(document).ready(function() {
+   // chrome fix.
+   document.onselectstart = function () { return false; };             
+
+    {{if session.NuevaLinea:}}
+    jQuery("#Alimento_Codigo").focus();
+    {{else:}}
+    jQuery("#CabeceraEntrada_Donante").focus();
+    {{pass}}
+    jQuery('#Alimento_Codigo').keyup(function(e){
+        if(e.keyCode == 13)
+        {
+            buscar_alimento();
+        }
+    });
+    jQuery('#Alimento_Codigo').change(function(){
+            buscar_alimento();
+    });
+
+   jQuery('#LineaEntrada_alimento').autocomplete({
+      minLength: 2,
+      source: function( request, response ) {
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_alimentos')}}", 
+              request, function( data, status, xhr ) {
+              response( data );
+            });
+        },
+    select: function( event, ui ) {
+      var jsonString={'alimento':  ui.item.value};
+      jQuery.post("{{=URL(c='almacen',f='set_alimento')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
+            .success(function(data) {
+                if (data =='') {
+                  jQuery("#LineaEntrada_alimento").val("");
+                  jQuery("#Alimento_Codigo").val("");
+                } else {
+                  jQuery("#Alimento_Codigo").val(data);
+                  jQuery("#LineaEntrada_Unidades").focus();
+                }    
+                  //jQuery("#list").jqGrid().trigger("reloadGrid");   
+            });
+
+    }        
+
+    }); // fin de LineaEntrada_alimento autocomplete
+
+   
+  jQuery("#list").jqGrid({
+    url:'{{=URL(r=request,f="call",args=["json","get_lineas_entradas"])}}',
+    data: "{}",
+    datatype: 'json',
+    mtype: 'GET',
+    contentType: "application/json; charset=utf-8",
+    cellEdit: false,
+    cellsubmit:'remote',
+    colNames:['','Alimento','Unidades','PesoUnidad','Caducidad','Lote','Estanteria'],
+
+    colModel :[
+       {name:'action', width:30, sortable:false,align:"center" },
+      {name:'Alimento', index:'Alimento',width:250},
+      {name:'Unidades', index:'Unidades',width:70,align:"center"},
+      {name:'PesoUnidad', index:'Peso/Unidad',width:90,align:"center"},
+      {name:'Caducidad', index:'Caducidad',width:70,align:"center"},
+      {name:'Lote', index:'Lote',width:70,align:"center"},
+      {name:'Estanteria', index:'Estanteria',width:70,align:"center"},
+    ],
+    pager: '#pager',
+    rowNum:10,
+    rowList:[10,20,30],
+    sortname: 'Descripcion',
+    sortorder: 'asc',
+    viewrecords: true,
+    caption: 'Líneas de esta entrada de almacén (Haga doble clic sobre la que desee editar)',
+    altRows:true,
+    height: 'auto',
+    width: 'auto',
+    subGrid : false,
+    gridComplete: function() {
+         var thegrid =jQuery("#list")
+         var ids = thegrid.jqGrid("getDataIDs");
+          for(var i=0;i < ids.length;i++){
+            var cl = ids[i];
+            //be = "<input style='height:22px;width:20px;' type='button' value='Borrar' onclick=\"jQuery('#list').editRow('"+cl+"');\"  />"; 
+            //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
+            be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
+            thegrid.jqGrid('setRowData',ids[i],{action:be});
+          }
+    }, // fin del evento gridComplete
+    ondblClickRow: function (id){
+      
+      window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/{{=session.current_entrada}}?lid=' + id;
+      
+    } // fin del evento dblclick
+
+  });
+
+
+  });
+
+</script>

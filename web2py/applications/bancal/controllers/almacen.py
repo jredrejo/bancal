@@ -76,6 +76,8 @@ def salidas():
 def nueva_entrada():
     session.Entradas = True
     session.NuevaLinea = None
+    frmlineas = None
+    codigo_alimento = None
     if len(request.args) > 0:
         session.current_entrada = request.args[0]
     else:
@@ -128,6 +130,42 @@ def nueva_entrada():
                 nueva_lineaalmacen(request.vars)
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
+    response.files.append(
+        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+
+    return dict(form=form, frmlineas=frmlineas, codigo_alimento=codigo_alimento)
+
+
+@auth.requires_login()
+def nueva_salida():
+    session.Entradas = False
+    session.NuevaLinea = None
+    frmlineas = None
+    codigo_alimento = None    
+    if len(request.args) > 0:
+        session.current_salida = request.args[0]
+    else:
+        session.current_salida = None
+    db.CabeceraSalida.almacen.writable = False
+    db.CabeceraSalida.almacen.readable = False
+    registro = None
+    if session.current_salida:
+        registro = db.CabeceraSalida(session.current_salida)
+        session.NuevaLinea = True
+    form = SQLFORM(db.CabeceraSalida, record=registro,
+                   submit_button='Grabar estos datos', keepvalues=True)
+    if form.accepts(request.vars, session):
+        response.flash = 'Nueva salida grabada'
+        session.current_salida = form.vars.id
+        redirect(URL('nueva_salida', args=[form.vars.id]))
+    elif form.errors:
+        response.flash = 'Error en los datos'
+
+
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
     response.files.append(

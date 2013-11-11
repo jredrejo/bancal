@@ -306,7 +306,7 @@ def get_rows_entradas():
 @auth.requires_login()
 @service.json
 def get_rows_salidas():
-    fields = ['Beneficiario', 'Fecha']
+    fields = ['nada','Beneficiario', 'Fecha']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
@@ -337,7 +337,9 @@ def get_rows_salidas():
         # print db._lastsql
         vals = []
         for f in fields:
-            if f == 'Beneficiario':
+            if f == 'nada':
+                vals.append("")            
+            elif f == 'Beneficiario':
                 # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
                 vals.append(db.CabeceraSalida['Beneficiario'].represent(r(f)))
             else:
@@ -447,6 +449,17 @@ def borra_entrada():
             db(db.LineaEntrada.id == row.id).delete()
         db(db.CabeceraEntrada.id==request.vars.entrada_id).delete()
 
+@auth.requires_login()
+@service.json
+def borra_salida():
+    if 'salida_id' in request.vars:
+        registro = db.CabeceraSalida(request.vars.salida_id)
+        rows = db(db.LineaSalida.cabecera==registro.id).select()
+        for row in rows:        
+            if row.LineaAlmacen > 0:
+                actualiza_lineaalmacen(row.LineaAlmacen,row.Unidades,0)
+            db(db.LineaSalida.id == row.id).delete()
+        db(db.CabeceraSalida.id==request.vars.salida_id).delete()
 
 @service.json
 def set_subfamilia():

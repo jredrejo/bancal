@@ -27,7 +27,7 @@
 
 
   <div class="row-fluid">
-    <h4>Entradas de almacén:</h4>
+    <h4>Salidas de almacén:</h4>
 
    
     <table id="list"></table>
@@ -79,6 +79,17 @@
                 });
      }
 
+    function borra_linea(id) {
+      var r = confirm("¿Seguro que quiere borrar esta salida?");
+      if (r==true)
+      {
+            var jsonString={'salida_id':  id };
+            jQuery.post("{{=URL(c='almacen',f='borra_salida')}}", jsonString, {contentType: 'application/json'} )
+                  .success(function(data) {           
+                  jQuery("#list").jqGrid().trigger("reloadGrid");     
+            }); 
+      }
+    }
 
  $(document).ready(function() {
    // chrome fix.
@@ -137,17 +148,9 @@
     mtype: 'GET',
     contentType: "application/json; charset=utf-8",
     cellEdit: false,
-    cellsubmit:'remote',
-    cellurl: '{{=URL(r=request,f="call",args=["json","save_cell"])}}',
-    complete: function(jsondata, stat) {
-        if (stat == "success") {
-            var thegrid = jQuery("#list")[0];
-            thegrid.addJSONData(JSON.parse(jsondata.responseText).d);
-        }
-    },
-    colNames:['Beneficiario','Fecha'],
+    colNames:[' ','Beneficiario','Fecha'],
     colModel :[
-      
+      {name:'action', width:30, sortable:false,align:"center" },
       {name:'Beneficiario', index:'Beneficiario',width:350},
       {name:'Fecha', index:'Fecha',width:180, align:"center", formatter:'date',formatoptions:{
        srcformat: 'Y-m-d', newformat: 'd/m/Y'}},
@@ -162,11 +165,29 @@
     altRows:true,
     height: 'auto',
     width: 'auto',
-  subGrid : true,
-  subGridUrl: 'get_lineas_entradas',
+    subGrid : true,
+    subGridUrl: 'get_lineas_entradas',
     subGridModel: [{ name  : ['Alimento','Unidades','Peso/Unidad','Caducidad','Lote'], 
-                    width : [200,70,70,70,70] } ]
- 
+                    width : [200,70,70,70,70] } ],
+    loadComplete: function(data){
+         var grid =jQuery("#list")
+         var ids = grid.jqGrid("getDataIDs");
+         if(ids && ids.length > 0)
+            grid.jqGrid("setSelection", ids[0]);       
+    }, //fin del evento loadcomplete
+    ondblClickRow: function (id){
+
+      window.location.href='{{=URL(r=request,f="nueva_salida")}}' + '/' + id;
+    }, // fin del evento dblclick
+    gridComplete: function() {
+         var thegrid =jQuery("#list")
+         var ids = thegrid.jqGrid("getDataIDs");
+          for(var i=0;i < ids.length;i++){
+            var cl = ids[i];
+            be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
+            thegrid.jqGrid('setRowData',ids[i],{action:be});
+          }
+    }, // fin del evento gridComplete  
   });
 
 

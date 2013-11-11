@@ -147,25 +147,60 @@ def nueva_salida():
     frmlineas = None
     codigo_alimento = None    
     if len(request.args) > 0:
-        session.current_salida = request.args[0]
+        # uso session.current_entrada en lugar de session.current_salida para
+        # que valga la misma función de  get_lineas_entradas en entradas y
+        # salidas
+        session.current_entrada = request.args[0]
     else:
-        session.current_salida = None
+        session.current_entrada = None
     db.CabeceraSalida.almacen.writable = False
     db.CabeceraSalida.almacen.readable = False
     registro = None
-    if session.current_salida:
-        registro = db.CabeceraSalida(session.current_salida)
+    if session.current_entrada:
+        registro = db.CabeceraSalida(session.current_entrada)
         session.NuevaLinea = True
     form = SQLFORM(db.CabeceraSalida, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
     if form.accepts(request.vars, session):
         response.flash = 'Nueva salida grabada'
-        session.current_salida = form.vars.id
+        session.current_entrada = form.vars.id
         redirect(URL('nueva_salida', args=[form.vars.id]))
     elif form.errors:
         response.flash = 'Error en los datos'
 
-
+    if session.current_entrada:
+        valor_antiguo_uds = None
+        if 'lid' in request.vars:
+            registro_linea = db.LineaSalida(request.vars.lid)
+            registro_alimento = db.Alimento(registro_linea.alimento)
+            codigo_alimento = registro_alimento.Codigo
+            session.AlmacenAlimento = registro_alimento.id
+            session.NuevaLinea = True
+            if request.vars.Unidades:
+                if float(request.vars.Unidades) != registro_linea.Unidades:
+                    valor_antiguo_uds = registro_linea.Unidades
+        else:
+            registro_linea = None
+            codigo_alimento = XML('""')
+        db.LineaSalida.cabecera.default = session.current_entrada
+        frmlineas = SQLFORM(
+            db.LineaSalida, registro_linea, submit_button='Guardar esta línea')
+        if 'lid' in request.vars:
+            frmlineas.vars.alimento = registro_alimento.Descripcion
+        if "alimento" in request.vars:
+            if session.AlmacenAlimento:
+                request.vars.alimento = session.AlmacenAlimento
+        # session.AlmacenAlimento
+        if frmlineas.accepts(request.vars, session):
+            # PENDIENTE: METER ESTOS DATOS EN LAS LINEASALMACEN
+            session.NuevaLinea = True
+            if valor_antiguo_uds:
+                actualiza_lineaalmacen(
+                    registro_linea.LineaAlmacen, valor_antiguo_uds,float(request.vars.Unidades))
+            else:
+                nueva_lineaalmacen(request.vars)
+        elif frmlineas.errors:
+            response.flash = 'Error en los datos'
     response.files.append(
         URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
     response.files.append(
@@ -470,10 +505,16 @@ def incidencias():
 @service.json
 def borra_linea():
     if 'linea_id' in request.vars:
-        registro = db.LineaEntrada(request.vars.linea_id)
-        if registro.LineaAlmacen > 0:
-            actualiza_lineaalmacen(registro.LineaAlmacen, 0, registro.Unidades)
-        db(db.LineaEntrada.id == request.vars.linea_id).delete()
+        if session.Entradas:
+            registro = db.LineaEntrada(request.vars.linea_id)
+            if registro.LineaAlmacen > 0:
+                actualiza_lineaalmacen(registro.LineaAlmacen, 0, registro.Unidades)
+            db(db.LineaEntrada.id == request.vars.linea_id).delete()
+        else:
+            registro = db.LineaSalida(request.vars.linea_id)
+            if registro.LineaAlmacen > 0:
+                actualiza_lineaalmacen(registro.LineaAlmacen, registro.Unidades,0)
+            db(db.LineaSalida.id == request.vars.linea_id).delete()            
 
 @auth.requires_login()
 @service.json

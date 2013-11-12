@@ -59,7 +59,7 @@
                         {{=frmlineas.custom.widget.Lote}}
                        </div>  
                         <div class="span1">{{=frmlineas.custom.label.estanteria}}:
-                        {{=frmlineas.custom.widget.estanteria}}
+                        {{=frmlineas.custom.widget.estanteria}} {{=frmlineas.custom.widget.LineaAlmacen}}
                        </div>
                         <div class="span3">
                         {{=frmlineas.custom.submit}} 
@@ -69,7 +69,10 @@
                               
                </div>        
         {{=frmlineas.custom.end}}
-
+        <span id="contenedor_almacen" style="display: none;">
+            <table id="almacen" ></table>
+            <div id="pager2"></div>
+        </span>
               </div> <!-- fin del well lineas-->
 
             <table id="list"></table>
@@ -95,7 +98,7 @@
     #LineaSalida_Caducidad{ width: 80px;}
     #LineaSalida_Lote{ width: 80px;}
     #LineaSalida_estanteria{ width: 80px;}
-    #LineaSalida_LineaAlmacen{ width: 80px;}
+    #LineaSalida_LineaAlmacen{ display: none;}
     #pager_left{width:10px;}
     .well {margin-bottom:2px;}
   </style>
@@ -108,6 +111,7 @@
     }   
 
     function buscar_alimento() {
+        jQuery("#contenedor_almacen").hide();
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
             jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}", 
@@ -116,8 +120,11 @@
                 jQuery("#LineaSalida_alimento").val("");
                 jQuery("#Alimento_Codigo").val("");
               } else {
-                jQuery("#LineaSalida_alimento").val(data['alimento']);}
+                jQuery("#LineaSalida_alimento").val(data['alimento']);
                 jQuery("#LineaSalida_Unidades").focus();
+
+                jQuery("#contenedor_almacen").show();}
+                jQuery("#almacen").jqGrid().trigger("reloadGrid");
             });        
     }   
 
@@ -163,14 +170,18 @@
         },
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
+      jQuery("#contenedor_almacen").hide();
       jQuery.post("{{=URL(c='almacen',f='set_alimento')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
                 if (data =='') {
                   jQuery("#LineaSalida_alimento").val("");
                   jQuery("#Alimento_Codigo").val("");
+                  
                 } else {
+                  jQuery("#contenedor_almacen").show();
                   jQuery("#Alimento_Codigo").val(data);
                   jQuery("#LineaSalida_Unidades").focus();
+                  
                 }    
                   //jQuery("#list").jqGrid().trigger("reloadGrid");   
             });
@@ -227,9 +238,76 @@
       
     } // fin del evento dblclick
 
-  });
+  }); //fin de la definición de jqgrid list
+
+  jQuery("#list").jqGrid().jqGrid('bindKeys',
+      {
+        onEnter: function(id) {
+            window.location.href='{{=URL(r=request,f="nueva_salida")}}' + '/{{=session.current_entrada}}?lid=' + id;
+        }
+      }
+  ); //fin de bindKeys para list
 
 
-  });
+
+
+  jQuery("#almacen").jqGrid({
+    url:'{{=URL(r=request,f="call",args=["json","get_lineas_almacen"])}}',
+    data: "{}",
+    datatype: 'json',
+    mtype: 'GET',
+    contentType: "application/json; charset=utf-8",
+    cellEdit: false,
+    cellsubmit:'remote',
+    colNames:['Alimento','Stock','PesoUnidad','Caducidad','Lote','Estanteria','Palets'],
+
+
+    colModel :[
+      {name:'Alimento', index:'Alimento',width:250},
+      {name:'Stock', index:'Unidades',width:70,align:"center"},
+      {name:'PesoUnidad', index:'Peso/Unidad',width:90,align:"center"},
+      {name:'Caducidad', index:'Caducidad',width:70,align:"center"},
+      {name:'Lote', index:'Lote',width:70,align:"center"},
+      {name:'Estanteria', index:'Estanteria',width:70,align:"center"},
+      {name:'Palets', index:'Estanteria',width:70,align:"center"},
+    ],
+    pager: '#pager2',
+    rowNum:15,
+    rowList:[15,30,60],
+    sortname: 'Caducidad',
+    sortorder: 'asc',
+    viewrecords: true,
+    caption: 'Líneas de almacén para este alimento (haga doble clic para seleccionar una)',
+    altRows:true,
+    height: 'auto',
+    width: 'auto',
+    subGrid : false,
+    loadComplete: function(data){
+         var grid =jQuery("#almacen")
+         var ids = grid.jqGrid("getDataIDs");
+         if(ids && ids.length > 0)
+            grid.jqGrid("setSelection", ids[0]);       
+    }, //fin del evento loadcomplete
+   onSelectRow: function(id){ 
+      jQuery("#LineaSalida_LineaAlmacen").val(id);
+   }, // fin del evento onselectrow
+    ondblClickRow: function (id){
+      
+ 
+      
+    } // fin del evento dblclick
+
+  }); //fin de la definición de jqgrid
+
+  jQuery("#list").jqGrid().jqGrid('bindKeys',
+      {
+        onEnter: function(id) {
+            
+        }
+      }
+  ); //fin de bindKeys
+
+
+  }); //fin de evento document.ready
 
 </script>

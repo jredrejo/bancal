@@ -188,8 +188,15 @@
             thegrid.jqGrid('setRowData',ids[i],{action:be});
           }
     }, // fin del evento gridComplete  
-  });
+  }); 
 
+  jQuery("#list").jqGrid().jqGrid('bindKeys',
+      {
+        onEnter: function(id) {
+            window.location.href='{{=URL(r=request,f="nueva_salida")}}' + '/' + id;
+        }
+      }
+  ); //fin de bindKeys
 
   });
 

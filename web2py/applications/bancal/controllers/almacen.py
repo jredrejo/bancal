@@ -4,7 +4,7 @@ from datetime import datetime
 if 0:
     from gluon import *
 
-
+from gluon.storage import Storage
 @auth.requires_login()
 def index():
     redirect(URL('entradas'))
@@ -113,7 +113,7 @@ def nueva_entrada():
             codigo_alimento = XML('""')
         db.LineaEntrada.cabecera.default = session.current_entrada
         frmlineas = SQLFORM(
-            db.LineaEntrada, registro_linea, submit_button='Guardar esta línea')
+            db.LineaEntrada, registro_linea, submit_button='Guardar esta línea',keepvalues=False)
         if 'lid' in request.vars:
             frmlineas.vars.alimento = registro_alimento.Descripcion
         if "alimento" in request.vars:
@@ -121,13 +121,13 @@ def nueva_entrada():
                 request.vars.alimento = session.AlmacenAlimento
         # session.AlmacenAlimento
         if frmlineas.accepts(request.vars, session):
-            # PENDIENTE: METER ESTOS DATOS EN LAS LINEASALMACEN
             session.NuevaLinea = True
             if valor_antiguo_uds:
                 actualiza_lineaalmacen(
                     registro_linea.LineaAlmacen, float(request.vars.Unidades), valor_antiguo_uds)
             else:
                 nueva_lineaalmacen(request.vars)
+            redirect(URL(f="nueva_entrada",args=session.current_entrada))
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
     response.files.append(
@@ -155,6 +155,7 @@ def nueva_salida():
         session.current_entrada = None
     db.CabeceraSalida.almacen.writable = False
     db.CabeceraSalida.almacen.readable = False
+
     registro = None
     if session.current_entrada:
         registro = db.CabeceraSalida(session.current_entrada)
@@ -183,6 +184,7 @@ def nueva_salida():
             registro_linea = None
             codigo_alimento = XML('""')
         db.LineaSalida.cabecera.default = session.current_entrada
+        db.LineaSalida.LineaAlmacen.writable=True
         frmlineas = SQLFORM(
             db.LineaSalida, registro_linea, submit_button='Guardar esta línea')
         if 'lid' in request.vars:
@@ -190,15 +192,16 @@ def nueva_salida():
         if "alimento" in request.vars:
             if session.AlmacenAlimento:
                 request.vars.alimento = session.AlmacenAlimento
+
         # session.AlmacenAlimento
         if frmlineas.accepts(request.vars, session):
-            # PENDIENTE: METER ESTOS DATOS EN LAS LINEASALMACEN
             session.NuevaLinea = True
             if valor_antiguo_uds:
                 actualiza_lineaalmacen(
                     registro_linea.LineaAlmacen, valor_antiguo_uds,float(request.vars.Unidades))
             else:
                 nueva_lineaalmacen(request.vars)
+            redirect(URL(f="nueva_salida",args=session.current_entrada))                
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
     response.files.append(
@@ -494,6 +497,44 @@ def get_lineas_entradas():
         return data
     else:
         return response.json(dict(rows=rows))
+
+
+@auth.requires_login()
+@service.json
+def get_lineas_almacen():
+    fields = ['alimento','Stock','PesoUnidad','Caducidad','Lote','estanteria','Palets']
+    rows = []
+    limitby = None
+    total=0
+    pages=0
+    page = int(request.vars.page)  # the page number
+    pagesize = int(request.vars.rows)
+    limitby = (page * pagesize - pagesize, page * pagesize)    
+    cabecera = db(
+        db.CabeceraAlmacen.alimento == session.AlmacenAlimento).select().first()
+    if cabecera:
+        query = (db.LineaAlmacen.cabecera == cabecera.id) & (db.LineaAlmacen.Stock >0)
+        mialimento=db.CabeceraAlmacen['alimento'].represent(cabecera.alimento)
+        for r in db(query).select(limitby=limitby):
+            vals = []
+            for f in fields:
+                if f == 'Caducidad':
+                    if r(f):
+                        k = r(f).strftime('%d/%m/%Y')
+                    else:
+                        k=""
+                    vals.append(k)
+                elif f == 'alimento':
+                    vals.append(mialimento)
+                elif f == 'Lote':
+                    vals.append(r[f] or '')
+                else:
+                    vals.append(str(r[f]))
+            rows.append(dict(id=r.id, cell=vals))    
+            total = db(query).count()
+            pages = math.ceil(1.0 * total / pagesize)
+    data = dict(records=total, total=pages, page=page, rows=rows)
+    return data    
 
 
 @auth.requires_login()

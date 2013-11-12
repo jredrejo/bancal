@@ -228,9 +228,16 @@
       
     } // fin del evento dblclick
 
-  });
+  }); //fin de la definición de jqgrid
 
+  jQuery("#list").jqGrid().jqGrid('bindKeys',
+      {
+        onEnter: function(id) {
+                  window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/{{=session.current_entrada}}?lid=' + id;
+        }
+      }
+  ); //fin de bindKeys
 
-  });
+  }); //fin de evento document.ready
 
 </script>

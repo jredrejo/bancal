@@ -209,9 +209,16 @@
           thegrid.jqGrid('setRowData',ids[i],{action:be});
         }
   }, // fin del evento gridComplete  
-  });
- 
+  }); //fin de la definición de jqgrid
 
-  });
+  jQuery("#list").jqGrid().jqGrid('bindKeys',
+      {
+        onEnter: function(id) {
+            window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/' + id;
+        }
+      }
+  ); //fin de bindKeys
+
+  }); //fin de evento document.ready
 
 </script>

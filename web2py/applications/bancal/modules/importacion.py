@@ -35,6 +35,15 @@ def rellena_paises():
         listado.append(datos_pais)
     current.db.pais.bulk_insert(listado)
 
+def rellena_alimentos2():
+    import applications.bancal.modules.alimentos
+
+    listado = []
+    for alimento in applications.bancal.modules.alimentos.Alimentos:
+        datos_alimento = {'Codigo': alimento[0],'Descripcion': alimento[1]}
+        listado.append(datos_alimento)
+    current.db.Alimento.bulk_insert(listado)
+
 
 def devuelve_datos(cadena,archivo="SigabaAlimentos.sqlite"):
     import sqlite3

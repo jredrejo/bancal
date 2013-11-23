@@ -8,14 +8,13 @@
   {{=form.custom.begin}}
 
     <div class="row-fluid">
-      <div class="span3">Familia: {{=form.custom.widget.Familia}}</div>
-      <div class="span3" id="subfamilias">Subfamilia: {{=form.custom.widget.SubFamilia}}</div>
+      <div class="span1">Código: {{=form.custom.widget.Codigo}}</div>
       <div class="span3">Alimento: {{=form.custom.widget.Descripcion}}</div>
   </div>
   {{=form.custom.end}}
 
   <div class="row-fluid">
-    <h4>Líneas de almacén:</h4>
+    <h4>Stock disponible:</h4>
 
    
     <table id="list"></table>
@@ -32,38 +31,50 @@
       .ui-pg-input{width:30px;}
       .ui-pg-selbox{width:60px;padding-top: 0px;}
       #pager_left{width:10px;}
-
+      #Alimento_Codigo{ width: 60px;}
   </style>
 
 
 
 <script type="text/javascript">
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }   
+    
+    function buscar_alimento() {
+        var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
+        var data= {"codigo":codigo};
+            jQuery.getJSON( 'get_codigo', 
+              data, function( data, status, xhr ) {
+              if (data['alimento']=='') {
+                jQuery("#Alimento_Descripcion").val("");
+                jQuery("#Alimento_Codigo").val("");
+                jQuery("#list").jqGrid().trigger("reloadGrid");
+              } else {
+                jQuery("#Alimento_Descripcion").val(data['alimento']);}
+              jQuery("#list").jqGrid().trigger("reloadGrid");
+            });        
+        
+    }   
 
  $(document).ready(function() {
    // chrome fix.
    document.onselectstart = function () { return false; };             
 
-   jQuery("#Alimento_Familia").focus();
-   
-   jQuery("#Alimento_Familia").change(function() {
-      jQuery("#Alimento_SubFamilia").empty();
-      ajax("get_subfamilias",["Familia"],"subfamilias");
-      jQuery("#list").jqGrid().trigger("reloadGrid");
-   });
-    
-   jQuery("#subfamilias").on('change',"#Alimento_SubFamilia",function() {
-        var jsonString={'subfamilia':  jQuery("#Alimento_SubFamilia").val() };
-        jQuery.post('set_subfamilia', jsonString, {contentType: 'application/json'} )
-              .success(function(data) {           
-                    jQuery("#list").jqGrid().trigger("reloadGrid");     
-              });
-        
-      });
-
-
-
-
    //var cachealimentos={}
+  jQuery("#Alimento_Codigo").focus();
+
+    jQuery('#Alimento_Codigo').keyup(function(e){
+        if(e.keyCode == 13)
+        {
+            buscar_alimento();
+        }
+    });
+    jQuery('#Alimento_Codigo').change(function(){
+            buscar_alimento();
+    });
+
 
    jQuery('#Alimento_Descripcion').autocomplete({
       minLength: 2,
@@ -73,7 +84,7 @@
               response( cachealimentos[ term ] );
               return;
             }*/
-            jQuery.getJSON( 'get_alimentos?subf='+ jQuery("#Alimento_SubFamilia").val() + '&fam=' + jQuery("#Alimento_Familia").val(), 
+            jQuery.getJSON( 'get_alimentos', 
               request, function( data, status, xhr ) {
               //cachealimentos[ term ] = data;
               response( data );
@@ -92,8 +103,6 @@
 
 
 
-
-
   jQuery("#list").jqGrid({
     url:'{{=URL(r=request,f="call",args=["json","get_rows"])}}',
     data: "{}",
@@ -101,20 +110,16 @@
     mtype: 'GET',
     contentType: "application/json; charset=utf-8",
     cellEdit: true,
-    cellsubmit:'remote',
-    cellurl: '{{=URL(r=request,f="call",args=["json","save_cell"])}}',
     complete: function(jsondata, stat) {
         if (stat == "success") {
             var thegrid = jQuery("#list")[0];
             thegrid.addJSONData(JSON.parse(jsondata.responseText).d);
         }
     },
-    colNames:['Nombre','Familia', 'Subfamilia','Conservación','Stock','Unidades'],
+    colNames:['Código','Nombre','Conservación','Stock','Unidades'],
     colModel :[
-      
-      {name:'Nombre', index:'Descripcion',width:230},
-      {name:'Familia', index:'Familia',width:170},
-      {name:'SubFamilia', index:'SubFamilia',width:170},
+      {name:'Código', index:'Codigo',width:80},
+      {name:'Nombre', index:'Descripcion',width:250},
       {name:'Conservación', index:'Conservacion',width:90,align:"center"},
       {name:'Stock', index:'Stock',width:60,align:"center"},
       {name:'Unidades', index:'Unidades',width:60,align:"center"},
@@ -125,11 +130,11 @@
     sortname: 'Descripcion',
     sortorder: 'asc',
     viewrecords: true,
-    caption: 'Haga clic en el + para ver las líneas de almacén',
+    caption: '',
     altRows:true,
     height: 'auto',
     width: 'auto',
-  subGrid : true,
+  subGrid : false,
   subGridUrl: 'get_lineas',
     subGridModel: [{ name  : ['Stock','Fecha caducidad','Peso/Unidad','Stock Inicial','Lote'], 
                     width : [55,80,80,80,80,80] } ]

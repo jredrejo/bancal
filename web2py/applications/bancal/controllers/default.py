@@ -20,7 +20,7 @@ def index():
     """
     if not session.auth:
         response.title = None
-    response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
+    #response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
 
     # Temporal, para importar datos de bb.dd. anterior ###
     import importacion
@@ -39,7 +39,7 @@ def index():
     #importacion.rellena_lineasentradas()
     #importacion.rellena_cabecerasalidas()
     #importacion.rellena_lineasalidas()
-
+    #importacion.rellena_alimentos2()
     return dict()
 
 

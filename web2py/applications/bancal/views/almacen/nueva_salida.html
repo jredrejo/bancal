@@ -47,20 +47,26 @@
                         <div class="span1">{{=frmlineas.custom.label.PesoUnidad}}:
                         {{=frmlineas.custom.widget.PesoUnidad}}
                        </div>
-                        <div class="span2">{{=frmlineas.custom.label.PrecioKg}}:
+                        <div class="span2"  style="display:none;">{{=frmlineas.custom.label.PrecioKg}}:
                         {{=frmlineas.custom.widget.PrecioKg}}
                        </div> 
+                         <div class="span1">{{=frmlineas.custom.label.Caducidad}}:
+                        {{=frmlineas.custom.widget.Caducidad}}
+                       </div>
                 </div>
                <div class="row-fluid">
-                      <div class="span1">{{=frmlineas.custom.label.Caducidad}}:
-                        {{=frmlineas.custom.widget.Caducidad}}
-                       </div> 
-                        <div class="span1">{{=frmlineas.custom.label.Lote}}:
+ 
+                        <div class="span1" style="display:none;">{{=frmlineas.custom.label.Lote}}:
                         {{=frmlineas.custom.widget.Lote}}
                        </div>  
-                        <div class="span1">{{=frmlineas.custom.label.estanteria}}:
+                        <div class="span1"  style="display:none;">{{=frmlineas.custom.label.estanteria}}:
                         {{=frmlineas.custom.widget.estanteria}} {{=frmlineas.custom.widget.LineaAlmacen}}
                        </div>
+
+                        <div class="span2" style="display:none;" id="stockalimento">Stock Disponible:
+                        <strong><span id="valorstock"></span></strong>
+                       </div>
+
                         <div class="span3">
                         {{=frmlineas.custom.submit}} 
                        </div> 
@@ -105,13 +111,15 @@
 
 
 <script type="text/javascript">
+  var stockdisponible=0;
     function removeSpaces(string) {
     // quita los espacios y todos los caraceres que no son un número
          return string.split(' ').join('').replace(/[^0-9]/g, ''); 
     }   
 
     function buscar_alimento() {
-        jQuery("#contenedor_almacen").hide();
+        //jQuery("#contenedor_almacen").hide();
+        jQuery("#stockalimento").hide();
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
             jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}", 
@@ -123,8 +131,12 @@
                 jQuery("#LineaSalida_alimento").val(data['alimento']);
                 jQuery("#LineaSalida_Unidades").focus();
 
-                jQuery("#contenedor_almacen").show();}
-                jQuery("#almacen").jqGrid().trigger("reloadGrid");
+                //jQuery("#contenedor_almacen").show();}
+                //jQuery("#almacen").jqGrid().trigger("reloadGrid");
+                jQuery("#stockalimento").show();
+                stockdisponible=data['stock']
+                jQuery("#valorstock").text(data['stock'].toString());}
+
             });        
     }   
 
@@ -150,6 +162,16 @@
     {{else:}}
     jQuery("#CabeceraSalida_Beneficiario").focus();
     {{pass}}
+
+    jQuery("#LineaSalida_Unidades").focusout(function() {
+      current_value =  parseInt($(this).val());
+      if (current_value>stockdisponible) 
+        $(this).val(stockdisponible.toString());
+
+    });
+
+
+
     jQuery('#Alimento_Codigo').keyup(function(e){
         if(e.keyCode == 13)
         {
@@ -170,16 +192,20 @@
         },
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
-      jQuery("#contenedor_almacen").hide();
-      jQuery.post("{{=URL(c='almacen',f='set_alimento')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
+      //jQuery("#contenedor_almacen").hide();
+      jQuery.post("{{=URL(c='almacen',f='set_alimento.json')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
-                if (data =='') {
+                jQuery("#stockalimento").hide();
+                if (data['stock'] ==0) {
                   jQuery("#LineaSalida_alimento").val("");
                   jQuery("#Alimento_Codigo").val("");
                   
                 } else {
-                  jQuery("#contenedor_almacen").show();
-                  jQuery("#Alimento_Codigo").val(data);
+                 // jQuery("#contenedor_almacen").show();
+                  jQuery("#Alimento_Codigo").val(data["codigo"]);
+                  jQuery("#stockalimento").show();
+                  stockdisponible=data['stock']
+                  jQuery("#valorstock").text(data['stock'].toString());                  
                   jQuery("#LineaSalida_Unidades").focus();
                   
                 }    
@@ -199,7 +225,7 @@
     contentType: "application/json; charset=utf-8",
     cellEdit: false,
     cellsubmit:'remote',
-    colNames:['','Alimento','Unidades','PesoUnidad','Caducidad','Lote','Estanteria'],
+    colNames:['','Alimento','Unidades','PesoUnidad','Caducidad'],
 
     colModel :[
        {name:'action', width:30, sortable:false,align:"center" },
@@ -207,8 +233,6 @@
       {name:'Unidades', index:'Unidades',width:70,align:"center"},
       {name:'PesoUnidad', index:'Peso/Unidad',width:90,align:"center"},
       {name:'Caducidad', index:'Caducidad',width:70,align:"center"},
-      {name:'Lote', index:'Lote',width:70,align:"center"},
-      {name:'Estanteria', index:'Estanteria',width:70,align:"center"},
     ],
     pager: '#pager',
     rowNum:10,
@@ -230,7 +254,8 @@
             //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
             be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
             thegrid.jqGrid('setRowData',ids[i],{action:be});
-          }
+          };
+
     }, // fin del evento gridComplete
     ondblClickRow: function (id){
       
@@ -286,7 +311,13 @@
          var grid =jQuery("#almacen")
          var ids = grid.jqGrid("getDataIDs");
          if(ids && ids.length > 0)
-            grid.jqGrid("setSelection", ids[0]);       
+            if (ids[0]=="404")
+               jQuery("#contenedor_almacen").hide();
+            else
+              grid.jqGrid("setSelection", ids[0]); 
+         else
+            jQuery("#contenedor_almacen").hide();
+   
     }, //fin del evento loadcomplete
    onSelectRow: function(id){ 
       jQuery("#LineaSalida_LineaAlmacen").val(id);

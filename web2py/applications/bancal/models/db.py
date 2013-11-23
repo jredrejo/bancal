@@ -70,21 +70,9 @@ auth.settings.reset_password_requires_verification = True
 #
 
 
-db.define_table('Familia',
-                Field('Descripcion', label='Descripción'), format='%(Descripcion)s'
-                )
-
-db.define_table('SubFamilia',
-                Field('Descripcion', label='Descripción'),
-                Field('Familia', db.Familia),
-                format='%(Descripcion)s'
-                )
-
 db.define_table('Alimento',
                 Field('Codigo', 'integer', label='Código'),
                 Field('Descripcion', label='Descripción'),
-                Field('Familia', db.Familia),
-                Field('SubFamilia', db.SubFamilia),
                 Field('Conservacion', label='Conservación', default=T(
                     'Calor')),
                 Field('Unidades', default='Kg.'),
@@ -314,11 +302,13 @@ db.define_table('Beneficiario',
                 Field('movil', label='Móvil'),
                 Field('email', label='Correo electrónico'),
                 Field('contacto', label='Persona contacto'),
+                Field('FAGA', 'boolean', default=False),
+                Field('beneficiarios',"integer",label="Nº Beneficiarios", default=100),
                 Field(
                     'tipobeneficiario', label='Tipo beneficiario', default="Banco Alimentos"),
-                Field(
-                    'gruporecogida', label='Grupo recogida', default="SEGUNDO DÍA"),
-                Field('FAGA', 'boolean', default=False),
+                #Field(
+                #    'gruporecogida', label='Grupo recogida', default="SEGUNDO DÍA"),
+                
 
 
                 format=lambda r: str(r.name) + ('' if not r.apellido1 else ' ' + r.apellido1) + (
@@ -331,7 +321,7 @@ db.Beneficiario.email.requires = IS_EMPTY_OR(
     IS_EMAIL(error_message=T('Invalid email!')))
 db.Beneficiario.tipobeneficiario.requires = IS_EMPTY_OR(
     IS_IN_SET(tipo_beneficiario))
-db.Beneficiario.gruporecogida.requires = IS_EMPTY_OR(IS_IN_SET(grupo_recogida))
+#db.Beneficiario.gruporecogida.requires = IS_EMPTY_OR(IS_IN_SET(grupo_recogida))
 db.Beneficiario.provincia.widget = ajax_autocomplete
 db.Beneficiario.poblacion.widget = ajax_autocomplete
 db.Beneficiario.movil.represent = lambda value, row: XML(
@@ -375,10 +365,8 @@ db.define_table('LineaAlmacen',
                 Field('Palets', 'integer', default=0)
                 )
 
-tipo_procedencia = (
-    "AYUDAS PÚBLICAS", "DECOMISOS", "DONACIONES", "EXCEDENTES DE PRODUCCIÓN",
-    "INVENTARIO", "MERMAS", "OPERACIÓN KILO", "OTROS BANCOS", "REGULARIZACIÓN DE STOCK",
-    "UNION EUROPEA")
+tipo_procedencia = ("COLECTAS", "DISTRIBUCIÓN",
+                    "ESTADO", "INDUSTRIA", "OTROS BANCOS", "UNIÓN EUROPEA")
 
 db.define_table('CabeceraEntrada',
                 Field('almacen', db.Almacen, label='Almacén', default=1),

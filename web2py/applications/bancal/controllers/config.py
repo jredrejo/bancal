@@ -9,10 +9,11 @@ def alimentos():
     search_text = request.get_vars.search_text
     query = search_query(db.Alimento.id, search_text, [
                          db.Alimento.Descripcion])
-
+    
+    query = query & (db.Alimento.Descripcion!=None)
     grid = SQLFORM.grid(
-        query, ui=ui, search_widget=search_form, editable=False,
-        deletable=False, create=False, details=False, maxtextlength=40, orderby=db.Alimento.Codigo)
+        query, ui=ui, search_widget=search_form, editable=True, paginate=30, csv=False,
+        deletable=False, create=True, details=False, maxtextlength=65, orderby=db.Alimento.Codigo)
 
     # grid = SQLFORM.smartgrid(db.Alimento,editable=False, deletable=False, create=False,details=False,maxtextlength=40)
     # grid = SQLFORM.grid(db.Alimento)

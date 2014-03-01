@@ -76,7 +76,7 @@
 
 </div>
 
-
+Total Kg. en esta entrada:
  <style>
       
       .ui-pg-input{width:20px;}
@@ -149,8 +149,18 @@
     });
 
     jQuery('#LineaEntrada_Unidades').focus(function(){
+            if (jQuery('#LineaEntrada_Unidades').val()=="1.00")
+              jQuery('#LineaEntrada_Unidades').val("");
+            else
             $(this).select();
+            
     });
+
+    jQuery('#LineaEntrada_Unidades').mouseup(function e() {
+      $(this).select();
+     e.preventDefault();
+      });
+
 
    jQuery('#LineaEntrada_alimento').autocomplete({
       minLength: 2,
@@ -169,7 +179,9 @@
                   jQuery("#Alimento_Codigo").val("");
                 } else {
                   jQuery("#Alimento_Codigo").val(data);
+                  jQuery.sleep(500);
                   jQuery("#LineaEntrada_Unidades").focus();
+                  
                 }    
                   //jQuery("#list").jqGrid().trigger("reloadGrid");   
             });
@@ -192,7 +204,7 @@
     colModel :[
        {name:'action', width:30, sortable:false,align:"center" },
       {name:'Alimento', index:'Alimento',width:250},
-      {name:'Unidades', index:'Unidades',width:70,align:"center"},
+      {name:'Unidades', index:'Unidades',width:70,align:"center",summaryType:'sum'},
       {name:'PesoUnidad', index:'Peso/Unidad',width:90,align:"center"},
       {name:'Caducidad', index:'Caducidad',width:70,align:"center"},
 
@@ -208,6 +220,7 @@
     height: 'auto',
     width: 'auto',
     subGrid : false,
+    footerrow: true,
     gridComplete: function() {
          var thegrid =jQuery("#list")
          var ids = thegrid.jqGrid("getDataIDs");
@@ -217,6 +230,7 @@
             //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
             be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
             thegrid.jqGrid('setRowData',ids[i],{action:be});
+            thegrid.jqGrid('footerData', 'set', {'Alimento':'TOTALES:', 'Unidades': thegrid.getGridParam('userData') ['qty_totales'] });
           }
     }, // fin del evento gridComplete
     ondblClickRow: function (id){
@@ -224,6 +238,10 @@
       window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/{{=session.current_entrada}}?lid=' + id;
       
     } // fin del evento dblclick
+
+ 
+
+
 
   }); //fin de la definición de jqgrid
 

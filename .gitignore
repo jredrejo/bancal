@@ -1,6 +1,11 @@
 web2py/cache.*
 *.pyc
 *.sqlite
+*.exe
+*.bak
+*.zip
+Data*
+Sigaba*
 127.0.0.1*
 web2py/cron.master
 web2py/httpserver.*

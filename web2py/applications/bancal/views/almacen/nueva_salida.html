@@ -245,6 +245,7 @@
     height: 'auto',
     width: 'auto',
     subGrid : false,
+    footerrow: true,
     gridComplete: function() {
          var thegrid =jQuery("#list")
          var ids = thegrid.jqGrid("getDataIDs");
@@ -254,6 +255,7 @@
             //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
             be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
             thegrid.jqGrid('setRowData',ids[i],{action:be});
+            thegrid.jqGrid('footerData', 'set', {'Alimento':'TOTALES:', 'Unidades': thegrid.getGridParam('userData') ['qty_totales'] });
           };
 
     }, // fin del evento gridComplete

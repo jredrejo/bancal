@@ -523,6 +523,7 @@ def get_lineas_entradas():
     rows = []
     EnDetalle = False
     limitby = None
+
     if 'id' in request.vars:
         cabecera_id = request.vars.id
     elif "current_entrada" in session.keys():
@@ -536,8 +537,14 @@ def get_lineas_entradas():
 
     if session.Entradas:
         query = (db.LineaEntrada.cabecera == cabecera_id)
+        suma=db.LineaEntrada.Unidades.sum()
     else:
         query = (db.LineaSalida.cabecera == cabecera_id)
+        suma=db.LineaSalida.Unidades.sum()
+        
+    totales = db(query).select(suma)
+    qty_totales=totales.first()[suma]
+    
     for r in db(query).select(limitby=limitby):
         vals = []
         for f in fields:
@@ -554,11 +561,11 @@ def get_lineas_entradas():
             else:
                 vals.append(str(r[f]))
         rows.append(dict(id=r.id, cell=vals))
-
+    #import ipdb;ipdb.set_trace()
     if EnDetalle:
         total = db(query).count()
         pages = math.ceil(1.0 * total / pagesize)
-        data = dict(records=total, total=pages, page=page, rows=rows)
+        data = dict(records=total, total=pages, page=page, rows=rows,userdata={'qty_totales':qty_totales})
         return data
     else:
         return response.json(dict(rows=rows))

@@ -170,7 +170,17 @@
 
     });
 
+    jQuery('#LineaSalida_Unidades').focus(function(){
+            if (jQuery('#LineaSalida_Unidades').val()=="1.00")
+              jQuery('#LineaSalida_Unidades').val("");
+            else
+            $(this).select();
+    });
 
+    jQuery('#LineaSalida_Unidades').mouseup(function e() {
+      $(this).select();
+     e.preventDefault();
+      });
 
     jQuery('#Alimento_Codigo').keyup(function(e){
         if(e.keyCode == 13)

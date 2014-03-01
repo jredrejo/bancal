@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import math
+import locale
 from datetime import datetime
 if 0:
     from gluon import *
@@ -198,7 +199,7 @@ def nueva_salida():
                 request.vars.alimento = session.AlmacenAlimento
 
         # session.AlmacenAlimento
-
+        
         session.valor_antiguo = valor_antiguo_uds
         if frmlineas.accepts(request.vars, session, onvalidation=check_stock):
             session.NuevaLinea = True
@@ -373,7 +374,6 @@ def get_rows():
         # print db._lastsql
         vals = []
         for f in fields:
-            # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
             if f == 'Stock':
                 vals.append(r["_extra"]['SUM(LineaAlmacen.Stock)'])
             else:
@@ -430,7 +430,6 @@ def get_rows_entradas():
             if f == 'nada':
                 vals.append("")
             elif f == 'Donante':
-                # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
                 vals.append(db.CabeceraEntrada['Donante'].represent(r(f)))
             else:
                 vals.append(r[f])
@@ -481,7 +480,6 @@ def get_rows_salidas():
             if f == 'nada':
                 vals.append("")
             elif f == 'Beneficiario':
-                # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
                 vals.append(db.CabeceraSalida['Beneficiario'].represent(r(f)))
             else:
                 vals.append(r[f])
@@ -518,7 +516,7 @@ def get_lineas():
 @auth.requires_login()
 @service.json
 def get_lineas_entradas():
-
+    #import ipdb;ipdb.set_trace()
     fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad']
     rows = []
     EnDetalle = False
@@ -561,11 +559,16 @@ def get_lineas_entradas():
             else:
                 vals.append(str(r[f]))
         rows.append(dict(id=r.id, cell=vals))
-    #import ipdb;ipdb.set_trace()
+
     if EnDetalle:
+        locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
+        if qty_totales:
+            totales=locale.format("%.2f", qty_totales, grouping=True)
+        else:
+            totales=""
         total = db(query).count()
         pages = math.ceil(1.0 * total / pagesize)
-        data = dict(records=total, total=pages, page=page, rows=rows,userdata={'qty_totales':qty_totales})
+        data = dict(records=total, total=pages, page=page, rows=rows,userdata={'qty_totales':totales})
         return data
     else:
         return response.json(dict(rows=rows))
@@ -698,7 +701,6 @@ def set_parametros():
 
 def get_alimentos():
     q = request.vars.term
-    # import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
     if q:
         search_term = q.lower().replace(" ", "-")
         query = (db.Alimento.Descripcion.contains(search_term))

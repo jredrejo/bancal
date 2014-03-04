@@ -130,8 +130,8 @@ def cabecera_informe(sheet):
     style10 = ezxf('font: name CG Times (WN), bold False, height 200;'
                    'alignment: horizontal center;'
                    'border: top thin, left medium,right medium,bottom medium')
-    sheet.write(4, 5, '100', style10)  # PENDIENTE PONER VALOR VERDADERO ###
-    sheet.write(4, 10, '6.486', style10)
+    sheet.write(4, 5, session.informe["TOT"]["bens"], style10)
+    sheet.write(4, 10, session.informe["TOT"]["beneficiarios"] , style10)
     sheet.col(0).width = 1340  # 1,02 cm,0,000761194 cm/pt
     sheet.row(3).height = 310  # 0.55cm
     return sheet
@@ -237,79 +237,6 @@ def descargar_tabla():
     response.headers['Content-Type'] = 'application/vnd.ms-excel'
     response.headers[
         'Content-Disposition'] = 'attachment; filename=Informe' + session.nombre_mes + session.nombre_year + '.xls'
-    return s.getvalue()
-
-
-@auth.requires_login()
-def fega():
-    ezxf = xlwt.easyxf
-    book = xlwt.Workbook(encoding='utf-8')
-    sheet = book.add_sheet('FORMULARIO')
-    data_xfs = [ezxf(
-        num_format_str='#,##0'), ezxf(), ezxf(), ezxf(num_format_str='#,##0'),
-        ezxf(num_format_str='#,##0'), ezxf(num_format_str='#,##0'), ezxf(num_format_str='#,##0')]
-    cabecera_fega(sheet)
-    query = (db.persona.baja == None)
-    orden = db.persona.surname1_idx
-    n_orden = 1
-
-    personas = db(
-        query).select(db.persona.id, db.persona.name, db.persona.surname1,
-                      db.persona.surname2, db.persona.nacimiento, db.persona.dni, orderby=orden)
-    for persona in personas:
-        edad = 99
-        if persona.nacimiento:
-            edad = calculate_age(persona.nacimiento)
-        sheet.write(n_orden + 7, 0, n_orden, ezxf(num_format_str='#,##0'))
-        sheet.write(n_orden + 7, 1, persona.surname1 + " " +
-                    persona.surname2 + ", " + persona.name)
-        sheet.write(n_orden + 7, 2, persona.dni)
-        if edad < 2:
-            sheet.write(n_orden + 7, 3, 1, ezxf(num_format_str='#,##0'))
-        elif edad < 8:
-            sheet.write(n_orden + 7, 4, 1, ezxf(num_format_str='#,##0'))
-        else:
-            sheet.write(n_orden + 7, 5, 1, ezxf(num_format_str='#,##0'))
-        sheet.write(n_orden + 7, 6, 1, ezxf(num_format_str='#,##0'))
-
-        n_orden += 1
-        query_familia = (db.familia.persona_id == persona.id)
-        familiares = db(query_familia).select(
-            db.familia.nombre, db.familia.nacimiento, db.familia.dni, db.familia.parentesco)
-        for familiar in familiares:
-            edad = 99
-            if familiar.nacimiento:
-                edad = calculate_age(familiar.nacimiento)
-            sheet.write(n_orden + 7, 0, n_orden, ezxf(num_format_str='#,##0'))
-            nombre = familiar.nombre
-            if not nombre:
-                nombre = " - " + familiar.parentesco
-            sheet.write(n_orden + 7, 1, nombre)
-            sheet.write(n_orden + 7, 2, familiar.dni)
-            if edad < 2:
-                sheet.write(n_orden + 7, 3, 1, ezxf(num_format_str='#,##0'))
-            elif edad < 8:
-                sheet.write(n_orden + 7, 4, 1, ezxf(num_format_str='#,##0'))
-            else:
-                sheet.write(n_orden + 7, 5, 1, ezxf(num_format_str='#,##0'))
-            sheet.write(n_orden + 7, 6, 1, ezxf(num_format_str='#,##0'))
-            n_orden += 1
-
-    sheet.write(n_orden + 7, 3,
-                xlwt.Formula("SUM(D9:D" + str(n_orden + 7) + ")"))
-    sheet.write(n_orden + 7, 4,
-                xlwt.Formula("SUM(E9:E" + str(n_orden + 7) + ")"))
-    sheet.write(n_orden + 7, 5,
-                xlwt.Formula("SUM(F9:F" + str(n_orden + 7) + ")"))
-    sheet.write(n_orden + 7, 6,
-                xlwt.Formula("SUM(G9:G" + str(n_orden + 7) + ")"))
-    s = cStringIO.StringIO()
-    doc = CompoundDoc.XlsDoc()
-    doc.save(s, book.get_biff_data())
-
-    response.headers['Content-Type'] = 'application/vnd.ms-excel'
-    response.headers[
-        'Content-Disposition'] = 'attachment; filename=Modelo_Beneficiarios_EEBB.xls'
     return s.getvalue()
 
 
@@ -477,6 +404,11 @@ def generar_informe(mes, year):
                     "sNombre"] = bancos.first().name
                 if informe[row.LineaSalida.alimento]["sNombre"][:5] != "BANCO":
                     informe[row.LineaSalida.alimento]["sNombre"] = "Varios"
+    #calculo de beneficiarios
+    bens= db(query1).select(db.Beneficiario.id,db.Beneficiario.beneficiarios,distinct=True)
+    beneficiarios=sum([x["beneficiarios"] for x in bens.as_list()])
+    informe["TOT"]["bens"]=len(bens)
+    informe["TOT"]["beneficiarios"] = beneficiarios
 
     return informe
 

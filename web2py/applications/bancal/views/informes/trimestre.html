@@ -4,3 +4,16 @@
 {{pass}}
 <h4>Seleccione año y trimestre para el informe:</h4>
 {{=form}}
+
+
+{{if tabla_informe:}}
+
+<h4>Entradas y salidas de alimentos en el {{=session.nombre_trimestre}} trimestre de {{=session.nombre_year}}</h4>
+{{=tabla_informe}}
+<div>Número de Asociaciones Benéficas atendidas: <strong>{{=session.informe["TOT"]["bens"]}}</strong>			Número de beneficiarios: <strong>{{=session.informe["TOT"]["beneficiarios"] }}</strong>
+</div>
+</br>
+<div>
+	<a href="descargar_tabla_trimestre" class="btn btn-large btn-primary">Descargar informe trimestral como hoja de cálculo</a>
+</div>
+{{pass}}

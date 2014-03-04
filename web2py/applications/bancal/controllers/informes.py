@@ -41,8 +41,11 @@ def mes():
 
 @auth.requires_login()
 def trimestre():
+    nombre_trimestre = None
+    nombre_year = None
+    tabla_informe = None
     years = range(2013, date.today().year + 1)
-    trimestres = ("Primero", "Segundo", "Tercero", "Cuarto")
+    trimestres = ("PRIMERO", "SEGUNDO", "TERCERO", "CUARTO")
 
     form = SQLFORM.factory(
         Field('year', label="Año", requires=IS_IN_SET(years)),
@@ -54,16 +57,18 @@ def trimestre():
     form.vars.trimestre = trimestres[(fecha_pasada.month - 1) // 3]
 
     if form.accepts(request, session):
-        session.year = form.vars.year
-        session.month = form.vars.mes
+        session.nombre_trimestre = form.vars.trimestre
+        session.nombre_year = form.vars.year
+        session.informe = generar_informe(
+            trimestres.index(session.nombre_trimestre), int(session.nombre_year), trimestre=True)
+        tabla_informe = generar_tabla(session.informe)
+    else:
+        session.informe = None
 
-    elif form.errors:
-        pass
-
-    return dict(form=form)
+    return dict(form=form, tabla_informe=tabla_informe)
 
 
-def cabecera_informe(sheet):
+def cabecera_informe(sheet,trimestre=False):
     ezxf = xlwt.easyxf
     style_hidden = ezxf('font: name CG Times (WN), bold True, height 220;'
                         'alignment: vertical top,horizontal center;'
@@ -73,11 +78,16 @@ def cabecera_informe(sheet):
                          'border: top thin, left medium,right medium,bottom thin')
     sheet.write_merge(
         0, 2, 0, 10, 'FEDERACIÓN   ESPAÑOLA   DE   BANCOS    DE    ALIMENTOS\nBANCO    DE    ALIMENTOS    DE  BADAJOZ', style_hidden)
-
-    sheet.write_merge(3, 3, 0, 10,
-                      'ENTRADAS Y SALIDAS DE ALIMENTOS EN ' +
-                      session.nombre_mes + ' DE ' + session.nombre_year,
-                      style_hidden2)
+    if trimestre:
+        sheet.write_merge(3, 3, 0, 10,
+                          'ENTRADAS Y SALIDAS DE ALIMENTOS EN EL ' +
+                          session.nombre_trimestre + ' TRIMESTRE DE ' + session.nombre_year,
+                          style_hidden2)
+    else:
+        sheet.write_merge(3, 3, 0, 10,
+                          'ENTRADAS Y SALIDAS DE ALIMENTOS EN ' +
+                          session.nombre_mes + ' DE ' + session.nombre_year,
+                          style_hidden2)
     style2 = ezxf('font: name CG Times (WN), bold False, height 200;'
                   'alignment: horizontal center;'
                   'border: top thin, left thin,right thin,bottom thin')
@@ -131,104 +141,115 @@ def cabecera_informe(sheet):
                    'alignment: horizontal center;'
                    'border: top thin, left medium,right medium,bottom medium')
     sheet.write(4, 5, session.informe["TOT"]["bens"], style10)
-    sheet.write(4, 10, session.informe["TOT"]["beneficiarios"] , style10)
+    sheet.write(4, 10, session.informe["TOT"]["beneficiarios"], style10)
     sheet.col(0).width = 1340  # 1,02 cm,0,000761194 cm/pt
     sheet.row(3).height = 310  # 0.55cm
     return sheet
 
 
 @auth.requires_login()
+def descargar_tabla_trimestre():
+    return crear_xls(trimestre=True)
+
+
+@auth.requires_login()
 def descargar_tabla():
+    return crear_xls()
+
+def crear_xls(trimestre=False):    
     ezxf = xlwt.easyxf
     book = xlwt.Workbook(encoding='utf-8')
     sheet = book.add_sheet(session.nombre_mes)
     data_xfs = [ezxf(
         num_format_str='#,##0'), ezxf(), ezxf(), ezxf(num_format_str='#,##0'),
         ezxf(num_format_str='#,##0'), ezxf(num_format_str='#,##0'), ezxf(num_format_str='#,##0')]
-    cabecera_informe(sheet)
+    cabecera_informe(sheet,trimestre)
     codigos = session.informe.keys()
     fila = 8
     style11 = ezxf('font: name CG Times (WN), bold False, height 160;'
-          'alignment: horizontal center,vertical center;'
-          'border: top dotted, left thin,right medium,bottom dotted')
+                   'alignment: horizontal center,vertical center;'
+                   'border: top dotted, left thin,right medium,bottom dotted')
     style12 = ezxf('font: name CG Times (WN), bold False, height 160;'
-          'alignment: horizontal center,vertical center;'
-          'border: top dotted, left thin,right thin,bottom dotted')
+                   'alignment: horizontal center,vertical center;'
+                   'border: top dotted, left thin,right thin,bottom dotted')
     style13 = ezxf('font: name CG Times (WN), bold False, height 160;'
-          'alignment: horizontal right,vertical center;'
-          'border: top dotted, left thin,right medium,bottom dotted')
+                   'alignment: horizontal right,vertical center;'
+                   'border: top dotted, left thin,right medium,bottom dotted')
     style14 = ezxf('font: name CG Times (WN), bold False, height 160;'
-          'alignment: horizontal right,vertical center;'
-          'border: top dotted, left thin,right thin,bottom dotted')
+                   'alignment: horizontal right,vertical center;'
+                   'border: top dotted, left thin,right thin,bottom dotted')
     for codigo in codigos:
         elemento = session.informe[codigo]
         if codigo != "TOT":
-            sheet.write(fila,0,codigo,style11)
-            sheet.write(fila,1,quita_none_float(elemento["ESTADO"]),style14)
-            sheet.write(fila,2,elemento["UNIÓN EUROPEA"],style14)
-            sheet.write(fila,3,quita_none_float(elemento["INDUSTRIA"]),style14)
-            sheet.write(fila,4,elemento["DISTRIBUCIÓN"],style14)
-            sheet.write(fila,5,elemento["COLECTAS"],style14)
-            if elemento["eNombre"] and elemento["eNombre"] != "Varios":
-                elemento["eNombre"] = elemento["eNombre"][6:]            
-            sheet.write(fila,6,elemento["eNombre"],style12)
-            sheet.write(fila,7,elemento["eCantidad"],style14)
-            if elemento["sNombre"] and elemento["sNombre"] != "Varios":
-                elemento["sNombre"] = elemento["sNombre"][6:]
-            sheet.write(fila,8,elemento["sNombre"],style12)
-            sheet.write(fila,9,elemento["OTROS BANCOS"],style14)
-            sheet.write(fila,10,elemento["ASOCIACIONES"],style13)
+            sheet.write(fila, 0, codigo, style11)
+            sheet.write(fila, 1, quita_none_float(elemento["ESTADO"]), style14)
+            sheet.write(fila, 2, elemento["UNIÓN EUROPEA"], style14)
+            sheet.write(fila, 3,
+                        quita_none_float(elemento["INDUSTRIA"]), style14)
+            sheet.write(fila, 4, elemento["DISTRIBUCIÓN"], style14)
+            sheet.write(fila, 5, elemento["COLECTAS"], style14)
+            sheet.write(fila, 6, elemento["eNombre"], style12)
+            sheet.write(fila, 7, elemento["eCantidad"], style14)
+            sheet.write(fila, 8, elemento["sNombre"], style12)
+            sheet.write(fila, 9, elemento["OTROS BANCOS"], style14)
+            sheet.write(fila, 10, elemento["ASOCIACIONES"], style13)
             fila += 1
 
-    #pie de hoja:
+    # pie de hoja:
     style15 = ezxf('font: name CG Times (WN), bold True, height 160;'
-          'alignment: horizontal center,vertical center;'
-          'border: top medium, left thin,right thin,bottom medium')
-    sheet.write(fila,0,"TOT",style15)
+                   'alignment: horizontal center,vertical center;'
+                   'border: top medium, left thin,right thin,bottom medium')
+    sheet.write(fila, 0, "TOT", style15)
     style15 = ezxf('font: name CG Times (WN), bold False, height 160;'
-          'alignment: horizontal right,vertical center;'
-          'border: top medium, left thin,right thin,bottom medium')    
-    sheet.write(fila,1,xlwt.Formula("SUM(B9:B" + str(fila) + ")"),style15)
-    sheet.write(fila,2,xlwt.Formula("SUM(C9:C" + str(fila) + ")"),style15)
-    sheet.write(fila,3,xlwt.Formula("SUM(D9:D" + str(fila) + ")"),style15)
-    sheet.write(fila,4,xlwt.Formula("SUM(E9:E" + str(fila) + ")"),style15)
-    sheet.write(fila,5,xlwt.Formula("SUM(F9:F" + str(fila) + ")"),style15)
-    sheet.write(fila,6,"",style15)
-    sheet.write(fila,7,xlwt.Formula("SUM(H9:H" + str(fila) + ")"),style15)
-    sheet.write(fila,8,"",style15)
-    sheet.write(fila,9,xlwt.Formula("SUM(J9:J" + str(fila) + ")"),style15)
+                   'alignment: horizontal right,vertical center;'
+                   'border: top medium, left thin,right thin,bottom medium')
+    sheet.write(fila, 1, xlwt.Formula("SUM(B9:B" + str(fila) + ")"), style15)
+    sheet.write(fila, 2, xlwt.Formula("SUM(C9:C" + str(fila) + ")"), style15)
+    sheet.write(fila, 3, xlwt.Formula("SUM(D9:D" + str(fila) + ")"), style15)
+    sheet.write(fila, 4, xlwt.Formula("SUM(E9:E" + str(fila) + ")"), style15)
+    sheet.write(fila, 5, xlwt.Formula("SUM(F9:F" + str(fila) + ")"), style15)
+    sheet.write(fila, 6, "", style15)
+    sheet.write(fila, 7, xlwt.Formula("SUM(H9:H" + str(fila) + ")"), style15)
+    sheet.write(fila, 8, "", style15)
+    sheet.write(fila, 9, xlwt.Formula("SUM(J9:J" + str(fila) + ")"), style15)
     style16 = ezxf('font: name CG Times (WN), bold False, height 160;'
-          'alignment: horizontal right,vertical center;'
-          'border: top medium, left thin,right medium,bottom medium')     
-    sheet.write(fila,10,xlwt.Formula("SUM(K9:K" + str(fila) + ")"),style16)
+                   'alignment: horizontal right,vertical center;'
+                   'border: top medium, left thin,right medium,bottom medium')
+    sheet.write(fila, 10, xlwt.Formula("SUM(K9:K" + str(fila) + ")"), style16)
     style8 = ezxf('font: name CG Times (WN), bold False, height 160;'
                   'alignment: horizontal center,vertical center;'
                   'border: top medium, left thin,right thin,bottom no_line')
-    sheet.write_merge(fila+1, fila +1, 0, 2, 'STOCK  a comienzo de mes:', style8)
-    sheet.write_merge(fila+1, fila +1, 3, 4, '+ TOTAL  RECIBIDO:', style8)
-    sheet.write_merge(fila+1, fila +1, 5, 6, '- TOTAL ENTREGADO:', style8)
-    sheet.write_merge(fila+1, fila +1, 7, 8, '  -  DESVIACIONES (2)', style8)
+    sheet.write_merge(fila + 1, fila + 1, 0, 2,
+                      'STOCK  a comienzo de mes:', style8)
+    sheet.write_merge(fila + 1, fila + 1, 3, 4, '+ TOTAL  RECIBIDO:', style8)
+    sheet.write_merge(fila + 1, fila + 1, 5, 6, '- TOTAL ENTREGADO:', style8)
+    sheet.write_merge(fila + 1, fila + 1, 7, 8,
+                      '  -  DESVIACIONES (2)', style8)
     style5 = ezxf('font: name CG Times (WN), bold False, height 160;'
                   'alignment: horizontal center,vertical center;'
                   'border: top medium, left thin,right medium,bottom no_line')
-    sheet.write_merge(fila+1, fila +1, 9, 10, '  =  STOCK a fin de mes', style5)
+    sheet.write_merge(fila + 1, fila + 1, 9, 10,
+                      '  =  STOCK a fin de mes', style5)
     style6 = ezxf('font: name CG Times (WN), bold False, height 160;'
                   'alignment: horizontal center,vertical center;'
                   'border: top no_line, left no_line,right no_line,bottom medium')
-    for col in (0,1,3,5,7,9):
-        sheet.write(fila+2,col,"",style6)
+    for col in (0, 1, 3, 5, 7, 9):
+        sheet.write(fila + 2, col, "", style6)
     style10 = ezxf('font: name CG Times (WN), bold False, height 200;'
                    'alignment: horizontal center, vertical center;'
                    'border: top medium, left medium,right medium,bottom medium')
-    sheet.write(fila+2,2,"",style10)
-    sheet.write(fila+2,8,"",style10)
-    sheet.write(fila+2,4,xlwt.Formula("SUM(B" + str(fila+1) +":H" + str(fila+1) + ")"),style10)
-    sheet.write(fila+2,6,xlwt.Formula("SUM(I" + str(fila+1) +":K" + str(fila+1) + ")"),style10)
-    sheet.write(fila+2,10,xlwt.Formula("C" + str(fila+3) + "+E" + str(fila+3) + "-G" + str(fila+3) + "-I" + str(fila+3)),style10)
-    texto_pie= "Notas:\t(1)  Indicar, por su código, los Bancos que han donado o recibido productos.\n"
+    sheet.write(fila + 2, 2, "", style10)
+    sheet.write(fila + 2, 8, "", style10)
+    sheet.write(fila + 2, 4,
+                xlwt.Formula("SUM(B" + str(fila + 1) + ":H" + str(fila + 1) + ")"), style10)
+    sheet.write(fila + 2, 6,
+                xlwt.Formula("SUM(I" + str(fila + 1) + ":K" + str(fila + 1) + ")"), style10)
+    sheet.write(fila + 2, 10, xlwt.Formula("C" + str(fila + 3) + "+E" +
+                str(fila + 3) + "-G" + str(fila + 3) + "-I" + str(fila + 3)), style10)
+    texto_pie = "Notas:\t(1)  Indicar, por su código, los Bancos que han donado o recibido productos.\n"
     texto_pie += "\t(2)  Justificar las desviaciones sobre el STOCK.\t\t\t\t\t\t\n\n\n"
     texto_pie += "Nombre del respons.:\t\t\t\t\t\t\tFirma:\t\t\t\t\t\tTlfno:\t\t\t\t\tFecha:\t\t\t\t "
-    sheet.write_merge(fila+3, fila +7, 0, 10, texto_pie, style10)
+    sheet.write_merge(fila + 3, fila + 7, 0, 10, texto_pie, style10)
 
     s = cStringIO.StringIO()
     doc = CompoundDoc.XlsDoc()
@@ -253,11 +274,13 @@ def quita_none_string(valor):
     else:
         return ' '
 
+
 def quita_none_float(valor):
     if valor:
         return float(valor)
     else:
         return None
+
 
 def generar_tabla(informe):
     cabecera1 = (
@@ -298,7 +321,7 @@ def generar_tabla(informe):
                 TD(quita_none(elemento["OTROS BANCOS"]), _class="pieinforme"),
                 TD(quita_none(elemento["ASOCIACIONES"]), _class="pieinforme")
             )
-        else:
+        else:               
             datos_elemento = (
                 TD(codigo),
                 TD(quita_none(elemento["ESTADO"])),
@@ -322,9 +345,13 @@ def generar_tabla(informe):
     return tabla
 
 
-def generar_informe(mes, year):
-    fecha1 = date(year, mes, 1)
-    fecha2 = fecha1 + relativedelta.relativedelta(months=1)
+def generar_informe(mes, year, trimestre=False):
+    if trimestre:
+        fecha1 = date(year, mes * 3 + 1, 1)
+        fecha2 = fecha1 + relativedelta.relativedelta(months=3)
+    else:
+        fecha1 = date(year, mes, 1)
+        fecha2 = fecha1 + relativedelta.relativedelta(months=1)
     informe = {}
     fila_informe = {
         "ESTADO": None, "UNIÓN EUROPEA": None, "INDUSTRIA": None, "DISTRIBUCIÓN": None, "COLECTAS": None,
@@ -368,9 +395,9 @@ def generar_informe(mes, year):
             if len(bancos) > 1:
                 informe[row.LineaEntrada.alimento]["eNombre"] = "Varios"
             else:
-                informe[row.LineaEntrada.alimento][
-                    "eNombre"] = bancos.first().name
-                if informe[row.LineaEntrada.alimento]["eNombre"][:5] != "BANCO":
+                if bancos.first().name[:5] == "BANCO":
+                    informe[row.LineaEntrada.alimento]["eNombre"] = bancos.first().name[6:]
+                else:
                     informe[row.LineaEntrada.alimento]["eNombre"] = "Varios"
             informe[row.LineaEntrada.alimento]["eCantidad"] = row[campo]
 
@@ -400,14 +427,16 @@ def generar_informe(mes, year):
             if len(bancos) > 1:
                 informe[row.LineaSalida.alimento]["sNombre"] = "Varios"
             else:
-                informe[row.LineaSalida.alimento][
-                    "sNombre"] = bancos.first().name
-                if informe[row.LineaSalida.alimento]["sNombre"][:5] != "BANCO":
+                if bancos.first().name[:5] == "BANCO":
+                    informe[row.LineaSalida.alimento]["sNombre"] = bancos.first().name[6:]
+                else:
                     informe[row.LineaSalida.alimento]["sNombre"] = "Varios"
-    #calculo de beneficiarios
-    bens= db(query1).select(db.Beneficiario.id,db.Beneficiario.beneficiarios,distinct=True)
-    beneficiarios=sum([x["beneficiarios"] for x in bens.as_list()])
-    informe["TOT"]["bens"]=len(bens)
+
+    # calculo de beneficiarios
+    bens = db(query1).select(db.Beneficiario.id,
+                             db.Beneficiario.beneficiarios, distinct=True)
+    beneficiarios = sum([x["beneficiarios"] for x in bens.as_list()])
+    informe["TOT"]["bens"] = len(bens)
     informe["TOT"]["beneficiarios"] = beneficiarios
 
     return informe

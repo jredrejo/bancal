@@ -1,0 +1,14 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+{{block right_sidebar}}
+{{pass}}
+<h4>Seleccione mes y año para el informe:</h4>
+{{=form}}
+
+{{if nombre_year:}}
+
+<h4>Entradas y salidas de alimentos en el mes de {{=nombre_mes}} de {{=nombre_year}}</h4>
+{{=tabla_informe}}
+
+	<a href="descargar_tabla" class="btn btn-large btn-primary">Descargar informe como hoja de cálculo</a>
+{{pass}}

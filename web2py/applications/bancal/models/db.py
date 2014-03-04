@@ -187,10 +187,13 @@ db.define_table('Estanteria',
                 Field('almacen', db.Almacen, label='Almacén', default=1)
                 )
 
+#tipo_empresa = (
+#    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
+#    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
+#    "DONACIONES PARTICULARES", "ORGANISMOS PÚBLICOS", "FEGA")
 tipo_empresa = (
-    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
-    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
-    "DONACIONES PARTICULARES", "ORGANISMOS PÚBLICOS", "FEGA")
+    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
+    "OTROS BANCOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "ESTADO","UNIÓN EUROPEA","COLECTAS")
 
 tipo_colaboracion = ("Miembro del equipo directivo",
                      "Voluntario en banco", "Otro modo de voluntariado")
@@ -279,11 +282,12 @@ db.Colaborador.name.represent = lambda value, row: (
     value if value is not None else '') + ((' ' + row.apellido1) if row.apellido1 is not None else '')
 
 
-tipo_beneficiario = (
-    "TODOS", "Residencia de Ancianos", "Guarderias", "Comedores Sociales", "Caritas",
-    "Centros de Reinserción", "Centros de Acogida", "Conventos", "Asociaciones Asistenciales",
-    "Banco Alimentos", "Regularizacion de existencias", "Iglesias Evangelistas", "Ayuntamientos",
-    "Otras Asociaciones", "Otras Confesiones Religiosas", "Otros Organismos Publicos")
+#tipo_beneficiario = (
+#    "TODOS", "Residencia de Ancianos", "Guarderias", "Comedores Sociales", "Caritas",
+#    "Centros de Reinserción", "Centros de Acogida", "Conventos", "Asociaciones Asistenciales",
+#    "Banco Alimentos", "Regularizacion de existencias", "Iglesias Evangelistas", "Ayuntamientos",
+#    "Otras Asociaciones", "Otras Confesiones Religiosas", "Otros Organismos Publicos")
+tipo_beneficiario=("OTROS BANCOS","ASOCIACIONES")
 
 grupo_recogida = ("PRIMER DÍA", "SEGUNDO DÍA",
                   "TERCER DÍA", "CUARTO DÍA", "QUINTO DÍA")
@@ -420,3 +424,4 @@ db.define_table('LineaSalida',
                       label="Línea Almacén", readable=False, writable=False),
                 Field('PrecioKg', 'double', default=0, label="Precio Kg.")
                 )
+

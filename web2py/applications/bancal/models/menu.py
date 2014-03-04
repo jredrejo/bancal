@@ -49,6 +49,7 @@ if session.auth:
 
     response.menu += [(T('Informes'), False,  None, [
         (T('Movimientos Mensuales'), False,  URL('informes', 'mes'), []),
+        (T('Informe trimestral'), False,  URL('informes', 'trimestre'), []),
 
         ])]
 

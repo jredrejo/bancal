@@ -38,6 +38,7 @@
   <!-- All JavaScript at the bottom, except for Modernizr which enables
        HTML5 elements & feature detects -->
   <script src="{{=URL('static','js/modernizr.custom.js')}}"></script>
+  <script src="{{=URL('static','js/shortcut.js')}}"></script>
 
   <!-- include stylesheets -->
   {{
@@ -180,6 +181,20 @@
 
   {{end}}
 
+<!--
+<A accesskey="N" href="{{=URL('almacen', 'nueva_entrada')}}">
+</A>
+
+<A accesskey="L" href="{{=URL('almacen', 'nueva_salida')}}">
+</A> -->
+<script>
+shortcut.add("Ctrl+e",function() {
+  window.open("{{=URL('almacen', 'nueva_entrada') }}", "_self");
+});
+shortcut.add("Ctrl+l",function() {
+  window.open("{{=URL('almacen', 'nueva_salida') }}", "_self");
+});
+</script>
 </body>
 </html>
 

@@ -521,7 +521,6 @@ def get_lineas_entradas():
     rows = []
     EnDetalle = False
     limitby = None
-
     if 'id' in request.vars:
         cabecera_id = request.vars.id
     elif "current_entrada" in session.keys():
@@ -536,14 +535,16 @@ def get_lineas_entradas():
     if session.Entradas:
         query = (db.LineaEntrada.cabecera == cabecera_id)
         suma=db.LineaEntrada.Unidades.sum()
+        ordenacion=~db.LineaEntrada.id
     else:
         query = (db.LineaSalida.cabecera == cabecera_id)
         suma=db.LineaSalida.Unidades.sum()
+        ordenacion=~db.LineaSalida.id
         
     totales = db(query).select(suma)
     qty_totales=totales.first()[suma]
     
-    for r in db(query).select(limitby=limitby):
+    for r in db(query).select(limitby=limitby,orderby=ordenacion):
         vals = []
         for f in fields:
             if f == 'nada':
@@ -710,6 +711,14 @@ def get_alimentos():
 
     return ''
 
+def get_donante():
+    q = request.vars.term
+    if q:
+        query = (db.Colaborador.name.contains(q)) & (db.Colaborador.Donante == True)
+        rows = db(query).select(db.Colaborador.name)
+        return response.json([s['name'] for s in rows])
+
+    return ''
 
 @cache.action()
 def download():

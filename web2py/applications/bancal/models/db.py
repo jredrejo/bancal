@@ -149,6 +149,7 @@ def ajax_autocomplete(f, v):
     wrapper = DIV()
     inp = SQLFORM.widgets.string.widget(f, v)
     wrapper.append(inp)
+    #inp2=INPUT(_type='hidden', _id=key3, _value=v, _name=name, requires=f.requires)
     return wrapper
 
 
@@ -187,13 +188,13 @@ db.define_table('Estanteria',
                 Field('almacen', db.Almacen, label='Almacén', default=1)
                 )
 
-#tipo_empresa = (
+# tipo_empresa = (
 #    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
 #    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
 #    "DONACIONES PARTICULARES", "ORGANISMOS PÚBLICOS", "FEGA")
 tipo_empresa = (
     "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
-    "OTROS BANCOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "ESTADO","UNIÓN EUROPEA","COLECTAS")
+    "OTROS BANCOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "ESTADO", "UNIÓN EUROPEA", "COLECTAS", "OTRAS")
 
 tipo_colaboracion = ("Miembro del equipo directivo",
                      "Voluntario en banco", "Otro modo de voluntariado")
@@ -282,12 +283,12 @@ db.Colaborador.name.represent = lambda value, row: (
     value if value is not None else '') + ((' ' + row.apellido1) if row.apellido1 is not None else '')
 
 
-#tipo_beneficiario = (
+# tipo_beneficiario = (
 #    "TODOS", "Residencia de Ancianos", "Guarderias", "Comedores Sociales", "Caritas",
 #    "Centros de Reinserción", "Centros de Acogida", "Conventos", "Asociaciones Asistenciales",
 #    "Banco Alimentos", "Regularizacion de existencias", "Iglesias Evangelistas", "Ayuntamientos",
 #    "Otras Asociaciones", "Otras Confesiones Religiosas", "Otros Organismos Publicos")
-tipo_beneficiario=("OTROS BANCOS","ASOCIACIONES")
+tipo_beneficiario = ("OTROS BANCOS", "ASOCIACIONES")
 
 grupo_recogida = ("PRIMER DÍA", "SEGUNDO DÍA",
                   "TERCER DÍA", "CUARTO DÍA", "QUINTO DÍA")
@@ -307,12 +308,13 @@ db.define_table('Beneficiario',
                 Field('email', label='Correo electrónico'),
                 Field('contacto', label='Persona contacto'),
                 Field('FAGA', 'boolean', default=False),
-                Field('beneficiarios',"integer",label="Nº Beneficiarios", default=100),
+                Field('beneficiarios', "integer",
+                      label="Nº Beneficiarios", default=100),
                 Field(
                     'tipobeneficiario', label='Tipo beneficiario', default="Banco Alimentos"),
-                #Field(
+                # Field(
                 #    'gruporecogida', label='Grupo recogida', default="SEGUNDO DÍA"),
-                
+
 
 
                 format=lambda r: str(r.name) + ('' if not r.apellido1 else ' ' + r.apellido1) + (
@@ -376,11 +378,16 @@ db.define_table('CabeceraEntrada',
                 Field('almacen', db.Almacen, label='Almacén', default=1),
                 Field('tipoProcedencia', requires=IS_EMPTY_OR(
                       IS_IN_SET(tipo_procedencia)), label="Procedencia"),
-                Field('Donante', db.Colaborador),
+                Field('Donante', db.Colaborador, widget=ajax_autocomplete),
                 Field('Fecha', 'date', default=datetime.date.today())
                 )
 db.CabeceraEntrada.Donante.requires = IS_IN_DB(db(db.Colaborador.Donante == True), 'Colaborador.id', lambda r: str(r.name) + (
     '' if not r.apellido1 else ' ' + r.apellido1) + ('' if not r.apellido2 else ' ' + r.apellido2), orderby=db.Colaborador.name)
+
+
+db.CabeceraEntrada.Donante.widget = SQLFORM.widgets.autocomplete(
+    request, db.Colaborador.name, id_field=db.Colaborador.id, min_length=1, limitby=(0, 100))
+
 
 db.define_table('LineaEntrada',
                 Field('cabecera', db.CabeceraEntrada,
@@ -406,7 +413,8 @@ db.define_table('CabeceraSalida',
                 )
 db.CabeceraSalida.Beneficiario.requires = IS_IN_DB(db, 'Beneficiario.id', lambda r: str(r.name) + (
     '' if not r.apellido1 else ' ' + r.apellido1) + ('' if not r.apellido2 else ' ' + r.apellido2), orderby=db.Beneficiario.name)
-
+db.CabeceraSalida.Beneficiario.widget = SQLFORM.widgets.autocomplete(
+    request, db.Beneficiario.name, id_field=db.Beneficiario.id, min_length=1, limitby=(0, 100))
 
 db.define_table('LineaSalida',
                 Field('cabecera', db.CabeceraSalida,
@@ -424,4 +432,3 @@ db.define_table('LineaSalida',
                       label="Línea Almacén", readable=False, writable=False),
                 Field('PrecioKg', 'double', default=0, label="Precio Kg.")
                 )
-

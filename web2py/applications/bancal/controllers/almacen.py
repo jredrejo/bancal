@@ -6,6 +6,7 @@ if 0:
     from gluon import *
 
 from gluon.storage import Storage
+from plugin_suggest_widget import suggest_widget
 
 
 @auth.requires_login()
@@ -84,12 +85,19 @@ def nueva_entrada():
         session.current_entrada = None
     db.CabeceraEntrada.almacen.writable = False
     db.CabeceraEntrada.almacen.readable = False
+    db.CabeceraEntrada.Donante.widget = suggest_widget(
+    db.Colaborador.name, id_field=db.Colaborador.id, min_length=1, limitby=(0, 50),
+    keyword='_autocomplete_category_2_%(fieldname)s',user_signature=True)
+
     registro = None
     if session.current_entrada:
         registro = db.CabeceraEntrada(session.current_entrada)
         session.NuevaLinea = True
     form = SQLFORM(db.CabeceraEntrada, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
+    #import ipdb;ipdb.set_trace()
+    if request.vars._autocomplete_Colaborador_name_aux:
+        request.vars.pop('_autocomplete_Colaborador_name_aux')
     if form.accepts(request.vars, session):
         response.flash = 'Nueva entrada grabada'
         session.current_entrada = form.vars.id
@@ -160,7 +168,9 @@ def nueva_salida():
         session.current_entrada = None
     db.CabeceraSalida.almacen.writable = False
     db.CabeceraSalida.almacen.readable = False
-
+    db.CabeceraSalida.Beneficiario.widget = suggest_widget(
+    db.Beneficiario.name, id_field=db.Beneficiario.id, min_length=1, limitby=(0, 50),
+    keyword='_autocomplete_category_2_%(fieldname)s',user_signature=True)
     registro = None
     if session.current_entrada:
         registro = db.CabeceraSalida(session.current_entrada)
@@ -719,6 +729,18 @@ def get_donante():
         return response.json([s['name'] for s in rows])
 
     return ''
+
+def set_donante():
+    
+    q = request.vars.donante
+    if q:
+        query = (db.Colaborador.name==q) & (db.Colaborador.Donante == True)
+        row = db(query).select(db.Colaborador.name,db.Colaborador.id).first()
+        data = {"donante": row.id}
+        data=row.id
+        return data
+    return ''
+
 
 @cache.action()
 def download():

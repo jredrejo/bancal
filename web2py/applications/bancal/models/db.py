@@ -142,12 +142,11 @@ db.poblacion.postal.requires = IS_EMPTY_OR(IS_MATCH(
 db.poblacion.provincia_id.requires = IS_IN_DB(
     db, 'provincia.tabla_id', 'provincia.provincia', error_message='Debe asignar una provincia')
 
-
-#
 def ajax_autocomplete(f, v):
     get_url = URL(r=request, f='get_items')
     wrapper = DIV()
     inp = SQLFORM.widgets.string.widget(f, v)
+    #inp2 = SQLFORM.widgets.string.widget(f, v,_type='hidden')
     wrapper.append(inp)
     #inp2=INPUT(_type='hidden', _id=key3, _value=v, _name=name, requires=f.requires)
     return wrapper
@@ -378,15 +377,11 @@ db.define_table('CabeceraEntrada',
                 Field('almacen', db.Almacen, label='Almacén', default=1),
                 Field('tipoProcedencia', requires=IS_EMPTY_OR(
                       IS_IN_SET(tipo_procedencia)), label="Procedencia"),
-                Field('Donante', db.Colaborador, widget=ajax_autocomplete),
+                Field('Donante', db.Colaborador),
                 Field('Fecha', 'date', default=datetime.date.today())
                 )
 db.CabeceraEntrada.Donante.requires = IS_IN_DB(db(db.Colaborador.Donante == True), 'Colaborador.id', lambda r: str(r.name) + (
     '' if not r.apellido1 else ' ' + r.apellido1) + ('' if not r.apellido2 else ' ' + r.apellido2), orderby=db.Colaborador.name)
-
-
-db.CabeceraEntrada.Donante.widget = SQLFORM.widgets.autocomplete(
-    request, db.Colaborador.name, id_field=db.Colaborador.id, min_length=1, limitby=(0, 100))
 
 
 db.define_table('LineaEntrada',
@@ -413,8 +408,6 @@ db.define_table('CabeceraSalida',
                 )
 db.CabeceraSalida.Beneficiario.requires = IS_IN_DB(db, 'Beneficiario.id', lambda r: str(r.name) + (
     '' if not r.apellido1 else ' ' + r.apellido1) + ('' if not r.apellido2 else ' ' + r.apellido2), orderby=db.Beneficiario.name)
-db.CabeceraSalida.Beneficiario.widget = SQLFORM.widgets.autocomplete(
-    request, db.Beneficiario.name, id_field=db.Beneficiario.id, min_length=1, limitby=(0, 100))
 
 db.define_table('LineaSalida',
                 Field('cabecera', db.CabeceraSalida,
@@ -432,3 +425,5 @@ db.define_table('LineaSalida',
                       label="Línea Almacén", readable=False, writable=False),
                 Field('PrecioKg', 'double', default=0, label="Precio Kg.")
                 )
+
+

@@ -25,7 +25,7 @@
   </div>
 
 {{if session.current_entrada:}}
-
+Total Kg. en esta entrada:
           <div class="row-fluid">
             <h5>Líneas:</h5>
               <div class="well well-small">
@@ -76,7 +76,7 @@
 
 </div>
 
-Total Kg. en esta entrada:
+
  <style>
       
       .ui-pg-input{width:20px;}
@@ -189,7 +189,7 @@ Total Kg. en esta entrada:
     }        
 
     }); // fin de LineaEntrada_alimento autocomplete
-/* 
+ /*
    jQuery('#CabeceraEntrada_Donante').autocomplete({
       minLength: 1,
       source: function( request, response ) {
@@ -199,11 +199,12 @@ Total Kg. en esta entrada:
             });
         },
     select: function( event, ui ) {
-      var jsonString={'alimento':  ui.item.value};
-      jQuery.post("{{=URL(c='almacen',f='set_donante')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
+      var jsonString2={'donante':  ui.item.value};
+      jQuery.post("{{=URL(c='almacen',f='set_donante')}}", jsonString2, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
-
-                  //jQuery("#list").jqGrid().trigger("reloadGrid");   
+            jQuery('#_autocomplete_Colaborador_name_auto').val(data);
+            jQuery("#CabeceraEntrada_tipoProcedencia").focus();
+                   
             });
 
     }        

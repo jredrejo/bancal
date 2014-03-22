@@ -160,33 +160,21 @@
        (Placed at the end of the document so the pages load faster) -->
   <script src="{{=URL('static','js/bootstrap.min.js')}}"></script>
   <script src="{{=URL('static','js/web2py_bootstrap.js')}}"></script>
+  
   <!--[if lt IE 7 ]>
       <script src="{{=URL('static','js/dd_belatedpng.js')}}"></script>
       <script> DD_belatedPNG.fix('img, .png_bg'); //fix any <img> or .png_bg background-images </script>
       <![endif]-->
   
-  {{if response.google_analytics_id:}}
-  <script src="{{=URL('static','js/analytics.min.js')}}"></script>
-  <script type="text/javascript">
-  analytics.initialize({
-    'Google Analytics':{trackingId:'{{=response.google_analytics_id}}'} 
-  });</script>
-  {{pass}}
-  <!-- 
-  <script src="{{=URL('static','js/share.js',vars=dict(static=URL('static','images')))}}"></script>  -->
-   <!-- para colocar js al final del documento: -->
+
+ 
    
   {{block misjavascript}}
-
+  <!-- para colocar js al final del documento: -->
 
   {{end}}
-
-<!--
-<A accesskey="N" href="{{=URL('almacen', 'nueva_entrada')}}">
-</A>
-
-<A accesskey="L" href="{{=URL('almacen', 'nueva_salida')}}">
-</A> -->
+ 
+ 
 <script>
 shortcut.add("Ctrl+e",function() {
   window.open("{{=URL('almacen', 'nueva_entrada') }}", "_self");

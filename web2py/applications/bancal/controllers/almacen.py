@@ -86,8 +86,8 @@ def nueva_entrada():
     db.CabeceraEntrada.almacen.writable = False
     db.CabeceraEntrada.almacen.readable = False
     db.CabeceraEntrada.Donante.widget = suggest_widget(
-    db.Colaborador.name, id_field=db.Colaborador.id, min_length=1, limitby=(0, 50),
-    keyword='_autocomplete_category_2_%(fieldname)s',user_signature=True)
+        db.Colaborador.name, id_field=db.Colaborador.id, min_length=1, limitby=(0, 50),
+        keyword='_autocomplete_category_2_%(fieldname)s', user_signature=True)
 
     registro = None
     if session.current_entrada:
@@ -169,8 +169,8 @@ def nueva_salida():
     db.CabeceraSalida.almacen.writable = False
     db.CabeceraSalida.almacen.readable = False
     db.CabeceraSalida.Beneficiario.widget = suggest_widget(
-    db.Beneficiario.name, id_field=db.Beneficiario.id, min_length=1, limitby=(0, 50),
-    keyword='_autocomplete_category_2_%(fieldname)s',user_signature=True)
+        db.Beneficiario.name, id_field=db.Beneficiario.id, min_length=1, limitby=(0, 50),
+        keyword='_autocomplete_category_2_%(fieldname)s', user_signature=True)
     registro = None
     if session.current_entrada:
         registro = db.CabeceraSalida(session.current_entrada)
@@ -209,7 +209,7 @@ def nueva_salida():
                 request.vars.alimento = session.AlmacenAlimento
 
         # session.AlmacenAlimento
-        
+
         session.valor_antiguo = valor_antiguo_uds
         if frmlineas.accepts(request.vars, session, onvalidation=check_stock):
             session.NuevaLinea = True
@@ -307,9 +307,13 @@ def get_codigo():
             query = query & (db.Alimento.id == alimento.id)
             stock = db(query).select(db.LineaAlmacen.Stock.sum()).first()[
                 db.LineaAlmacen.Stock.sum()]
+
             if stock:
+                locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
                 session.AlmacenStock = stock
                 data["stock"] = stock
+                data[
+                    "stock-text"] = locale.format("%.2f", stock, grouping=True)
             else:
                 data = {"alimento": ''}
                 session.AlmacenAlimento = None
@@ -337,7 +341,8 @@ def set_alimento():
         session.AlmacenAlimento = None
 
     if not session.Entradas:
-        data = {"codigo": codigo, "stock": 0}
+        data = {"codigo": codigo, "stock": 0, "stock-text": ''}
+        locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
         if codigo != '':
             query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
                 db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
@@ -347,9 +352,12 @@ def set_alimento():
             if stock:
                 session.AlmacenStock = stock
                 data["stock"] = stock
+                data[
+                    "stock-text"] = locale.format("%.2f", stock, grouping=True)
             else:
                 session.AlmacenStock = None
                 data["stock"] = 0
+                data["stock-text"] = ""
         return response.json(data)
     else:
         return response.json(codigo)
@@ -368,8 +376,8 @@ def get_rows():
 
     if request.vars.sidx == 'Stock':
         orderby = db.LineaAlmacen.Stock.sum()
-    elif request.vars.sidx=="kkkkk":
-        orderby =~db.LineaAlmacen.id
+    elif request.vars.sidx == "kkkkk":
+        orderby = ~db.LineaAlmacen.id
     else:
         orderby = db.Alimento[request.vars.sidx]
     if request.vars.sord == 'desc':
@@ -545,17 +553,17 @@ def get_lineas_entradas():
 
     if session.Entradas:
         query = (db.LineaEntrada.cabecera == cabecera_id)
-        suma=db.LineaEntrada.Unidades.sum()
-        ordenacion=~db.LineaEntrada.id
+        suma = db.LineaEntrada.Unidades.sum()
+        ordenacion = ~db.LineaEntrada.id
     else:
         query = (db.LineaSalida.cabecera == cabecera_id)
-        suma=db.LineaSalida.Unidades.sum()
-        ordenacion=~db.LineaSalida.id
-        
+        suma = db.LineaSalida.Unidades.sum()
+        ordenacion = ~db.LineaSalida.id
+
     totales = db(query).select(suma)
-    qty_totales=totales.first()[suma]
-    
-    for r in db(query).select(limitby=limitby,orderby=ordenacion):
+    qty_totales = totales.first()[suma]
+    locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
+    for r in db(query).select(limitby=limitby, orderby=ordenacion):
         vals = []
         for f in fields:
             if f == 'nada':
@@ -569,18 +577,18 @@ def get_lineas_entradas():
             elif f == 'Lote':
                 vals.append(r[f] or '')
             else:
-                vals.append(str(r[f]))
+                vals.append(locale.format("%.2f", r[f], grouping=True))
         rows.append(dict(id=r.id, cell=vals))
 
     if EnDetalle:
-        locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
         if qty_totales:
-            totales=locale.format("%.2f", qty_totales, grouping=True)
+            totales = locale.format("%.2f", qty_totales, grouping=True)
         else:
-            totales=""
+            totales = ""
         total = db(query).count()
         pages = math.ceil(1.0 * total / pagesize)
-        data = dict(records=total, total=pages, page=page, rows=rows,userdata={'qty_totales':totales})
+        data = dict(records=total, total=pages, page=page,
+                    rows=rows, userdata={'qty_totales': totales})
         return data
     else:
         return response.json(dict(rows=rows))
@@ -722,23 +730,26 @@ def get_alimentos():
 
     return ''
 
+
 def get_donante():
     q = request.vars.term
     if q:
-        query = (db.Colaborador.name.contains(q)) & (db.Colaborador.Donante == True)
+        query = (db.Colaborador.name.contains(q)) & (
+            db.Colaborador.Donante == True)
         rows = db(query).select(db.Colaborador.name)
         return response.json([s['name'] for s in rows])
 
     return ''
 
+
 def set_donante():
-    
+
     q = request.vars.donante
     if q:
-        query = (db.Colaborador.name==q) & (db.Colaborador.Donante == True)
-        row = db(query).select(db.Colaborador.name,db.Colaborador.id).first()
+        query = (db.Colaborador.name == q) & (db.Colaborador.Donante == True)
+        row = db(query).select(db.Colaborador.name, db.Colaborador.id).first()
         data = {"donante": row.id}
-        data=row.id
+        data = row.id
         return data
     return ''
 

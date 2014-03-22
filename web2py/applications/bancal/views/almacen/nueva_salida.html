@@ -109,9 +109,10 @@
     .well {margin-bottom:2px;}
   </style>
 
-
+<script src="{{=URL('static','js/autoNumeric.js')}}"></script>
 <script type="text/javascript">
   var stockdisponible=0;
+  var stockdisponible_text="";
     function removeSpaces(string) {
     // quita los espacios y todos los caraceres que no son un número
          return string.split(' ').join('').replace(/[^0-9]/g, ''); 
@@ -135,7 +136,8 @@
                 //jQuery("#almacen").jqGrid().trigger("reloadGrid");
                 jQuery("#stockalimento").show();
                 stockdisponible=data['stock']
-                jQuery("#valorstock").text(data['stock'].toString());}
+                stockdisponible_text=data['stock-text']
+                jQuery("#valorstock").text(data['stock-text']);}
 
             });        
     }   
@@ -163,25 +165,27 @@
     jQuery("#CabeceraSalida_Beneficiario").focus();
     {{pass}}
 
+    jQuery('#LineaSalida_Unidades').autoNumeric('init', {aSep: '.',aDec: ',' });
+    jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.',aDec: ',' });
     jQuery("#LineaSalida_Unidades").focusout(function() {
       current_value =  parseInt($(this).val());
       if (current_value>stockdisponible) 
-        $(this).val(stockdisponible.toString());
+        $(this).val(stockdisponible_text);
 
     });
 
     jQuery('#LineaSalida_Unidades').focus(function(){
-            if (jQuery('#LineaSalida_Unidades').val()=="1.00")
+            if (jQuery('#LineaSalida_Unidades').val()=="1,00")
               jQuery('#LineaSalida_Unidades').val("");
             else
             $(this).select();
     });
-
+/*
     jQuery('#LineaSalida_Unidades').mouseup(function e() {
       $(this).select();
      e.preventDefault();
       });
-
+*/
     jQuery('#Alimento_Codigo').keyup(function(e){
         if(e.keyCode == 13)
         {
@@ -215,7 +219,8 @@
                   jQuery("#Alimento_Codigo").val(data["codigo"]);
                   jQuery("#stockalimento").show();
                   stockdisponible=data['stock']
-                  jQuery("#valorstock").text(data['stock'].toString());                  
+                  stockdisponible_text=data['stock-text']
+                  jQuery("#valorstock").text(stockdisponible_text);
                   jQuery("#LineaSalida_Unidades").focus();
                   
                 }    

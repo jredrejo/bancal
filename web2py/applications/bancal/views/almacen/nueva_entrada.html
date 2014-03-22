@@ -96,6 +96,8 @@ Total Kg. en esta entrada:
   </style>
 
 
+<script src="{{=URL('static','js/autoNumeric.js')}}"></script>
+
 <script type="text/javascript">
     function removeSpaces(string) {
     // quita los espacios y todos los caraceres que no son un número
@@ -148,19 +150,24 @@ Total Kg. en esta entrada:
             buscar_alimento();
     });
 
+
+
+    jQuery('#LineaEntrada_Unidades').autoNumeric('init', {aSep: '.',aDec: ',' });
+    jQuery('#LineaEntrada_PesoUnidad').autoNumeric('init', {aSep: '.',aDec: ',' });
+
     jQuery('#LineaEntrada_Unidades').focus(function(){
-            if (jQuery('#LineaEntrada_Unidades').val()=="1.00")
+            if (jQuery('#LineaEntrada_Unidades').val()=="1,00")
               jQuery('#LineaEntrada_Unidades').val("");
             else
             $(this).select();
             
     });
-
+/*
     jQuery('#LineaEntrada_Unidades').mouseup(function e() {
       $(this).select();
      e.preventDefault();
       });
-
+*/
 
    jQuery('#LineaEntrada_alimento').autocomplete({
       minLength: 2,

@@ -13,7 +13,7 @@ def index():
     grid = SQLFORM.grid(query, ui=ui, search_widget=search_form, maxtextlength=40,
         fields = [db.Beneficiario.name,db.Beneficiario.poblacion,db.Beneficiario.telefono,
         db.Beneficiario.movil,db.Beneficiario.contacto,db.Beneficiario.tipobeneficiario],
-        orderby=db.Beneficiario.name)
+        orderby=~db.Beneficiario.id)
 
     return locals()
 

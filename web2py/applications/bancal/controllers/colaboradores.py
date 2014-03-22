@@ -15,7 +15,7 @@ def index():
         db.Colaborador.movil,db.Colaborador.email,db.Colaborador.contacto,db.Colaborador.Donante,
         db.Colaborador.Voluntario,db.Colaborador.Patrocinador,db.Colaborador.Socio,
         db.Colaborador.apellido1,db.Colaborador.apellido2],
-        orderby=db.Colaborador.name)
+        orderby=~db.Colaborador.id)
 
     return locals()
 
@@ -36,7 +36,7 @@ def donantes():
         fields = [db.Colaborador.name,db.Colaborador.poblacion,db.Colaborador.telefono,
         db.Colaborador.movil,db.Colaborador.email,db.Colaborador.contacto,db.Colaborador.dontipo,
         db.Colaborador.apellido1,db.Colaborador.apellido2],
-        orderby=db.Colaborador.name)
+        orderby=~db.Colaborador.id)
 
     return locals()
 
@@ -61,7 +61,7 @@ def voluntarios():
         fields = [db.Colaborador.name,db.Colaborador.poblacion,db.Colaborador.telefono,
         db.Colaborador.movil,db.Colaborador.email,db.Colaborador.voltipo,
         db.Colaborador.apellido1,db.Colaborador.apellido2],
-        orderby=db.Colaborador.name)
+        orderby=~db.Colaborador.id)
 
     return locals()  
 
@@ -86,7 +86,7 @@ def socios():
         fields = [db.Colaborador.name,db.Colaborador.poblacion,db.Colaborador.telefono,
         db.Colaborador.movil,db.Colaborador.email,db.Colaborador.soccuota,
         db.Colaborador.apellido1,db.Colaborador.apellido2],
-        orderby=db.Colaborador.name)
+        orderby=~db.Colaborador.id)
 
     return locals()  
 
@@ -110,7 +110,7 @@ def patrocinadores():
         fields = [db.Colaborador.name,db.Colaborador.poblacion,db.Colaborador.telefono,
         db.Colaborador.movil,db.Colaborador.email,db.Colaborador.pattipo,
         db.Colaborador.apellido1,db.Colaborador.apellido2],
-        orderby=db.Colaborador.name)
+        orderby=~db.Colaborador.id)
 
     return locals()   
 

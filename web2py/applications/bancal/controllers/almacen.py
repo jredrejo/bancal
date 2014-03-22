@@ -368,6 +368,8 @@ def get_rows():
 
     if request.vars.sidx == 'Stock':
         orderby = db.LineaAlmacen.Stock.sum()
+    elif request.vars.sidx=="kkkkk":
+        orderby =~db.LineaAlmacen.id
     else:
         orderby = db.Alimento[request.vars.sidx]
     if request.vars.sord == 'desc':
@@ -526,7 +528,6 @@ def get_lineas():
 @auth.requires_login()
 @service.json
 def get_lineas_entradas():
-    #import ipdb;ipdb.set_trace()
     fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad']
     rows = []
     EnDetalle = False

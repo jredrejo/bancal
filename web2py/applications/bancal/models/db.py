@@ -76,7 +76,7 @@ db.define_table('Alimento',
                 Field('Conservacion', label='Conservación', default=T(
                     'Calor')),
                 Field('Unidades', default='Kg.'),
-                format='%(Descripcion)s'
+                format='%(Codigo)s - %(Descripcion)s'
                 )
 db.Alimento.Conservacion.requires = IS_IN_SET((T('Calor'), T('Frío')))
 db.Alimento.Unidades.requires = IS_IN_SET(('Kg.', 'L.'))

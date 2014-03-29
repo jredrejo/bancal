@@ -155,7 +155,7 @@
     }
 
 
- $(document).ready(function() {
+ jQuery(document).ready(function() {
    // chrome fix.
    document.onselectstart = function () { return false; };             
 
@@ -180,12 +180,22 @@
             else
             $(this).select();
     });
-/*
-    jQuery('#LineaSalida_Unidades').mouseup(function e() {
-      $(this).select();
-     e.preventDefault();
-      });
-*/
+      
+      //Para deshacer el formateado numérico en español antes de enviar el formulario
+      jQuery('#frmlineas').submit(function(){
+        var unidades=jQuery("#LineaSalida_Unidades")
+        var v=unidades.autoNumeric('get');
+        unidades.autoNumeric('destroy');
+        unidades.val(v);
+        var peso=jQuery("#LineaSalida_PesoUnidad")
+        v=peso.autoNumeric('get');
+        peso.autoNumeric('destroy');
+        peso.val(v);
+        return true;
+    });
+
+
+
     jQuery('#Alimento_Codigo').keyup(function(e){
         if(e.keyCode == 13)
         {

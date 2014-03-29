@@ -120,8 +120,8 @@ def nueva_entrada():
             registro_linea = None
             codigo_alimento = XML('""')
         db.LineaEntrada.cabecera.default = session.current_entrada
-        frmlineas = SQLFORM(
-            db.LineaEntrada, registro_linea, submit_button='Guardar esta línea', keepvalues=False)
+        frmlineas = SQLFORM(db.LineaEntrada, registro_linea, _id="frmlineas",
+                            submit_button='Guardar esta línea', keepvalues=False)
         if 'lid' in request.vars:
             frmlineas.vars.alimento = registro_alimento.Descripcion
         if "alimento" in request.vars:
@@ -201,7 +201,7 @@ def nueva_salida():
         db.LineaSalida.cabecera.default = session.current_entrada
         db.LineaSalida.LineaAlmacen.writable = True
         frmlineas = SQLFORM(
-            db.LineaSalida, registro_linea, submit_button='Guardar esta línea')
+            db.LineaSalida, registro_linea, submit_button='Guardar esta línea', _id="frmlineas")
         if 'lid' in request.vars:
             frmlineas.vars.alimento = registro_alimento.Descripcion
         if "alimento" in request.vars:

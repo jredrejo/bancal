@@ -151,9 +151,10 @@ Total Kg. en esta entrada:
     });
 
 
-
-    jQuery('#LineaEntrada_Unidades').autoNumeric('init', {aSep: '.',aDec: ',' });
-    jQuery('#LineaEntrada_PesoUnidad').autoNumeric('init', {aSep: '.',aDec: ',' });
+    jQuery('#LineaEntrada_Unidades').removeClass("double");
+    jQuery('#LineaEntrada_Unidades').autoNumeric('init', {aSep: '.', aDec: ','});
+    jQuery('#LineaEntrada_PesoUnidad').removeClass("double");    
+    jQuery('#LineaEntrada_PesoUnidad').autoNumeric('init', {aSep: '.', aDec: ','});
 
     jQuery('#LineaEntrada_Unidades').focus(function(){
             if (jQuery('#LineaEntrada_Unidades').val()=="1,00")

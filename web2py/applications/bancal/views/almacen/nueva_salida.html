@@ -165,8 +165,10 @@
     jQuery("#CabeceraSalida_Beneficiario").focus();
     {{pass}}
 
-    jQuery('#LineaSalida_Unidades').autoNumeric('init', {aSep: '.',aDec: ',' });
-    jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.',aDec: ',' });
+    jQuery('#LineaSalida_Unidades').removeClass("double");
+    jQuery('#LineaSalida_Unidades').autoNumeric('init', {aSep: '.', aDec: ','});
+    jQuery('#LineaSalida_PesoUnidad').removeClass("double");    
+    jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.', aDec: ','});    
     jQuery("#LineaSalida_Unidades").focusout(function() {
       current_value =  parseInt($(this).val());
       if (current_value>stockdisponible) 

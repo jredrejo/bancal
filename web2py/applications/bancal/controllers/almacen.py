@@ -296,7 +296,8 @@ def nueva_lineaalmacen(valores):
 @service.json
 def get_codigo():
     codigo = request.vars.codigo
-    alimento = db((db.Alimento.Codigo == codigo) & (db.Alimento.Descripcion!=None) ).select().first()
+    alimento = db((db.Alimento.Codigo == codigo) &
+                  (db.Alimento.Descripcion != None)).select().first()
     if alimento:
         data = {"alimento": alimento.Descripcion}
         session.AlmacenAlimento = alimento.id
@@ -383,7 +384,7 @@ def get_rows():
     if request.vars.sord == 'desc':
         orderby = ~orderby
     query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
-        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) & (db.Alimento.Descripcion!=None)
+        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) & (db.Alimento.Descripcion != None)
 
     if session.AlmacenAlimento:
         query = query & (db.Alimento.id == session.AlmacenAlimento)
@@ -411,7 +412,7 @@ def get_rows():
 @auth.requires_login()
 @service.json
 def get_rows_entradas():
-    fields = ['nada', 'Donante', 'Fecha', 'tipoProcedencia']
+    fields = ['nada', 'Donante', 'Fecha', 'tipoProcedencia', 'Total']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
@@ -440,6 +441,7 @@ def get_rows_entradas():
     if session.AlmacenAlimento:
         query = query & (db.CabeceraEntrada.id == db.LineaEntrada.cabecera)
         query = query & (db.LineaEntrada.alimento == session.AlmacenAlimento)
+
     rowsentradas = db(query).select(
         db.CabeceraEntrada.ALL, limitby=limitby, orderby=orderby)
     # print db._lastsql
@@ -466,7 +468,7 @@ def get_rows_entradas():
 @auth.requires_login()
 @service.json
 def get_rows_salidas():
-    fields = ['nada', 'Beneficiario', 'Fecha']
+    fields = ['nada', 'Beneficiario', 'Fecha', 'Total']
     rows = []
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)

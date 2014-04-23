@@ -150,12 +150,13 @@
     mtype: 'GET',
     contentType: "application/json; charset=utf-8",
     cellEdit: false,
-    colNames:[' ','Beneficiario','Fecha'],
+    colNames:[' ','Beneficiario','Fecha', 'Totales'],
     colModel :[
       {name:'action', width:30, sortable:false,align:"center" },
       {name:'Beneficiario', index:'Beneficiario',width:350},
       {name:'Fecha', index:'Fecha',width:180, align:"center", formatter:'date',formatoptions:{
        srcformat: 'Y-m-d', newformat: 'd/m/Y'}},
+      {name:'Totales', index:'Totales',width:70,align:"right",formatter:'number',formatoptions : {decimalSeparator:",", thousandsSeparator: ".", decimalPlaces: 2, defaultValue: '0,00'},sortable:false}
     ],
     pager: '#pager',
     rowNum:10,

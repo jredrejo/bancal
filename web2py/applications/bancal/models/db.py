@@ -401,6 +401,11 @@ db.define_table('LineaEntrada',
                 Field('PrecioKg', 'double', default=0, label="Precio Kg.")
                 )
 
+totalEntrada = db.LineaEntrada.Unidades.sum()
+
+db.CabeceraEntrada.Total = Field.Virtual(
+    lambda row: db(db.LineaEntrada.cabecera==row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
+
 db.define_table('CabeceraSalida',
                 Field('almacen', db.Almacen, label='Almacén', default=1),
                 Field('Beneficiario', db.Beneficiario),
@@ -426,4 +431,7 @@ db.define_table('LineaSalida',
                 Field('PrecioKg', 'double', default=0, label="Precio Kg.")
                 )
 
+totalSalida = db.LineaSalida.Unidades.sum()
 
+db.CabeceraSalida.Total = Field.Virtual(
+    lambda row: db(db.LineaSalida.cabecera==row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])

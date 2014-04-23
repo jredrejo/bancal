@@ -166,13 +166,14 @@
             thegrid.addJSONData(JSON.parse(jsondata.responseText).d);
         }
     },
-    colNames:[' ','Donante','Fecha', 'Procedencia'],
+    colNames:[' ','Donante','Fecha', 'Procedencia', 'Totales'],
     colModel :[
       {name:'action', width:30, sortable:false,align:"center" },
       {name:'Donante', index:'Donante',width:250},
       {name:'Fecha', index:'Fecha',width:170, align:"center", formatter:'date',formatoptions:{
        srcformat: 'Y-m-d', newformat: 'd/m/Y'}},
       {name:'Procedencia', index:'Procedencia',width:170,align:"center"},
+      {name:'Totales', index:'Totales',width:70,align:"right",formatter:'number',formatoptions : {decimalSeparator:",", thousandsSeparator: ".", decimalPlaces: 2, defaultValue: '0,00'},sortable:false}
     ],
     pager: '#pager',
     rowNum:10,

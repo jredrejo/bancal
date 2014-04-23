@@ -13,12 +13,14 @@ import datetime
 if 0:
     from gluon import *
 
-db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'])
+db = DAL('sqlite://storage.sqlite', pool_size=1,
+         check_reserved=['all'], migrate=False, lazy_tables=True)
 current.db = db
 
 # by default give a view/generic.extension to all actions from localhost
 # none otherwise. a pattern can be 'controller/function.extension'
 response.generic_patterns = ['*'] if request.is_local else []
+
 # (optional) optimize handling of static files
 # response.optimize_css = 'concat,minify,inline'
 # response.optimize_js = 'concat,minify,inline'
@@ -141,6 +143,7 @@ db.poblacion.postal.requires = IS_EMPTY_OR(IS_MATCH(
     '^\d{5}(-\d{4})?$', error_message='El Código Postal deben ser 5 dígitos'))
 db.poblacion.provincia_id.requires = IS_IN_DB(
     db, 'provincia.tabla_id', 'provincia.provincia', error_message='Debe asignar una provincia')
+
 
 def ajax_autocomplete(f, v):
     get_url = URL(r=request, f='get_items')
@@ -404,7 +407,7 @@ db.define_table('LineaEntrada',
 totalEntrada = db.LineaEntrada.Unidades.sum()
 
 db.CabeceraEntrada.Total = Field.Virtual(
-    lambda row: db(db.LineaEntrada.cabecera==row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
+    lambda row: db(db.LineaEntrada.cabecera == row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
 
 db.define_table('CabeceraSalida',
                 Field('almacen', db.Almacen, label='Almacén', default=1),
@@ -434,4 +437,4 @@ db.define_table('LineaSalida',
 totalSalida = db.LineaSalida.Unidades.sum()
 
 db.CabeceraSalida.Total = Field.Virtual(
-    lambda row: db(db.LineaSalida.cabecera==row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])
+    lambda row: db(db.LineaSalida.cabecera == row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])

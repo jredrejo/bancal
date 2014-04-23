@@ -112,9 +112,10 @@ Total Kg. en esta entrada:
               if (data['alimento']=='') {
                 jQuery("#LineaEntrada_alimento").val("");
                 jQuery("#Alimento_Codigo").val("");
+                jQuery("#Alimento_Codigo").focus();
               } else {
-                jQuery("#LineaEntrada_alimento").val(data['alimento']);}
-                jQuery("#LineaEntrada_Unidades").focus();
+                jQuery("#LineaEntrada_alimento").val(data['alimento']);
+                jQuery("#LineaEntrada_Unidades").focus();}
             });        
     }   
 

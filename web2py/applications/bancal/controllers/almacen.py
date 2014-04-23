@@ -296,7 +296,7 @@ def nueva_lineaalmacen(valores):
 @service.json
 def get_codigo():
     codigo = request.vars.codigo
-    alimento = db(db.Alimento.Codigo == codigo).select().first()
+    alimento = db((db.Alimento.Codigo == codigo) & (db.Alimento.Descripcion!=None) ).select().first()
     if alimento:
         data = {"alimento": alimento.Descripcion}
         session.AlmacenAlimento = alimento.id
@@ -383,7 +383,7 @@ def get_rows():
     if request.vars.sord == 'desc':
         orderby = ~orderby
     query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
-        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) & (db.Alimento.Descripcion!=None)
 
     if session.AlmacenAlimento:
         query = query & (db.Alimento.id == session.AlmacenAlimento)

@@ -302,8 +302,8 @@ db.define_table('Beneficiario',
                 Field('poblacion', label='Población'),
                 Field('direccion', label="Dirección", length=200),
                 Field('postal', label="Cód. Postal", length=5),
-                Field('nif', label="CIF/NIF", requires=IS_NOT_IN_DB(
-                      db, 'Beneficiario.nif')),
+                Field('nif', label="CIF/NIF", requires=IS_EMPTY_OR(IS_NOT_IN_DB(
+                      db, 'Beneficiario.nif'))),
                 Field('telefono', label='Teléfono 1'),
                 Field('telefono2', label='Fax/Teléfono 2'),
                 Field('movil', label='Móvil'),

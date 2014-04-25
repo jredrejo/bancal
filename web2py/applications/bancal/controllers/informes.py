@@ -68,7 +68,7 @@ def trimestre():
     return dict(form=form, tabla_informe=tabla_informe)
 
 
-def cabecera_informe(sheet,trimestre=False):
+def cabecera_informe(sheet, trimestre=False):
     ezxf = xlwt.easyxf
     style_hidden = ezxf('font: name CG Times (WN), bold True, height 220;'
                         'alignment: vertical top,horizontal center;'
@@ -81,7 +81,8 @@ def cabecera_informe(sheet,trimestre=False):
     if trimestre:
         sheet.write_merge(3, 3, 0, 10,
                           'ENTRADAS Y SALIDAS DE ALIMENTOS EN EL ' +
-                          session.nombre_trimestre + ' TRIMESTRE DE ' + session.nombre_year,
+                          session.nombre_trimestre +
+                          ' TRIMESTRE DE ' + session.nombre_year,
                           style_hidden2)
     else:
         sheet.write_merge(3, 3, 0, 10,
@@ -156,14 +157,18 @@ def descargar_tabla_trimestre():
 def descargar_tabla():
     return crear_xls()
 
-def crear_xls(trimestre=False):    
+
+def crear_xls(trimestre=False):
     ezxf = xlwt.easyxf
     book = xlwt.Workbook(encoding='utf-8')
-    sheet = book.add_sheet(session.nombre_mes)
+    if trimestre:
+      sheet = book.add_sheet(session.nombre_trimestre)
+    else:
+      sheet = book.add_sheet(session.nombre_mes)
     data_xfs = [ezxf(
         num_format_str='#,##0'), ezxf(), ezxf(), ezxf(num_format_str='#,##0'),
         ezxf(num_format_str='#,##0'), ezxf(num_format_str='#,##0'), ezxf(num_format_str='#,##0')]
-    cabecera_informe(sheet,trimestre)
+    cabecera_informe(sheet, trimestre)
     codigos = session.informe.keys()
     fila = 8
     style11 = ezxf('font: name CG Times (WN), bold False, height 160;'
@@ -238,7 +243,7 @@ def crear_xls(trimestre=False):
     style10 = ezxf('font: name CG Times (WN), bold False, height 200;'
                    'alignment: horizontal center, vertical center;'
                    'border: top medium, left medium,right medium,bottom medium')
-    sheet.write(fila + 2, 2, "", style10)
+    sheet.write(fila + 2, 2, session.total_previo, style10)
     sheet.write(fila + 2, 8, "", style10)
     sheet.write(fila + 2, 4,
                 xlwt.Formula("SUM(B" + str(fila + 1) + ":H" + str(fila + 1) + ")"), style10)
@@ -256,8 +261,12 @@ def crear_xls(trimestre=False):
     doc.save(s, book.get_biff_data())
 
     response.headers['Content-Type'] = 'application/vnd.ms-excel'
-    response.headers[
-        'Content-Disposition'] = 'attachment; filename=Informe' + session.nombre_mes + session.nombre_year + '.xls'
+    if trimestre:
+        response.headers['Content-Disposition'] = 'attachment; filename=Informe' + \
+            session.nombre_trimestre + session.nombre_year + '.xls'
+    else:
+        response.headers['Content-Disposition'] = 'attachment; filename=Informe' + \
+            session.nombre_mes + session.nombre_year + '.xls'
     return s.getvalue()
 
 
@@ -321,7 +330,7 @@ def generar_tabla(informe):
                 TD(quita_none(elemento["OTROS BANCOS"]), _class="pieinforme"),
                 TD(quita_none(elemento["ASOCIACIONES"]), _class="pieinforme")
             )
-        else:               
+        else:
             datos_elemento = (
                 TD(codigo),
                 TD(quita_none(elemento["ESTADO"])),
@@ -364,8 +373,27 @@ def generar_informe(mes, year, trimestre=False):
             "eNombre": None, "eCantidad": None, "sNombre": None, "OTROS BANCOS": None, "ASOCIACIONES": None}
     informe["TOT"] = fila_informe
 
-    # ENTRADAS:
+
     campo = db.LineaEntrada.Unidades.sum()
+    # totales previos
+    query = (db.CabeceraEntrada.Fecha < fecha1) & (
+        db.LineaEntrada.cabecera == db.CabeceraEntrada.id)
+    rows = db(query).select(campo)
+    try:
+        total_entradas = rows.first()[campo]
+    except:
+        total_entradas = 0
+    query = (db.CabeceraSalida.Fecha < fecha1) & (
+        db.LineaSalida.cabecera == db.CabeceraSalida.id)
+    campo2 = db.LineaSalida.Unidades.sum()
+    rows = db(query).select(campo2)
+    try:
+        total_salidas = rows.first()[campo2]
+    except:
+        total_salidas = 0
+    session.total_previo = total_entradas - total_salidas
+
+    # ENTRADAS:
     query = (db.CabeceraEntrada.Fecha < fecha2) & (
         db.CabeceraEntrada.Fecha >= fecha1)
 
@@ -396,7 +424,8 @@ def generar_informe(mes, year, trimestre=False):
                 informe[row.LineaEntrada.alimento]["eNombre"] = "Varios"
             else:
                 if bancos.first().name[:5] == "BANCO":
-                    informe[row.LineaEntrada.alimento]["eNombre"] = bancos.first().name[6:]
+                    informe[row.LineaEntrada.alimento][
+                        "eNombre"] = bancos.first().name[6:]
                 else:
                     informe[row.LineaEntrada.alimento]["eNombre"] = "Varios"
             informe[row.LineaEntrada.alimento]["eCantidad"] = row[campo]
@@ -428,7 +457,8 @@ def generar_informe(mes, year, trimestre=False):
                 informe[row.LineaSalida.alimento]["sNombre"] = "Varios"
             else:
                 if bancos.first().name[:5] == "BANCO":
-                    informe[row.LineaSalida.alimento]["sNombre"] = bancos.first().name[6:]
+                    informe[row.LineaSalida.alimento][
+                        "sNombre"] = bancos.first().name[6:]
                 else:
                     informe[row.LineaSalida.alimento]["sNombre"] = "Varios"
 

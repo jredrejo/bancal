@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+if 0:
+    from gluon import *
+    
 @auth.requires_login()
 def index():
     import ui_def

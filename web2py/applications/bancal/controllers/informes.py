@@ -383,6 +383,7 @@ def generar_informe(mes, year, trimestre=False):
         total_entradas = rows.first()[campo]
     except:
         total_entradas = 0
+    if not total_entradas: total_entradas=0
     query = (db.CabeceraSalida.Fecha < fecha1) & (
         db.LineaSalida.cabecera == db.CabeceraSalida.id)
     campo2 = db.LineaSalida.Unidades.sum()
@@ -391,6 +392,7 @@ def generar_informe(mes, year, trimestre=False):
         total_salidas = rows.first()[campo2]
     except:
         total_salidas = 0
+    if not total_salidas: total_salidas=0
     session.total_previo = total_entradas - total_salidas
 
     # ENTRADAS:

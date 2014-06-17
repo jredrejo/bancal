@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-This file is part of the web2py Web Framework
-Copyrighted by Massimo Di Pierro <mdipierro@cs.depaul.edu>
-License: LGPLv3 (http://www.gnu.org/licenses/lgpl.html)
+| This file is part of the web2py Web Framework
+| Copyrighted by Massimo Di Pierro <mdipierro@cs.depaul.edu>
+| License: LGPLv3 (http://www.gnu.org/licenses/lgpl.html)
+
+HTTP statuses helpers
+--------------------------------------------
 """
 
 import re
@@ -52,11 +55,24 @@ defined_status = {
     503: 'SERVICE UNAVAILABLE',
     504: 'GATEWAY TIMEOUT',
     505: 'HTTP VERSION NOT SUPPORTED',
+    509: 'BANDWIDTH LIMIT EXCEEDED',
 }
 
 regex_status = re.compile('^\d{3} [0-9A-Z ]+$')
 
 class HTTP(Exception):
+    """Raises an HTTP response
+
+    Args:
+        status: usually an integer. If it's a well known status code, the ERROR
+          message will be automatically added. A string can also be passed
+          as `510 Foo Bar` and in that case the status code and the error
+          message will be parsed accordingly
+        body: what to return as body. If left as is, will return the error code
+          and the status message in the body itself
+        cookies: pass cookies along (usually not needed)
+        headers: pass headers as usual dict mapping
+    """
 
     def __init__(
         self,
@@ -135,6 +151,14 @@ class HTTP(Exception):
 
 
 def redirect(location='', how=303, client_side=False):
+    """Raises a redirect (303)
+
+    Args:
+        location: the url where to redirect
+        how: what HTTP status code to use when redirecting
+        client_side: if set to True, it triggers a reload of the entire page
+          when the fragment has been loaded as a component
+    """
     if location:
         from gluon import current
         loc = location.replace('\r', '%0D').replace('\n', '%0A')

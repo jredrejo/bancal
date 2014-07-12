@@ -75,10 +75,7 @@
                               
                </div>        
         {{=frmlineas.custom.end}}
-        <span id="contenedor_almacen" style="display: none;">
-            <table id="almacen" ></table>
-            <div id="pager2"></div>
-        </span>
+  
               </div> <!-- fin del well lineas-->
 
             <table id="list"></table>
@@ -129,6 +126,7 @@
                 jQuery("#LineaSalida_alimento").val("");
                 jQuery("#Alimento_Codigo").val("");
                 jQuery("#Alimento_Codigo").focus();
+                alert("No hay stock de este producto");
               } else {
                 jQuery("#LineaSalida_alimento").val(data['alimento']);
                 jQuery("#LineaSalida_Unidades").focus();
@@ -174,6 +172,7 @@
       current_value =  parseInt($(this).val());
       if (current_value>stockdisponible) 
         $(this).val(stockdisponible_text);
+        alert("Ajustadas las unidades al máximo stock disponible en almacén: " + stockdisponible_text);
 
     });
 
@@ -304,61 +303,6 @@
   ); //fin de bindKeys para list
 
 
-
-
-  jQuery("#almacen").jqGrid({
-    url:'{{=URL(r=request,f="call",args=["json","get_lineas_almacen"])}}',
-    data: "{}",
-    datatype: 'json',
-    mtype: 'GET',
-    contentType: "application/json; charset=utf-8",
-    cellEdit: false,
-    cellsubmit:'remote',
-    colNames:['Alimento','Stock','PesoUnidad','Caducidad','Lote','Estanteria','Palets'],
-
-
-    colModel :[
-      {name:'Alimento', index:'Alimento',width:250},
-      {name:'Stock', index:'Unidades',width:70,align:"center"},
-      {name:'PesoUnidad', index:'Peso/Unidad',width:90,align:"center"},
-      {name:'Caducidad', index:'Caducidad',width:70,align:"center"},
-      {name:'Lote', index:'Lote',width:70,align:"center"},
-      {name:'Estanteria', index:'Estanteria',width:70,align:"center"},
-      {name:'Palets', index:'Estanteria',width:70,align:"center"},
-    ],
-    pager: '#pager2',
-    rowNum:15,
-    rowList:[15,30,60],
-    sortname: 'Caducidad',
-    sortorder: 'asc',
-    viewrecords: true,
-    caption: 'Líneas de almacén para este alimento (haga doble clic para seleccionar una)',
-    altRows:true,
-    height: 'auto',
-    width: 'auto',
-    subGrid : false,
-    loadComplete: function(data){
-         var grid =jQuery("#almacen")
-         var ids = grid.jqGrid("getDataIDs");
-         if(ids && ids.length > 0)
-            if (ids[0]=="404")
-               jQuery("#contenedor_almacen").hide();
-            else
-              grid.jqGrid("setSelection", ids[0]); 
-         else
-            jQuery("#contenedor_almacen").hide();
-   
-    }, //fin del evento loadcomplete
-   onSelectRow: function(id){ 
-      jQuery("#LineaSalida_LineaAlmacen").val(id);
-   }, // fin del evento onselectrow
-    ondblClickRow: function (id){
-      
- 
-      
-    } // fin del evento dblclick
-
-  }); //fin de la definición de jqgrid
 
   jQuery("#list").jqGrid().jqGrid('bindKeys',
       {

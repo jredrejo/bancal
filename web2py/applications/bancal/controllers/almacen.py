@@ -95,7 +95,7 @@ def nueva_entrada():
         session.NuevaLinea = True
     form = SQLFORM(db.CabeceraEntrada, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
-    #import ipdb;ipdb.set_trace()
+
     if request.vars._autocomplete_Colaborador_name_aux:
         request.vars.pop('_autocomplete_Colaborador_name_aux')
     if form.accepts(request.vars, session):
@@ -211,6 +211,7 @@ def nueva_salida():
         # session.AlmacenAlimento
 
         session.valor_antiguo = valor_antiguo_uds
+
         if frmlineas.accepts(request.vars, session, onvalidation=check_stock):
             session.NuevaLinea = True
             stock_pendiente = float(frmlineas.vars.Unidades)
@@ -250,6 +251,12 @@ def nueva_salida():
 
 
 def check_stock(form):
+    """Comprueba que hay stock disponible, dependiendo de:
+    - valor que se ha pedido ahora:stock_pendiente
+    - stock en el almacén: stock_actual
+    - Si se está editando una línea que ya tenía stock anteriormente descontado
+    hay que tenerlo en cuenta: session.valor_antiguo. Si la línea es nueva esto valdrá 0
+    """    
     stock_pendiente = float(form.vars.Unidades)
     query = (db.CabeceraAlmacen.alimento == form.vars.alimento) & (
         db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
@@ -258,6 +265,7 @@ def check_stock(form):
     if stock_pendiente - session.valor_antiguo > stock_actual:
         stock_pendiente = stock_actual + session.valor_antiguo
         form.vars.Unidades = stock_pendiente
+        form.vars.LineaAlmacen = db(query).select(db.LineaAlmacen.id).first().id
 
 
 def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):

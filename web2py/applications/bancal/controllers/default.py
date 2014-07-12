@@ -1,13 +1,45 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-# this file is released under public domain and you can use without limitations
 
+##############################################################################
+# Project:     Bancal - Gestión de almacén para los Bancos de Alimentos
+# Language:    Python 2.7
+# Date:        15-Ago-2013.
+# Ver.:        12-Jul-2014.
+# Copyright:   2013-2014 - José L. Redrejo Rodríguez  <jredrejo @nospam@ itais.net>
 #
-# This is a sample controller
-# - index is the default action of any application
-# - user is required for authentication and authorization
-# - download is for downloading files uploaded in the db (does streaming)
-# - call exposes all registered services (none by default)
+# * Dual licensed under the MIT and GPL licenses.
 #
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+
+#Para el autocompletado con aptana/eclipse+pydev:
+if 0:
+    from gluon import *
+    global LOAD; LOAD  = compileapp.LoadFactory()
+    global request; request = globals.Request()
+    global response; response = globals.Response()
+    global session; session = globals.Session()
+    global cache; cache = cache.Cache()
+    global db; db = sql.DAL()
+    global auth; auth = tools.Auth()
+    global crud; crud = tools.Crud()
+    global mail; mail = tools.Mail()
+    global plugins; plugins = tools.PluginManager()
+    global service; service = tools.Service()
+
 
 @auth.requires_login()
 def index():
@@ -18,28 +50,14 @@ def index():
     if you need a simple wiki simple replace the two lines below with:
     return auth.wiki()
     """
+
     if not session.auth:
         response.title = None
-    #response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
 
-    # Temporal, para importar datos de bb.dd. anterior ###
-    import importacion
-    # importacion.rellena_familias()
-    # importacion.rellena_subfamilias()
-    # importacion.rellena_alimentos()
-    # importacion.rellena_paises()
-    # importacion.rellena_provincias()
-    # importacion.rellena_localidades()
-    # importacion.rellena_colaboradores()
-    #importacion.rellena_beneficiarios()
-    #importacion.rellena_estanterias()
-    #importacion.rellena_cabecerasalmacen()
-    #importacion.rellena_lineasalmacen()
-    #importacion.rellena_cabecerasentradas()
-    #importacion.rellena_lineasentradas()
-    #importacion.rellena_cabecerasalidas()
-    #importacion.rellena_lineasalidas()
-    #importacion.rellena_alimentos2()
+    # response.flash = T("Página de gestión del Banco de Alimentos de Badajoz")
+
+
+
     return dict()
 
 
@@ -58,6 +76,7 @@ def user():
         @auth.requires_permission('read','table name',record_id)
     to decorate functions that need access control
     """
+
     return dict(form=auth())
 
 
@@ -67,6 +86,7 @@ def download():
     allows downloading of uploaded files
     http://..../[app]/default/download/[filename]
     """
+
     return response.download(request, db)
 
 
@@ -77,6 +97,7 @@ def call():
     decorate with @services.jsonrpc the functions to expose
     supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
     """
+
     return service()
 
 
@@ -95,4 +116,5 @@ def data():
     or with the signed load operator
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
+
     return dict(form=crud())

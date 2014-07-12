@@ -1,10 +1,48 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+##############################################################################
+# Project:     Bancal - Gestión de almacén para los Bancos de Alimentos
+# Language:    Python 2.7
+# Date:        15-Ago-2013.
+# Ver.:        12-Jul-2014.
+# Copyright:   2013-2014 - José L. Redrejo Rodríguez  <jredrejo @nospam@ itais.net>
+#
+# * Dual licensed under the MIT and GPL licenses.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+##############################################################################
+
 import math
 import locale
 from datetime import datetime
+
+#Para el autocompletado con aptana/eclipse+pydev:
 if 0:
     from gluon import *
-
+    global LOAD; LOAD  = compileapp.LoadFactory()
+    global request; request = globals.Request()
+    global response; response = globals.Response()
+    global session; session = globals.Session()
+    global cache; cache = cache.Cache()
+    global db; db = sql.DAL()
+    global auth; auth = tools.Auth()
+    global crud; crud = tools.Crud()
+    global mail; mail = tools.Mail()
+    global plugins; plugins = tools.PluginManager()
+    global service; service = tools.Service()
 from gluon.storage import Storage
 from plugin_suggest_widget import suggest_widget
 
@@ -20,14 +58,16 @@ def stock():
     session.AlmacenAlimento = None
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.Alimento)
+
     # if request.vars.Descripcion:
     #    session.AlmacenAlimento=request.vars.Descripcion
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+
+    response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
+                          f='grid.locale-es.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/js',
+                          f='jquery.jqGrid.min.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/css',
+                          f='ui.jqgrid.css'))
 
     return locals()
 
@@ -42,12 +82,12 @@ def entradas():
     db.Alimento.Descripcion.widget = ajax_autocomplete
     form = SQLFORM(db.CabeceraEntrada)
 
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+    response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
+                          f='grid.locale-es.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/js',
+                          f='jquery.jqGrid.min.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/css',
+                          f='ui.jqgrid.css'))
 
     return locals()
 
@@ -63,12 +103,13 @@ def salidas():
 
     # if request.vars.Descripcion:
     #    session.AlmacenAlimento=request.vars.Descripcion
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+
+    response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
+                          f='grid.locale-es.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/js',
+                          f='jquery.jqGrid.min.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/css',
+                          f='ui.jqgrid.css'))
 
     return locals()
 
@@ -86,8 +127,13 @@ def nueva_entrada():
     db.CabeceraEntrada.almacen.writable = False
     db.CabeceraEntrada.almacen.readable = False
     db.CabeceraEntrada.Donante.widget = suggest_widget(
-        db.Colaborador.name, id_field=db.Colaborador.id, min_length=1, limitby=(0, 50),
-        keyword='_autocomplete_category_2_%(fieldname)s', user_signature=True)
+        db.Colaborador.name,
+        id_field=db.Colaborador.id,
+        min_length=1,
+        limitby=(0, 50),
+        keyword='_autocomplete_category_2_%(fieldname)s',
+        user_signature=True,
+        )
 
     registro = None
     if session.current_entrada:
@@ -114,42 +160,49 @@ def nueva_entrada():
             session.AlmacenAlimento = registro_alimento.id
             session.NuevaLinea = True
             if request.vars.Unidades:
-                if float(request.vars.Unidades) != registro_linea.Unidades:
+                if float(request.vars.Unidades) \
+                    != registro_linea.Unidades:
                     valor_antiguo_uds = registro_linea.Unidades
         else:
             registro_linea = None
             codigo_alimento = XML('""')
         db.LineaEntrada.cabecera.default = session.current_entrada
-        frmlineas = SQLFORM(db.LineaEntrada, registro_linea, _id="frmlineas",
-                            submit_button='Guardar esta línea', keepvalues=False)
+        frmlineas = SQLFORM(db.LineaEntrada, registro_linea,
+                            _id='frmlineas',
+                            submit_button='Guardar esta línea',
+                            keepvalues=False)
         if 'lid' in request.vars:
             frmlineas.vars.alimento = registro_alimento.Descripcion
-        if "alimento" in request.vars:
+        if 'alimento' in request.vars:
             if session.AlmacenAlimento:
                 request.vars.alimento = session.AlmacenAlimento
+
         # session.AlmacenAlimento
+
         if frmlineas.accepts(request.vars, session):
             session.NuevaLinea = True
             if valor_antiguo_uds and registro_linea.LineaAlmacen:
-                actualiza_lineaalmacen(
-                    registro_linea.LineaAlmacen, float(request.vars.Unidades), valor_antiguo_uds)
+                actualiza_lineaalmacen(registro_linea.LineaAlmacen,
+                        float(request.vars.Unidades), valor_antiguo_uds)
             else:
                 cid = nueva_lineaalmacen(request.vars)
                 registro_linea = db.LineaEntrada(frmlineas.vars.id)
                 registro_linea.LineaAlmacen = cid
                 registro_linea.update_record()
 
-            redirect(URL(f="nueva_entrada", args=session.current_entrada))
+            redirect(URL(f='nueva_entrada',
+                     args=session.current_entrada))
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+    response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
+                          f='grid.locale-es.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/js',
+                          f='jquery.jqGrid.min.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/css',
+                          f='ui.jqgrid.css'))
 
-    return dict(form=form, frmlineas=frmlineas, codigo_alimento=codigo_alimento)
+    return dict(form=form, frmlineas=frmlineas,
+                codigo_alimento=codigo_alimento)
 
 
 @auth.requires_login()
@@ -160,17 +213,24 @@ def nueva_salida():
     frmlineas = None
     codigo_alimento = None
     if len(request.args) > 0:
+
         # uso session.current_entrada en lugar de session.current_salida para
         # que valga la misma función de  get_lineas_entradas en entradas y
         # salidas
+
         session.current_entrada = request.args[0]
     else:
         session.current_entrada = None
     db.CabeceraSalida.almacen.writable = False
     db.CabeceraSalida.almacen.readable = False
     db.CabeceraSalida.Beneficiario.widget = suggest_widget(
-        db.Beneficiario.name, id_field=db.Beneficiario.id, min_length=1, limitby=(0, 50),
-        keyword='_autocomplete_category_2_%(fieldname)s', user_signature=True)
+        db.Beneficiario.name,
+        id_field=db.Beneficiario.id,
+        min_length=1,
+        limitby=(0, 50),
+        keyword='_autocomplete_category_2_%(fieldname)s',
+        user_signature=True,
+        )
     registro = None
     if session.current_entrada:
         registro = db.CabeceraSalida(session.current_entrada)
@@ -193,18 +253,20 @@ def nueva_salida():
             session.AlmacenAlimento = registro_alimento.id
             session.NuevaLinea = True
             if request.vars.Unidades:
-                if float(request.vars.Unidades) != registro_linea.Unidades:
+                if float(request.vars.Unidades) \
+                    != registro_linea.Unidades:
                     valor_antiguo_uds = registro_linea.Unidades
         else:
             registro_linea = None
             codigo_alimento = XML('""')
         db.LineaSalida.cabecera.default = session.current_entrada
         db.LineaSalida.LineaAlmacen.writable = True
-        frmlineas = SQLFORM(
-            db.LineaSalida, registro_linea, submit_button='Guardar esta línea', _id="frmlineas")
+        frmlineas = SQLFORM(db.LineaSalida, registro_linea,
+                            submit_button='Guardar esta línea',
+                            _id='frmlineas')
         if 'lid' in request.vars:
             frmlineas.vars.alimento = registro_alimento.Descripcion
-        if "alimento" in request.vars:
+        if 'alimento' in request.vars:
             if session.AlmacenAlimento:
                 request.vars.alimento = session.AlmacenAlimento
 
@@ -212,18 +274,23 @@ def nueva_salida():
 
         session.valor_antiguo = valor_antiguo_uds
 
-        if frmlineas.accepts(request.vars, session, onvalidation=check_stock):
+        if frmlineas.accepts(request.vars, session,
+                             onvalidation=check_stock):
             session.NuevaLinea = True
             stock_pendiente = float(frmlineas.vars.Unidades)
+
             # descontamos el stock ahora de las líneas de almacén que haga
             # falta:
-            query = (db.CabeceraAlmacen.alimento == frmlineas.vars.alimento) & (
-                db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
-            lineas_almacen = db(query).select(
-                db.LineaAlmacen.id, db.LineaAlmacen.Stock, orderby=~db.LineaAlmacen.Stock)
+
+            query = (db.CabeceraAlmacen.alimento
+                     == frmlineas.vars.alimento) \
+                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+            lineas_almacen = db(query).select(db.LineaAlmacen.id,
+                    db.LineaAlmacen.Stock,
+                    orderby=~db.LineaAlmacen.Stock)
             if valor_antiguo_uds > 0:
-                actualiza_lineaalmacen(
-                    lineas_almacen.first().id, valor_antiguo_uds, stock_pendiente)
+                actualiza_lineaalmacen(lineas_almacen.first().id,
+                        valor_antiguo_uds, stock_pendiente)
             else:
                 for linea in lineas_almacen:
                     if stock_pendiente <= linea.Stock:
@@ -232,22 +299,23 @@ def nueva_salida():
                     else:
                         stock_resta = linea.Stock
                         stock_pendiente = stock_pendiente - stock_resta
-                    actualiza_lineaalmacen(
-                        linea.id, 0, stock_resta)
+                    actualiza_lineaalmacen(linea.id, 0, stock_resta)
                     if stock_pendiente == 0:
                         break
 
-            redirect(URL(f="nueva_salida", args=session.current_entrada))
+            redirect(URL(f='nueva_salida',
+                     args=session.current_entrada))
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js/i18n', f='grid.locale-es.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/js', f='jquery.jqGrid.min.js'))
-    response.files.append(
-        URL(r=request, c='static/jqGrid/css', f='ui.jqgrid.css'))
+    response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
+                          f='grid.locale-es.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/js',
+                          f='jquery.jqGrid.min.js'))
+    response.files.append(URL(r=request, c='static/jqGrid/css',
+                          f='ui.jqgrid.css'))
 
-    return dict(form=form, frmlineas=frmlineas, codigo_alimento=codigo_alimento)
+    return dict(form=form, frmlineas=frmlineas,
+                codigo_alimento=codigo_alimento)
 
 
 def check_stock(form):
@@ -256,35 +324,39 @@ def check_stock(form):
     - stock en el almacén: stock_actual
     - Si se está editando una línea que ya tenía stock anteriormente descontado
     hay que tenerlo en cuenta: session.valor_antiguo. Si la línea es nueva esto valdrá 0
-    """    
+    """
+
     stock_pendiente = float(form.vars.Unidades)
-    query = (db.CabeceraAlmacen.alimento == form.vars.alimento) & (
-        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
-    stock_actual = db(query).select(
-        db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
+    query = (db.CabeceraAlmacen.alimento == form.vars.alimento) \
+        & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+    stock_actual = \
+        db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
     if stock_pendiente - session.valor_antiguo > stock_actual:
         stock_pendiente = stock_actual + session.valor_antiguo
         form.vars.Unidades = stock_pendiente
-        form.vars.LineaAlmacen = db(query).select(db.LineaAlmacen.id).first().id
+        form.vars.LineaAlmacen = \
+            db(query).select(db.LineaAlmacen.id).first().id
 
 
 def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
+    """Descuenta o añade stock en una línea de almacén, según el orden de valornuevo y valorprevio"""
+
     registro = db.LineaAlmacen(linea)
     total = float(registro.Stock)
-    registro.Stock = total + (valornuevo - valorprevio)
+    registro.Stock = total + valornuevo - valorprevio
     registro.update_record()
 
 
 def nueva_lineaalmacen(valores):
-    cabecera = db(
-        db.CabeceraAlmacen.alimento == valores.alimento).select().first()
+    cabecera = db(db.CabeceraAlmacen.alimento
+                  == valores.alimento).select().first()
     if not cabecera:
         cid = db.CabeceraAlmacen.insert(alimento=valores.alimento)
     else:
         cid = cabecera.id
     fecha_caducidad = datetime.strptime(valores.Caducidad, '%d-%m-%Y')
-    query = (db.LineaAlmacen.cabecera == cid) & (
-        db.LineaAlmacen.PesoUnidad == valores.PesoUnidad)
+    query = (db.LineaAlmacen.cabecera == cid) \
+        & (db.LineaAlmacen.PesoUnidad == valores.PesoUnidad)
     query = query & (db.LineaAlmacen.Caducidad == fecha_caducidad)
     query = query & (db.LineaAlmacen.estanteria == valores.estanteria)
     query = query & (db.LineaAlmacen.Lote == valores.Lote)
@@ -295,41 +367,52 @@ def nueva_lineaalmacen(valores):
         lid = linea.id
     else:
         lid = db.LineaAlmacen.insert(
-            cabecera=cid, PesoUnidad=valores.PesoUnidad,
-            Caducidad=fecha_caducidad, estanteria=valores.estanteria,
-            Lote=valores.Lote, Stock=float(valores.Unidades))
+            cabecera=cid,
+            PesoUnidad=valores.PesoUnidad,
+            Caducidad=fecha_caducidad,
+            estanteria=valores.estanteria,
+            Lote=valores.Lote,
+            Stock=float(valores.Unidades),
+            )
     return lid
 
 
 @service.json
 def get_codigo():
+    """Devuelve:
+    - el nombre de un alimento dado su código
+    - Si hay stock devuelve también:
+        - el stock disponible como número real
+        - el stock disponible como cadena de texto"""
+
     codigo = request.vars.codigo
-    alimento = db((db.Alimento.Codigo == codigo) &
-                  (db.Alimento.Descripcion != None)).select().first()
+    alimento = db((db.Alimento.Codigo == codigo)
+                  & (db.Alimento.Descripcion != None)).select().first()
     if alimento:
-        data = {"alimento": alimento.Descripcion}
+        data = {'alimento': alimento.Descripcion}
         session.AlmacenAlimento = alimento.id
 
         if not session.Entradas:
-            query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
-                db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+            query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
+                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
             query = query & (db.Alimento.id == alimento.id)
-            stock = db(query).select(db.LineaAlmacen.Stock.sum()).first()[
-                db.LineaAlmacen.Stock.sum()]
+            stock = \
+                db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
 
             if stock:
                 locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
                 session.AlmacenStock = stock
-                data["stock"] = stock
-                data[
-                    "stock-text"] = locale.format("%.2f", stock, grouping=True)
+                data['stock'] = stock
+
+                data['stock-text'] = locale.format('%.2f', stock,
+                        grouping=True)
             else:
-                data = {"alimento": ''}
+                data = {'alimento': ''}
                 session.AlmacenAlimento = None
                 session.AlmacenStock = None
-
     else:
-        data = {"alimento": ''}
+
+        data = {'alimento': ''}
         session.AlmacenAlimento = None
 
     return response.json(data)
@@ -337,12 +420,18 @@ def get_codigo():
 
 @service.json
 def set_alimento():
+    """Devuelve:
+    - el código de un alimento dado su texto
+    - Si hay stock devuelve también:
+        - el stock disponible como número real
+        - el stock disponible como cadena de texto"""
+
     codigo = ''
 
     if len(request.vars) > 0:
         session.AlmacenAlimento = request.vars.alimento
-        alimento = db(
-            db.Alimento.Descripcion == request.vars.alimento).select().first()
+        alimento = db(db.Alimento.Descripcion
+                      == request.vars.alimento).select().first()
         if alimento:
             codigo = alimento.Codigo
             session.AlmacenAlimento = alimento.id
@@ -350,23 +439,24 @@ def set_alimento():
         session.AlmacenAlimento = None
 
     if not session.Entradas:
-        data = {"codigo": codigo, "stock": 0, "stock-text": ''}
+        data = {'codigo': codigo, 'stock': 0, 'stock-text': ''}
         locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
         if codigo != '':
-            query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
-                db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+            query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
+                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
             query = query & (db.Alimento.Codigo == codigo)
-            stock = db(query).select(db.LineaAlmacen.Stock.sum()).first()[
-                db.LineaAlmacen.Stock.sum()]
+            stock = \
+                db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
             if stock:
                 session.AlmacenStock = stock
-                data["stock"] = stock
-                data[
-                    "stock-text"] = locale.format("%.2f", stock, grouping=True)
+                data['stock'] = stock
+
+                data['stock-text'] = locale.format('%.2f', stock,
+                        grouping=True)
             else:
                 session.AlmacenStock = None
-                data["stock"] = 0
-                data["stock-text"] = ""
+                data['stock'] = 0
+                data['stock-text'] = ''
         return response.json(data)
     else:
         return response.json(codigo)
@@ -385,31 +475,43 @@ def get_rows():
 
     if request.vars.sidx == 'Stock':
         orderby = db.LineaAlmacen.Stock.sum()
-    elif request.vars.sidx == "kkkkk":
+    elif request.vars.sidx == 'kkkkk':
         orderby = ~db.LineaAlmacen.id
     else:
         orderby = db.Alimento[request.vars.sidx]
     if request.vars.sord == 'desc':
         orderby = ~orderby
-    query = (db.CabeceraAlmacen.alimento == db.Alimento.id) & (
-        db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) & (db.Alimento.Descripcion != None)
+    query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
+        & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) \
+        & (db.Alimento.Descripcion != None)
 
     if session.AlmacenAlimento:
         query = query & (db.Alimento.id == session.AlmacenAlimento)
-    for r in db(
-        query).select(db.CabeceraAlmacen.id, db.Alimento.Codigo, db.Alimento.Descripcion, db.Alimento.Conservacion, db.Alimento.Unidades, db.LineaAlmacen.Stock.sum(
-    ),
-            limitby=limitby, orderby=orderby, groupby=db.CabeceraAlmacen.alimento):
+    for r in db(query).select(
+        db.CabeceraAlmacen.id,
+        db.Alimento.Codigo,
+        db.Alimento.Descripcion,
+        db.Alimento.Conservacion,
+        db.Alimento.Unidades,
+        db.LineaAlmacen.Stock.sum(),
+        limitby=limitby,
+        orderby=orderby,
+        groupby=db.CabeceraAlmacen.alimento,
+        ):
+
         # print db._lastsql
+
         vals = []
         for f in fields:
             if f == 'Stock':
-                vals.append(r["_extra"]['SUM(LineaAlmacen.Stock)'])
+                vals.append(r['_extra']['SUM(LineaAlmacen.Stock)'])
             else:
                 vals.append(r[f])
 
         rows.append(dict(id=r.CabeceraAlmacen.id, cell=vals))
+
     # print db._lastsql
+
     total = db(db.CabeceraAlmacen.alimento == db.Alimento.id).count()
     pages = math.ceil(1.0 * total / pagesize)
     data = dict(records=total, total=pages, page=page, rows=rows)
@@ -438,29 +540,38 @@ def get_rows_entradas():
     if request.vars.sord == 'desc':
         orderby = ~orderby
 
-    query = (db.CabeceraEntrada.id > 0)
+    query = db.CabeceraEntrada.id > 0
     if session.FechaAlmacen:
-        query = query & (db.CabeceraEntrada.Fecha == session.FechaAlmacen)
+        query = query & (db.CabeceraEntrada.Fecha
+                         == session.FechaAlmacen)
     if session.DonanteAlmacen:
-        query = query & (db.CabeceraEntrada.Donante == session.DonanteAlmacen)
+        query = query & (db.CabeceraEntrada.Donante
+                         == session.DonanteAlmacen)
     if session.ProcedenciaAlmacen:
-        query = query & (
-            db.CabeceraEntrada.tipoProcedencia == session.ProcedenciaAlmacen)
+        query = query & (db.CabeceraEntrada.tipoProcedencia
+                         == session.ProcedenciaAlmacen)
     if session.AlmacenAlimento:
-        query = query & (db.CabeceraEntrada.id == db.LineaEntrada.cabecera)
-        query = query & (db.LineaEntrada.alimento == session.AlmacenAlimento)
+        query = query & (db.CabeceraEntrada.id
+                         == db.LineaEntrada.cabecera)
+        query = query & (db.LineaEntrada.alimento
+                         == session.AlmacenAlimento)
 
-    rowsentradas = db(query).select(
-        db.CabeceraEntrada.ALL, limitby=limitby, orderby=orderby)
+    rowsentradas = db(query).select(db.CabeceraEntrada.ALL,
+                                    limitby=limitby, orderby=orderby)
+
     # print db._lastsql
+
     for r in rowsentradas:
+
         # print db._lastsql
+
         vals = []
         for f in fields:
             if f == 'nada':
-                vals.append("")
+                vals.append('')
             elif f == 'Donante':
-                vals.append(db.CabeceraEntrada['Donante'].represent(r(f)))
+                vals.append(db.CabeceraEntrada['Donante'
+                            ].represent(r(f)))
             else:
                 vals.append(r[f])
 
@@ -490,27 +601,35 @@ def get_rows_salidas():
         orderby = ~db.CabeceraSalida.Fecha
     if request.vars.sord == 'desc':
         orderby = ~orderby
-    #query = ""
-    query = (db.CabeceraSalida.id > 0)
+
+    # query = ""
+
+    query = db.CabeceraSalida.id > 0
     if session.FechaAlmacen:
-        query = query & (db.CabeceraSalida.Fecha == session.FechaAlmacen)
+        query = query & (db.CabeceraSalida.Fecha
+                         == session.FechaAlmacen)
     if session.BeneficiarioAlmacen:
-        query = query & (
-            db.CabeceraSalida.Beneficiario == session.BeneficiarioAlmacen)
+        query = query & (db.CabeceraSalida.Beneficiario
+                         == session.BeneficiarioAlmacen)
     if session.AlmacenAlimento:
-        query = query & (db.CabeceraSalida.id == db.LineaSalida.cabecera)
-        query = query & (db.LineaSalida.alimento == session.AlmacenAlimento)
-    rowssalidas = db(query).select(
-        db.CabeceraSalida.ALL, limitby=limitby, orderby=orderby)
+        query = query & (db.CabeceraSalida.id
+                         == db.LineaSalida.cabecera)
+        query = query & (db.LineaSalida.alimento
+                         == session.AlmacenAlimento)
+    rowssalidas = db(query).select(db.CabeceraSalida.ALL,
+                                   limitby=limitby, orderby=orderby)
 
     for r in rowssalidas:
+
         # print db._lastsql
+
         vals = []
         for f in fields:
             if f == 'nada':
-                vals.append("")
+                vals.append('')
             elif f == 'Beneficiario':
-                vals.append(db.CabeceraSalida['Beneficiario'].represent(r(f)))
+                vals.append(db.CabeceraSalida['Beneficiario'
+                            ].represent(r(f)))
             else:
                 vals.append(r[f])
 
@@ -527,10 +646,11 @@ def get_rows_salidas():
 @service.json
 def get_lineas():
 
-    fields = ['Stock', 'Caducidad', 'PesoUnidad', 'stockinicial', 'Lote']
+    fields = ['Stock', 'Caducidad', 'PesoUnidad', 'stockinicial', 'Lote'
+              ]
     rows = []
     cabecera_id = request.vars.id
-    query = (db.LineaAlmacen.cabecera == cabecera_id)
+    query = db.LineaAlmacen.cabecera == cabecera_id
     for r in db(query).select(orderby=db.LineaAlmacen.Caducidad):
         vals = []
         for f in fields:
@@ -552,21 +672,21 @@ def get_lineas_entradas():
     limitby = None
     if 'id' in request.vars:
         cabecera_id = request.vars.id
-    elif "current_entrada" in session.keys():
+    elif 'current_entrada' in session.keys():
         if session.current_entrada:
             cabecera_id = session.current_entrada
             page = int(request.vars.page)  # the page number
             pagesize = int(request.vars.rows)
             limitby = (page * pagesize - pagesize, page * pagesize)
             EnDetalle = True
-            fields = ["nada", ] + fields
+            fields = ['nada'] + fields
 
     if session.Entradas:
-        query = (db.LineaEntrada.cabecera == cabecera_id)
+        query = db.LineaEntrada.cabecera == cabecera_id
         suma = db.LineaEntrada.Unidades.sum()
         ordenacion = ~db.LineaEntrada.id
     else:
-        query = (db.LineaSalida.cabecera == cabecera_id)
+        query = db.LineaSalida.cabecera == cabecera_id
         suma = db.LineaSalida.Unidades.sum()
         ordenacion = ~db.LineaSalida.id
 
@@ -577,7 +697,7 @@ def get_lineas_entradas():
         vals = []
         for f in fields:
             if f == 'nada':
-                vals.append("")
+                vals.append('')
             elif f == 'Caducidad':
                 k = r(f).strftime('%d/%m/%Y')
                 vals.append(k)
@@ -587,18 +707,18 @@ def get_lineas_entradas():
             elif f == 'Lote':
                 vals.append(r[f] or '')
             else:
-                vals.append(locale.format("%.2f", r[f], grouping=True))
+                vals.append(locale.format('%.2f', r[f], grouping=True))
         rows.append(dict(id=r.id, cell=vals))
 
     if EnDetalle:
         if qty_totales:
-            totales = locale.format("%.2f", qty_totales, grouping=True)
+            totales = locale.format('%.2f', qty_totales, grouping=True)
         else:
-            totales = ""
+            totales = ''
         total = db(query).count()
         pages = math.ceil(1.0 * total / pagesize)
-        data = dict(records=total, total=pages, page=page,
-                    rows=rows, userdata={'qty_totales': totales})
+        data = dict(records=total, total=pages, page=page, rows=rows,
+                    userdata={'qty_totales': totales})
         return data
     else:
         return response.json(dict(rows=rows))
@@ -607,8 +727,15 @@ def get_lineas_entradas():
 @auth.requires_login()
 @service.json
 def get_lineas_almacen():
-    fields = ['alimento', 'Stock', 'PesoUnidad',
-              'Caducidad', 'Lote', 'estanteria', 'Palets']
+    fields = [
+        'alimento',
+        'Stock',
+        'PesoUnidad',
+        'Caducidad',
+        'Lote',
+        'estanteria',
+        'Palets',
+        ]
     rows = []
     limitby = None
     total = 0
@@ -616,13 +743,13 @@ def get_lineas_almacen():
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
     limitby = (page * pagesize - pagesize, page * pagesize)
-    cabecera = db(
-        db.CabeceraAlmacen.alimento == session.AlmacenAlimento).select().first()
+    cabecera = db(db.CabeceraAlmacen.alimento
+                  == session.AlmacenAlimento).select().first()
     if cabecera:
-        query = (db.LineaAlmacen.cabecera == cabecera.id) & (
-            db.LineaAlmacen.Stock > 0)
-        mialimento = db.CabeceraAlmacen[
-            'alimento'].represent(cabecera.alimento)
+        query = (db.LineaAlmacen.cabecera == cabecera.id) \
+            & (db.LineaAlmacen.Stock > 0)
+        mialimento = db.CabeceraAlmacen['alimento'
+                ].represent(cabecera.alimento)
         for r in db(query).select(limitby=limitby):
             vals = []
             for f in fields:
@@ -630,7 +757,7 @@ def get_lineas_almacen():
                     if r(f):
                         k = r(f).strftime('%d/%m/%Y')
                     else:
-                        k = ""
+                        k = ''
                     vals.append(k)
                 elif f == 'alimento':
                     vals.append(mialimento)
@@ -662,22 +789,24 @@ def borrar_linea(linea_id=None):
         if session.Entradas:
             registro = db.LineaEntrada(linea_id)
             if registro.LineaAlmacen > 0:
-                actualiza_lineaalmacen(
-                    registro.LineaAlmacen, 0, registro.Unidades)
+                actualiza_lineaalmacen(registro.LineaAlmacen, 0,
+                        registro.Unidades)
             db(db.LineaEntrada.id == linea_id).delete()
         else:
             registro = db.LineaSalida(linea_id)
-            cabecera = db(
-                db.CabeceraAlmacen.alimento == registro.alimento).select().first()
-            query = (db.LineaAlmacen.cabecera == cabecera.id)
-            linea_almacen = db(query).select(
-                db.LineaAlmacen.id, orderby=~db.LineaAlmacen.Stock).first()
+            cabecera = db(db.CabeceraAlmacen.alimento
+                          == registro.alimento).select().first()
+            query = db.LineaAlmacen.cabecera == cabecera.id
+            linea_almacen = db(query).select(db.LineaAlmacen.id,
+                    orderby=~db.LineaAlmacen.Stock).first()
+
             # metemos el stock de la línea borrada en la lína
             # de stock que más tenga. No se lleva registro de las
             # líneas de almacén que hubiera antes:
+
             if linea_almacen > 0:
-                actualiza_lineaalmacen(
-                    linea_almacen.id, registro.Unidades, 0)
+                actualiza_lineaalmacen(linea_almacen.id,
+                        registro.Unidades, 0)
             db(db.LineaSalida.id == linea_id).delete()
 
 
@@ -685,8 +814,8 @@ def borrar_linea(linea_id=None):
 @service.json
 def borra_entrada():
     if 'entrada_id' in request.vars:
-        query = (db.LineaEntrada.cabecera == db.CabeceraEntrada.id) & (
-            db.CabeceraEntrada.id == request.vars.entrada_id)
+        query = (db.LineaEntrada.cabecera == db.CabeceraEntrada.id) \
+            & (db.CabeceraEntrada.id == request.vars.entrada_id)
         rows = db(query).select(db.LineaEntrada.id)
         for row in rows:
             borrar_linea(row.id)
@@ -698,8 +827,8 @@ def borra_entrada():
 @service.json
 def borra_salida():
     if 'salida_id' in request.vars:
-        query = (db.LineaSalida.cabecera == db.CabeceraSalida.id) & (
-            db.CabeceraSalida.id == request.vars.salida_id)
+        query = (db.LineaSalida.cabecera == db.CabeceraSalida.id) \
+            & (db.CabeceraSalida.id == request.vars.salida_id)
         rows = db(query).select(db.LineaSalida.id)
         for row in rows:
             borrar_linea(row.id)
@@ -716,8 +845,8 @@ def set_parametros():
             valor = None
         if parametro == 'fecha':
             if valor:
-                session.FechaAlmacen = datetime.date(
-                    datetime.strptime(valor, '%d-%m-%Y'))
+                session.FechaAlmacen = \
+                    datetime.date(datetime.strptime(valor, '%d-%m-%Y'))
             else:
                 session.FechaAlmacen = None
         elif parametro == 'donante':
@@ -732,8 +861,8 @@ def set_parametros():
 def get_alimentos():
     q = request.vars.term
     if q:
-        search_term = q.lower().replace(" ", "-")
-        query = (db.Alimento.Descripcion.contains(search_term))
+        search_term = q.lower().replace(' ', '-')
+        query = db.Alimento.Descripcion.contains(search_term)
 
         rows = db(query).select(db.Alimento.Descripcion)
         return response.json([s['Descripcion'] for s in rows])
@@ -744,8 +873,8 @@ def get_alimentos():
 def get_donante():
     q = request.vars.term
     if q:
-        query = (db.Colaborador.name.contains(q)) & (
-            db.Colaborador.Donante == True)
+        query = db.Colaborador.name.contains(q) \
+            & (db.Colaborador.Donante == True)
         rows = db(query).select(db.Colaborador.name)
         return response.json([s['name'] for s in rows])
 
@@ -756,9 +885,11 @@ def set_donante():
 
     q = request.vars.donante
     if q:
-        query = (db.Colaborador.name == q) & (db.Colaborador.Donante == True)
-        row = db(query).select(db.Colaborador.name, db.Colaborador.id).first()
-        data = {"donante": row.id}
+        query = (db.Colaborador.name == q) & (db.Colaborador.Donante
+                == True)
+        row = db(query).select(db.Colaborador.name,
+                               db.Colaborador.id).first()
+        data = {'donante': row.id}
         data = row.id
         return data
     return ''
@@ -779,23 +910,22 @@ def data():
 
 
 def search_form(self, url):
-    form = FORM('',
-
-                INPUT(_name='search_text', _value=request.get_vars.keywords,
-
-                      _style='width:200px;',
-                      _id='searchText'),
-                INPUT(_type='submit', _value=T('Search')),
-                INPUT(_type='submit', _value=T('Clear'),
-                      _onclick="jQuery('#keywords').val('');"),
-
-                _method="GET", _action=url)
+    form = FORM(
+        '',
+        INPUT(_name='search_text', _value=request.get_vars.keywords,
+              _style='width:200px;', _id='searchText'),
+        INPUT(_type='submit', _value=T('Search')),
+        INPUT(_type='submit', _value=T('Clear'),
+              _onclick="jQuery('#keywords').val('');"),
+        _method='GET',
+        _action=url,
+        )
 
     return form
 
 
 def search_query(tableid, search_text, fields):
-    words = search_text.split(' ') if search_text else []
+    words = (search_text.split(' ') if search_text else [])
     query = tableid < 0  # empty query
     for field in fields:
         new_query = tableid > 0

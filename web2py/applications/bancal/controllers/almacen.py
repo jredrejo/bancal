@@ -144,7 +144,7 @@ def nueva_entrada():
 
     if request.vars._autocomplete_Colaborador_name_aux:
         request.vars.pop('_autocomplete_Colaborador_name_aux')
-    if form.accepts(request.vars, session):
+    if form.accepts(request.vars, session,onvalidation=ver_cierre):
         response.flash = 'Nueva entrada grabada'
         session.current_entrada = form.vars.id
         redirect(URL('nueva_entrada', args=[form.vars.id]))
@@ -205,6 +205,12 @@ def nueva_entrada():
                 codigo_alimento=codigo_alimento)
 
 
+def ver_cierre(form):
+    if session.cierre:
+        if form.vars.Fecha<session.cierre:
+            form.errors.Fecha='El almacén está cerrado para esa fecha'
+
+
 @auth.requires_login()
 def nueva_salida():
     session.Entradas = False
@@ -214,7 +220,7 @@ def nueva_salida():
     codigo_alimento = None
     if len(request.args) > 0:
 
-        # uso session.current_entrada en lugar de session.current_salida para
+        # uso session.current_entrada en lugar de session.current_salida para.
         # que valga la misma función de  get_lineas_entradas en entradas y
         # salidas
 
@@ -237,7 +243,7 @@ def nueva_salida():
         session.NuevaLinea = True
     form = SQLFORM(db.CabeceraSalida, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
-    if form.accepts(request.vars, session):
+    if form.accepts(request.vars, session,onvalidation=ver_cierre):
         response.flash = 'Nueva salida grabada'
         session.current_entrada = form.vars.id
         redirect(URL('nueva_salida', args=[form.vars.id]))

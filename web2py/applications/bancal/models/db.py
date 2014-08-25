@@ -28,29 +28,22 @@
 #Activate in production:
 # request.requires_https()
 
-from gluon import current
-import datetime
-#Para el autocompletado con aptana/eclipse+pydev:
+# Para el autocompletado con aptana/eclipse+pydev:
 if 0:
     from gluon import *
-    global LOAD; LOAD  = compileapp.LoadFactory()
-    global request; request = globals.Request()
-    global response; response = globals.Response()
-    global session; session = globals.Session()
-    global cache; cache = cache.Cache()
-    global db; db = sql.DAL()
-    global auth; auth = tools.Auth()
-    global crud; crud = tools.Crud()
-    global mail; mail = tools.Mail()
-    global plugins; plugins = tools.PluginManager()
-    global service; service = tools.Service()
+    (request, session, response, T, cache) = (current.request,
+                                              current.session, current.response, current.t, current.cache)
+    from gluon.dal import DAL
+    from gluon.sqlhtml import *
+    from gluon.validators import *
 
 ####NOTA IMPORTANTE:
 ####  Mientras se está en desarrollo, hay que poner migrate=True y lazy_tables=False
 #### para que se puedan crear las tablas necesarias en la base de datos.
 #### Una vez se pase a producción, migrate=False y lazy_tables=True
 #### hará que sea mucho más rápida la ejecución de la aplicación:
-
+from gluon import current
+import datetime
 db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'
          ], migrate=False, lazy_tables=True)
 current.db = db
@@ -80,7 +73,7 @@ auth = Auth(db)
 
 # create all tables needed by auth if not custom tables
 
-auth.define_tables(username=False, signature=True)
+auth.define_tables(username=False, signature=False)
 
 
 # configure email
@@ -239,6 +232,11 @@ db.define_table('Estanteria', Field('name', label='Nombre',
                 default='Estantería A'), Field('almacen', db.Almacen,
                 label='Almacén', default=1))
 
+
+db.define_table('Cierre',
+                Field('Fecha','date',label="Fecha de cierre",default=datetime.date.today()),
+                Field('Cerrado','boolean',default=False))
+db.Cierre.id.readable = False
 # tipo_empresa = (
 #    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
 #    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
@@ -545,4 +543,13 @@ if "comprobado" not in session.keys():
         # importacion.rellena_lineasentradas()
         # importacion.rellena_cabecerasalidas()
         # importacion.rellena_lineasalidas()
-        importacion.rellena_alimentos2()        
+        importacion.rellena_alimentos2()
+
+    record = db().select(db.Cierre.ALL, limitby=(0, 1))
+    if not record:
+        id1 = db.Cierre.insert()
+    record = db(db.Cierre.id == 1).select().first()
+    if record.Cerrado:
+        session.cierre=record.Fecha
+    else:
+        session.cierre=None

@@ -88,6 +88,26 @@ def sede():
 
     return dict(form=form)
 
+def cierre():
+    record = db().select(db.Cierre.ALL, limitby=(0, 1))
+    if not record:
+        id1 = db.Cierre.insert()
+    record = db(db.Cierre.id == 1).select().first()
+    form = SQLFORM(db.Cierre, record)
+    if form.process().accepted:
+        response.flash = 'Datos grabados'
+        if form.vars.Cerrado:
+            session.cierre=form.vars.Fecha
+        else:
+            session.cierre=None
+    elif form.errors:
+        response.flash = 'Hay errores en estos datos'
+    else:
+        response.flash = 'Rellene estos datos'
+    return dict(form=form)
+
+
+
 
 @auth.requires_login()
 def almacen():

@@ -25,6 +25,16 @@
 #
 ##############################################################################
 
+# Para el autocompletado con aptana/eclipse+pydev:
+if 0:
+    from gluon import *
+    (request, session, response, T, cache) = (current.request,
+                                              current.session, current.response, current.t, current.cache)
+    from gluon.dal import DAL
+    from gluon.sqlhtml import *
+    from gluon.validators import *
+
+
 response.logo = A(B('Banco de Alimentos'), XML('&nbsp;Badajoz'),
                   _class="brand", _href=URL('default', 'index'))
 response.title = 'Banco de alimentos'
@@ -45,6 +55,7 @@ if session.auth:
         (T('Datos de la sede'), False,  URL('config', 'sede'), []),
         (T('Almacenes'), False,  URL('config', 'almacen'), []),
         (T('Alimentos'), False,  URL('config', 'alimentos'), []),
+        (T('Cierre Almacén'), False,  URL('config', 'cierre'), []),
         ])
     ]
 
@@ -79,5 +90,3 @@ if session.auth:
 else:
     response.menu = []
 
-if "auth" in locals():
-    auth.wikimenu()

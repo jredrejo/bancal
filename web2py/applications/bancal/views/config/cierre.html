@@ -1,0 +1,63 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+
+
+  <style type="text/css">
+  
+  [type="text"], select {
+  width: 450px;
+}
+  </style>
+<h4>Activar si se desea cerrar las entradas y salidas de almacén anteriores a esta fecha:</h4>
+{{=form}}
+
+{{block misjavascript}}
+
+
+
+<script type="text/javascript">
+
+
+        
+    function removeSpaces(string) {
+    // quita los espacios y todos los caraceres que no son un número
+         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
+    }        
+    
+     
+
+jQuery(document).ready(function(){
+   // chrome fix.
+   document.onselectstart = function () { return false; };             
+
+
+
+  jQuery("#Sede_name").focus();
+
+   jQuery('#sede_CIF').change(function(){
+        var arr = $(this).val();
+        $(this).val(checkDNIData(arr));
+        });
+
+        
+   jQuery('#Sede_movil').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });        
+   jQuery('#Sede_telefono').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });       
+   jQuery('#Sede_telefono2').change(function(){
+        var arr = $(this).val();
+        $(this).val(removeSpaces(arr));
+        });        
+
+
+
+});
+
+
+
+</script>
+{{end}}

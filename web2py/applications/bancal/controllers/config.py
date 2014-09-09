@@ -88,6 +88,8 @@ def sede():
 
     return dict(form=form)
 
+
+@auth.requires_login()
 def cierre():
     record = db().select(db.Cierre.ALL, limitby=(0, 1))
     if not record:

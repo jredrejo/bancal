@@ -368,7 +368,7 @@ db.define_table(  # Field(
     Field('email', label='Correo electrónico'),
     Field('contacto', label='Persona contacto'),
     Field('FAGA', 'boolean', default=False),
-    Field('beneficiarios', 'integer', label="Nº Beneficiarios",
+    Field('beneficiarios', 'integer', label="Nº Beneficiarios",notnull=True,
           default=100),
     Field('tipobeneficiario', label='Tipo beneficiario',
           default='Banco Alimentos'),

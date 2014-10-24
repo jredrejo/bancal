@@ -387,7 +387,7 @@ def nueva_lineaalmacen(valores):
 def get_codigo():
     """Devuelve:
     - el nombre de un alimento dado su código
-    - Si hay stock devuelve también:
+    - Si estoy en salidas y hay stock devuelve también:
         - el stock disponible como número real
         - el stock disponible como cadena de texto"""
 
@@ -405,17 +405,20 @@ def get_codigo():
             stock = \
                 db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
 
+            data = {'alimento': ''}
+            session.AlmacenAlimento = None
+            session.AlmacenStock = None
             if stock:
-                locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
-                session.AlmacenStock = stock
-                data['stock'] = stock
+                if stock>0:
+                    locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
+                    session.AlmacenStock = stock
+                    data['stock'] = stock
 
-                data['stock-text'] = locale.format('%.2f', stock,
-                        grouping=True)
-            else:
-                data = {'alimento': ''}
-                session.AlmacenAlimento = None
-                session.AlmacenStock = None
+                    data['stock-text'] = locale.format('%.2f', stock,
+                            grouping=True)
+                    data = {'alimento': alimento.Descripcion}
+                    session.AlmacenAlimento = alimento.id
+
     else:
 
         data = {'alimento': ''}

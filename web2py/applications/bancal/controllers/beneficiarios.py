@@ -25,21 +25,6 @@
 #
 ##############################################################################
 
-#Para el autocompletado con aptana/eclipse+pydev:
-if 0:
-    from gluon import *
-    global LOAD; LOAD  = compileapp.LoadFactory()
-    global request; request = globals.Request()
-    global response; response = globals.Response()
-    global session; session = globals.Session()
-    global cache; cache = cache.Cache()
-    global db; db = sql.DAL()
-    global auth; auth = tools.Auth()
-    global crud; crud = tools.Crud()
-    global mail; mail = tools.Mail()
-    global plugins; plugins = tools.PluginManager()
-    global service; service = tools.Service()
-
 @auth.requires_login()
 def index():
     import ui_def

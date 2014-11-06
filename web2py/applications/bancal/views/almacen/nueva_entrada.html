@@ -141,12 +141,14 @@ Total Kg. en esta entrada:
     {{else:}}
     jQuery("#CabeceraEntrada_Donante").focus();
     {{pass}}
+     /*
     jQuery('#Alimento_Codigo').keyup(function(e){
         if(e.keyCode == 13)
         {
             buscar_alimento();
         }
     });
+    */
     jQuery('#Alimento_Codigo').change(function(){
             buscar_alimento();
     });
@@ -168,11 +170,11 @@ Total Kg. en esta entrada:
 
       //Para deshacer el formateado numérico en español antes de enviar el formulario
       jQuery('#frmlineas').submit(function(){
-        var unidades=jQuery("#LineaEntrada_Unidades")
+        var unidades=jQuery("#LineaEntrada_Unidades");
         var v=unidades.autoNumeric('get');
         unidades.autoNumeric('destroy');
         unidades.val(v);
-        var peso=jQuery("#LineaEntrada_PesoUnidad")
+        var peso=jQuery("#LineaEntrada_PesoUnidad");
         v=peso.autoNumeric('get');
         peso.autoNumeric('destroy');
         peso.val(v);
@@ -248,7 +250,7 @@ Total Kg. en esta entrada:
       {name:'Alimento', index:'Alimento',width:250},
       {name:'Unidades', index:'Unidades',width:70,align:"center"},
       {name:'PesoUnidad', index:'Peso/Unidad',width:90,align:"center"},
-      {name:'Caducidad', index:'Caducidad',width:70,align:"center"},
+      {name:'Caducidad', index:'Caducidad',width:70,align:"center"}
 
     ],
     pager: '#pager',
@@ -264,7 +266,7 @@ Total Kg. en esta entrada:
     subGrid : false,
     footerrow: true,
     gridComplete: function() {
-         var thegrid =jQuery("#list")
+         var thegrid =jQuery("#list");
          var ids = thegrid.jqGrid("getDataIDs");
           for(var i=0;i < ids.length;i++){
             var cl = ids[i];

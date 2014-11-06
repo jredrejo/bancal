@@ -134,8 +134,8 @@
                 //jQuery("#contenedor_almacen").show();}
                 //jQuery("#almacen").jqGrid().trigger("reloadGrid");
                 jQuery("#stockalimento").show();
-                stockdisponible=data['stock']
-                stockdisponible_text=data['stock-text']
+                stockdisponible=data['stock'];
+                stockdisponible_text=data['stock-text'];
                 jQuery("#valorstock").text(data['stock-text']);}
 
             });        
@@ -185,11 +185,11 @@
       
       //Para deshacer el formateado numérico en español antes de enviar el formulario
       jQuery('#frmlineas').submit(function(){
-        var unidades=jQuery("#LineaSalida_Unidades")
+        var unidades=jQuery("#LineaSalida_Unidades");
         var v=unidades.autoNumeric('get');
         unidades.autoNumeric('destroy');
         unidades.val(v);
-        var peso=jQuery("#LineaSalida_PesoUnidad")
+        var peso=jQuery("#LineaSalida_PesoUnidad");
         v=peso.autoNumeric('get');
         peso.autoNumeric('destroy');
         peso.val(v);
@@ -198,12 +198,13 @@
 
 
 
-    jQuery('#Alimento_Codigo').keyup(function(e){
+    /*jQuery('#Alimento_Codigo').keyup(function(e){
         if(e.keyCode == 13)
         {
             buscar_alimento();
         }
     });
+    */
     jQuery('#Alimento_Codigo').change(function(){
             buscar_alimento();
     });
@@ -230,8 +231,8 @@
                  // jQuery("#contenedor_almacen").show();
                   jQuery("#Alimento_Codigo").val(data["codigo"]);
                   jQuery("#stockalimento").show();
-                  stockdisponible=data['stock']
-                  stockdisponible_text=data['stock-text']
+                  stockdisponible=data['stock'];
+                  stockdisponible_text=data['stock-text'];
                   jQuery("#valorstock").text(stockdisponible_text);
                   jQuery("#LineaSalida_Unidades").focus();
                   
@@ -274,7 +275,7 @@
     subGrid : false,
     footerrow: true,
     gridComplete: function() {
-         var thegrid =jQuery("#list")
+         var thegrid =jQuery("#list");
          var ids = thegrid.jqGrid("getDataIDs");
           for(var i=0;i < ids.length;i++){
             var cl = ids[i];

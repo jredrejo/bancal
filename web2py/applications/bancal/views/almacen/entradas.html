@@ -190,7 +190,7 @@
     subGridModel: [{ name  : ['Alimento','Unidades','Peso/Unidad','Caducidad','Lote'], 
                     width : [200,70,70,70,70] } ],
     loadComplete: function(data){
-         var grid =jQuery("#list")
+         var grid =jQuery("#list");
          var ids = grid.jqGrid("getDataIDs");
          if(ids && ids.length > 0)
             grid.jqGrid("setSelection", ids[0]);       
@@ -200,7 +200,7 @@
     window.location.href='{{=URL(r=request,f="nueva_entrada")}}' + '/' + id;
   }, // fin del evento dblclick
   gridComplete: function() {
-       var thegrid =jQuery("#list")
+       var thegrid =jQuery("#list");
        var ids = thegrid.jqGrid("getDataIDs");
         for(var i=0;i < ids.length;i++){
           var cl = ids[i];
@@ -209,7 +209,7 @@
           be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
           thegrid.jqGrid('setRowData',ids[i],{action:be});
         }
-  }, // fin del evento gridComplete  
+  } // fin del evento gridComplete
   }); //fin de la definición de jqgrid
 
   jQuery("#list").jqGrid().jqGrid('bindKeys',

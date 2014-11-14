@@ -168,13 +168,24 @@
     jQuery('#LineaSalida_Unidades').autoNumeric('init', {aSep: '.', aDec: ','});
     jQuery('#LineaSalida_PesoUnidad').removeClass("double");    
     jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.', aDec: ','});    
-    jQuery("#LineaSalida_Unidades").focusout(function() {
-      current_value =  parseInt($(this).val());
-      if (current_value>stockdisponible) 
-        $(this).val(stockdisponible_text);
-        alert("Ajustadas las unidades al máximo stock disponible en almacén: " + stockdisponible_text);
 
+    jQuery('#Alimento_Codigo').change(function(){
+            buscar_alimento();
     });
+
+    jQuery('#LineaSalida_Unidades').focus(function(){
+        if (!jQuery("#stockalimento").is(":visible") )
+            buscar_alimento();
+    });
+
+    jQuery("#LineaSalida_Unidades").focusout(function() {
+        current_value = parseInt($(this).val());
+        if (current_value > stockdisponible) {
+            $(this).val(stockdisponible_text);
+            alert("Ajustadas las unidades al máximo stock disponible en almacén: " + stockdisponible_text);
+        }
+    });
+
 
     jQuery('#LineaSalida_Unidades').focus(function(){
             if (jQuery('#LineaSalida_Unidades').val()=="1,00")
@@ -205,9 +216,8 @@
         }
     });
     */
-    jQuery('#Alimento_Codigo').change(function(){
-            buscar_alimento();
-    });
+
+
 
    jQuery('#LineaSalida_alimento').autocomplete({
       minLength: 2,

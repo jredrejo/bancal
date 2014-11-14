@@ -334,7 +334,9 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
 
     registro = db.LineaAlmacen(linea)
     total = float(registro.Stock)
-    registro.Stock = total + valornuevo - valorprevio
+    #Limito a tres decimales en el stock
+    registro.Stock = float("{0:.3f}".format(total + valornuevo - valorprevio))
+    if registro.Stock<0: registro.Stock =0
     registro.update_record()
 
 
@@ -471,7 +473,7 @@ def get_rows():
     if request.vars.sidx == 'Stock':
         orderby = db.LineaAlmacen.Stock.sum()
     elif request.vars.sidx == 'kkkkk':
-        orderby = ~db.LineaAlmacen.id
+        orderby = db.Alimento.Codigo
     else:
         orderby = db.Alimento[request.vars.sidx]
     if request.vars.sord == 'desc':
@@ -799,7 +801,7 @@ def borrar_linea(linea_id=None):
             # de stock que más tenga. No se lleva registro de las
             # líneas de almacén que hubiera antes:
 
-            if linea_almacen > 0:
+            if linea_almacen:
                 actualiza_lineaalmacen(linea_almacen.id,
                         registro.Unidades, 0)
             db(db.LineaSalida.id == linea_id).delete()

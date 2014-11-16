@@ -465,8 +465,14 @@ def get_rows():
     fields = ['Alimento.Codigo', 'Alimento.Descripcion',
               'Alimento.Conservacion', 'Stock', 'Alimento.Unidades']
     rows = []
-    page = int(request.vars.page)  # the page number
-    pagesize = int(request.vars.rows)
+    try:
+        page = int(request.vars.page)  # the page number
+    except:
+        page = 1
+    try:
+        pagesize = int(request.vars.rows)
+    except:
+        pagesize = 100
 
     limitby = (page * pagesize - pagesize, page * pagesize)
 
@@ -930,3 +936,34 @@ def search_query(tableid, search_text, fields):
             new_query = new_query & field.contains(word)
         query = query | new_query
     return query
+
+
+def repaso_almacen():
+    query=(db.LineaSalida.cabecera>507) & (db.LineaEntrada.cabecera>292)
+
+    sumsalidas= db.LineaSalida.Unidades.sum()
+    sumentradas= db.LineaEntrada.Unidades.sum()
+    totales=[]
+
+
+
+    filas=db(db.LineaSalida.cabecera>507).select(db.LineaSalida.alimento,sumsalidas,groupby=db.LineaSalida.alimento)
+    filase=db(db.LineaEntrada.cabecera>292).select(db.LineaEntrada.alimento,sumentradas,groupby=db.LineaEntrada.alimento)
+
+    entradas={}
+    totales={}
+
+    for fila in filase:
+        totales[fila.LineaEntrada.alimento]= fila[sumentradas]
+
+    for fila in filas:
+        if fila.LineaSalida.alimento in totales.keys():
+            totales[fila.LineaSalida.alimento]=totales[fila.LineaSalida.alimento] - fila[sumsalidas]
+        else:
+            totales[fila.LineaSalida.alimento]= - fila[sumsalidas]
+
+
+
+
+
+    return dict(totales=totales)

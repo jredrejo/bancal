@@ -945,7 +945,7 @@ def repaso_almacen():
     sumentradas= db.LineaEntrada.Unidades.sum()
     totales=[]
 
-
+    estado_11_11_2014={2:1267.67,3:61.0,4:9.5,6:55.7,7:147.015,9:1423.8,10:8192.0,11:29114.5,12:7379.0,14:139.84,17:465.0,19:6443.25,21:21506.65,22:48.3,23:486.3,24:62.4,25:35.3,28:10393.2,43:0.0,45:6643.55,46:235.0,51:163.04,99:276.0}
 
     filas=db(db.LineaSalida.cabecera>507).select(db.LineaSalida.alimento,sumsalidas,groupby=db.LineaSalida.alimento)
     filase=db(db.LineaEntrada.cabecera>292).select(db.LineaEntrada.alimento,sumentradas,groupby=db.LineaEntrada.alimento)
@@ -961,7 +961,12 @@ def repaso_almacen():
             totales[fila.LineaSalida.alimento]=totales[fila.LineaSalida.alimento] - fila[sumsalidas]
         else:
             totales[fila.LineaSalida.alimento]= - fila[sumsalidas]
-
+    for estado in estado_11_11_2014:
+        try:
+            totales[estado]=estado_11_11_2014[estado]+ totales[estado]
+            totales[estado]=float("{0:.3f}".format(totales[estado]))
+        except:
+            pass
 
 
 

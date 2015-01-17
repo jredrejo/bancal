@@ -127,6 +127,7 @@
 'Database': 'base de datos',
 'Database %s select': 'selección en base de datos %s',
 'database administration': 'administración base de datos',
+'Database Administration (appadmin)': 'Database Administration (appadmin)',
 'Date and Time': 'Fecha y Hora',
 'Datos de la sede': 'Datos de la sede',
 'db': 'db',

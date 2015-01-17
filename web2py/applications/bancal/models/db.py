@@ -370,7 +370,7 @@ db.define_table(  # Field(
     Field('FAGA', 'boolean', default=False),
     Field('beneficiarios', 'integer', label="Nº Beneficiarios",notnull=True,
           default=100),
-    Field('tipobeneficiario', label='Tipo beneficiario',
+    Field('tipobeneficiario', label='Tipo beneficiario',notnull=True,
           default='Banco Alimentos'),
     format=lambda r: str(r.name) + (('' if not r.apellido1 else ' '
                                     + r.apellido1)) + ((''
@@ -440,7 +440,7 @@ tipo_procedencia = (
 
 db.define_table('CabeceraEntrada', Field('almacen', db.Almacen,
                 label='Almacén', default=1), Field('tipoProcedencia',
-                requires=IS_EMPTY_OR(IS_IN_SET(tipo_procedencia)),
+                requires=IS_IN_SET(tipo_procedencia), notnull=True,
                 label='Procedencia'), Field('Donante', db.Colaborador),
                 Field('Fecha', 'date', default=datetime.date.today()))
 db.CabeceraEntrada.Donante.requires = \

@@ -23,6 +23,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+#
+# For the app reports to work python-dateutil package must be installed
 ##############################################################################
 
 #Activate in production:
@@ -45,7 +47,7 @@ if 0:
 from gluon import current
 import datetime
 db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'
-         ], migrate=False, lazy_tables=True)
+         ], migrate=True, lazy_tables=False)
 current.db = db
 
 # by default give a view/generic.extension to all actions from localhost
@@ -505,7 +507,7 @@ db.CabeceraSalida.Total = Field.Virtual(lambda row: \
 #### IMPORTANTE: POR SEGURIDAD UNA VEZ QUE SE ENTRE EN LA APLICACIÓN HAY QUE 
 #### CAMBIAR LA CONTRASEÑA DEL USUARIO admin@admin.com, que inicialmente es
 #### password_malo
-if "comprobado" not in session.keys():  
+if "comprobado" not in session.keys():
     session.comprobado=True
     # initialize admin user and roles group:
     useradmin = db(db.auth_user.id == 1).select()

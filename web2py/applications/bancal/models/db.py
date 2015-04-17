@@ -44,9 +44,17 @@ if 0:
 #### hará que sea mucho más rápida la ejecución de la aplicación:
 from gluon import current
 import datetime
-db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'
-         ], migrate=False, lazy_tables=True)
+import pytest
+from web2pytest import web2pytest
+
+if web2pytest.is_running_under_test(request, request.application):
+    db = DAL('sqlite://test.sqlite', pool_size=1, check_reserved=['all'
+         ], migrate=True, lazy_tables=False)    
+else:
+    db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'
+         ], migrate=True, lazy_tables=False)
 current.db = db
+
 
 # by default give a view/generic.extension to all actions from localhost
 # none otherwise. a pattern can be 'controller/function.extension'
@@ -71,9 +79,6 @@ from gluon.tools import Auth, Crud, Service, PluginManager
 auth = Auth(db)
 (crud, service, plugins) = (Crud(db), Service(), PluginManager())
 
-# create all tables needed by auth if not custom tables
-
-auth.define_tables(username=False, signature=False)
 
 
 # configure email
@@ -227,6 +232,21 @@ db.Sede.poblacion.widget = ajax_autocomplete
 db.define_table('Almacen', Field('name', label='Nombre',
                 default='El Nevero'), Field('sede', db.Sede,
                 label='Sede', default=1))
+
+
+
+
+
+auth.settings.extra_fields['auth_user']= [
+  Field('almacen',db.Almacen, label='Almacén', default=1)
+  ]
+# create all tables needed by auth if not custom tables
+
+auth.define_tables(username=False, signature=False)
+
+#set session almacenvariable despues de login
+auth.settings.login_onaccept.append(lambda x:session.update({'almacen':session.auth.user.almacen}))
+
 
 db.define_table('Estanteria', Field('name', label='Nombre',
                 default='Estantería A'), Field('almacen', db.Almacen,
@@ -505,14 +525,19 @@ db.CabeceraSalida.Total = Field.Virtual(lambda row: \
 #### IMPORTANTE: POR SEGURIDAD UNA VEZ QUE SE ENTRE EN LA APLICACIÓN HAY QUE 
 #### CAMBIAR LA CONTRASEÑA DEL USUARIO admin@admin.com, que inicialmente es
 #### password_malo
+db.commit()
 if "comprobado" not in session.keys():  
     session.comprobado=True
     # initialize admin user and roles group:
     useradmin = db(db.auth_user.id == 1).select()
     if len(useradmin) == 0:
+        db.Sede.insert(name="Sede de pruebas")
+        db.Almacen.insert(name="AlmacenTest")
         my_crypt = CRYPT(key=auth.settings.hmac_key)
+        crypted_passwd = my_crypt('password_malo')[0]
+        db.commit()
         k = db.auth_user.insert(email='admin@admin.com', first_name='Administrator',
-                                password=my_crypt('password_malo')[0])
+                                password=crypted_passwd, almacen=1)
         if str(k) != '1':
             db.executesql('update auth_user set id=1 where id=' + str(k))
 

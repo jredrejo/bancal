@@ -56,7 +56,7 @@ def create_testfile_to_application(request, appname):
     request.addfinalizer(web2pytest.delete_testfile)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope='session')
 def cleanup_db(web2py):
     '''Truncate all database tables before every single test case.
 
@@ -65,7 +65,7 @@ def cleanup_db(web2py):
 
     Automatically called by test.py due to decorator.
     '''
-
+    return
     web2py.db.rollback()
     for tab in web2py.db.tables:
         web2py.db[tab].truncate()

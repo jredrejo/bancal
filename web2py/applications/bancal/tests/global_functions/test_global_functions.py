@@ -4,7 +4,7 @@
 '''
 
 
-def test_my_model_function(web2py):
+def kktest_my_model_function(web2py):
     '''Test a function defined in your models dir.
     '''
 

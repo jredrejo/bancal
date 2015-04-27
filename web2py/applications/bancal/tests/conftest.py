@@ -56,7 +56,7 @@ def create_testfile_to_application(request, appname):
     request.addfinalizer(web2pytest.delete_testfile)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope='session')
 def cleanup_db(web2py):
     '''Truncate all database tables before every single test case.
 
@@ -65,7 +65,7 @@ def cleanup_db(web2py):
 
     Automatically called by test.py due to decorator.
     '''
-
+    return
     web2py.db.rollback()
     for tab in web2py.db.tables:
         web2py.db[tab].truncate()
@@ -94,6 +94,7 @@ def web2py(appname):
 
         env.request.controller = controller
         env.request.function = function
+
         r = None
         try:
             r =  run_controller_in(controller, function, env)
@@ -120,11 +121,23 @@ def web2py(appname):
             _formkey=action,
             _formname=formname
         )
-
+        #pytest.set_trace()
         if data:
             env.request.post_vars.update(data)
+
         env.request.post_vars.update(hidden)
         env.session["_formkey[%s]" % formname] = [action]
+
+        return env.run(controller, action, env)
+
+
+    def send(controller, action, env, data=None):
+        """Call a controller action using get.
+        env must be the web2py environment fixture.
+        data must be a dictionary with the request args
+        """
+        if data:
+            env.request.vars.update(Storage(data))
 
         return env.run(controller, action, env)
 

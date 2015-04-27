@@ -50,7 +50,6 @@ def index():
     if you need a simple wiki simple replace the two lines below with:
     return auth.wiki()
     """
-
     if not session.auth:
         response.title = None
 

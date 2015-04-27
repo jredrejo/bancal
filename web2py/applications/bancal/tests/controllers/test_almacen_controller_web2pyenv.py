@@ -10,9 +10,38 @@ So, they run faster and don't need web2py server running.
 If you want to see webclient approach, see test_people_controller_webclient.py
 in this same directory.
 '''
+import pytest
 
 
-def test_index_exists(web2py):
+def test_hay_stock(web2py):
+    db=web2py.db
+    hay=0
+
+    query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
+        & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) \
+        & (db.Alimento.Descripcion != None)
+
+    rows= db(query).select(
+        db.CabeceraAlmacen.id,
+        db.Alimento.Codigo,
+        db.Alimento.Descripcion,
+        db.Alimento.Conservacion,
+        db.Alimento.Unidades,
+        db.LineaAlmacen.Stock.sum(),
+        groupby=db.CabeceraAlmacen.alimento,
+        )
+    for row in rows:
+        if row[db.LineaAlmacen.Stock.sum()]>0:
+            hay +=1
+            break
+
+    assert hay>0
+
+
+
+
+
+def kktest_index_exists(web2py):
     '''Page index exists?
     '''
 
@@ -24,7 +53,7 @@ def test_index_exists(web2py):
     assert "Hi. I'm the people index" in html
 
 
-def test_new_person_with_form(web2py):
+def kktest_new_person_with_form(web2py):
     '''Is this function showing the right form?
     '''
 
@@ -43,7 +72,7 @@ def test_new_person_with_form(web2py):
     # <textarea...>, etc.
 
 
-def test_validate_new_person(web2py):
+def kktest_validate_new_person(web2py):
     '''Is the form validating?
     '''
 
@@ -67,7 +96,7 @@ def test_validate_new_person(web2py):
     # You can create other test case to check other validations, too.
 
 
-def test_save_new_person(web2py):
+def kktest_save_new_person(web2py):
     '''Created a new person?
     '''
 
@@ -87,7 +116,7 @@ def test_save_new_person(web2py):
     assert web2py.db(web2py.db.people.name == data['name']).count() == 1
 
 
-def test_get_person_by_creation_date(web2py):
+def kktest_get_person_by_creation_date(web2py):
     '''Is my filter working?
     '''
 

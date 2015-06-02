@@ -30,6 +30,34 @@ import locale
 from datetime import datetime
 
 from plugin_suggest_widget import suggest_widget
+if 0:  # for IDE's to find the imports for the globals
+    from gluon.globals import *
+    from gluon.html import *
+    from gluon.http import redirect
+    from gluon.tools import *
+    from gluon.sql import *
+    from gluon.validators import *
+    from gluon.languages import translator as T
+    from gluon.sqlhtml import SQLFORM, SQLTABLE, form_factory
+    from gluon import compileapp
+    from gluon import tools, sql, compileapp
+    from gluon.languages import translator as T
+    from gluon.dal import DAL
+    from gluon.sqlhtml import *
+    from gluon.html import URL
+    from gluon.validators import *
+    global LOAD
+    LOAD = compileapp.LoadFactory()
+    global request
+    request = globals.Request()
+    global response
+    response = globals.Response()
+    global session
+    session = globals.Session()
+    global cache
+    cache = cache.Cache
+    db = DAL('sqlite://storage.sqlite')
+    auth = Auth(globals(), None)
 
 
 @auth.requires_login()
@@ -48,11 +76,11 @@ def stock():
     #    session.AlmacenAlimento=request.vars.Descripcion
 
     response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
-                          f='grid.locale-es.js'))
+                              f='grid.locale-es.js'))
     response.files.append(URL(r=request, c='static/jqGrid/js',
-                          f='jquery.jqGrid.min.js'))
+                              f='jquery.jqGrid.min.js'))
     response.files.append(URL(r=request, c='static/jqGrid/css',
-                          f='ui.jqgrid.css'))
+                              f='ui.jqgrid.css'))
 
     return locals()
 
@@ -68,11 +96,11 @@ def entradas():
     form = SQLFORM(db.CabeceraEntrada)
 
     response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
-                          f='grid.locale-es.js'))
+                              f='grid.locale-es.js'))
     response.files.append(URL(r=request, c='static/jqGrid/js',
-                          f='jquery.jqGrid.min.js'))
+                              f='jquery.jqGrid.min.js'))
     response.files.append(URL(r=request, c='static/jqGrid/css',
-                          f='ui.jqgrid.css'))
+                              f='ui.jqgrid.css'))
 
     return locals()
 
@@ -90,11 +118,11 @@ def salidas():
     #    session.AlmacenAlimento=request.vars.Descripcion
 
     response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
-                          f='grid.locale-es.js'))
+                              f='grid.locale-es.js'))
     response.files.append(URL(r=request, c='static/jqGrid/js',
-                          f='jquery.jqGrid.min.js'))
+                              f='jquery.jqGrid.min.js'))
     response.files.append(URL(r=request, c='static/jqGrid/css',
-                          f='ui.jqgrid.css'))
+                              f='ui.jqgrid.css'))
 
     return locals()
 
@@ -118,8 +146,7 @@ def nueva_entrada():
         limitby=(0, 50),
         keyword='_autocomplete_category_2_%(fieldname)s',
         user_signature=True,
-        )
-
+    )
     registro = None
     if session.current_entrada:
         registro = db.CabeceraEntrada(session.current_entrada)
@@ -129,7 +156,7 @@ def nueva_entrada():
 
     if request.vars._autocomplete_Colaborador_name_aux:
         request.vars.pop('_autocomplete_Colaborador_name_aux')
-    if form.accepts(request.vars, session,onvalidation=ver_cierre):
+    if form.accepts(request.vars, session, onvalidation=ver_cierre):
         response.flash = 'Nueva entrada grabada'
         session.current_entrada = form.vars.id
         redirect(URL('nueva_entrada', args=[form.vars.id]))
@@ -146,7 +173,7 @@ def nueva_entrada():
             session.NuevaLinea = True
             if request.vars.Unidades:
                 if float(request.vars.Unidades) \
-                    != registro_linea.Unidades:
+                        != registro_linea.Unidades:
                     valor_antiguo_uds = registro_linea.Unidades
         else:
             registro_linea = None
@@ -168,7 +195,7 @@ def nueva_entrada():
             session.NuevaLinea = True
             if valor_antiguo_uds and registro_linea.LineaAlmacen:
                 actualiza_lineaalmacen(registro_linea.LineaAlmacen,
-                        float(request.vars.Unidades), valor_antiguo_uds)
+                                       float(request.vars.Unidades), valor_antiguo_uds)
             else:
                 cid = nueva_lineaalmacen(request.vars)
                 registro_linea = db.LineaEntrada(frmlineas.vars.id)
@@ -176,15 +203,15 @@ def nueva_entrada():
                 registro_linea.update_record()
 
             redirect(URL(f='nueva_entrada',
-                     args=session.current_entrada))
+                         args=session.current_entrada))
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
     response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
-                          f='grid.locale-es.js'))
+                              f='grid.locale-es.js'))
     response.files.append(URL(r=request, c='static/jqGrid/js',
-                          f='jquery.jqGrid.min.js'))
+                              f='jquery.jqGrid.min.js'))
     response.files.append(URL(r=request, c='static/jqGrid/css',
-                          f='ui.jqgrid.css'))
+                              f='ui.jqgrid.css'))
 
     return dict(form=form, frmlineas=frmlineas,
                 codigo_alimento=codigo_alimento)
@@ -192,8 +219,8 @@ def nueva_entrada():
 
 def ver_cierre(form):
     if session.cierre:
-        if form.vars.Fecha<session.cierre:
-            form.errors.Fecha='El almacén está cerrado para esa fecha'
+        if form.vars.Fecha < session.cierre:
+            form.errors.Fecha = 'El almacén está cerrado para esa fecha'
 
 
 @auth.requires_login()
@@ -221,14 +248,14 @@ def nueva_salida():
         limitby=(0, 50),
         keyword='_autocomplete_category_2_%(fieldname)s',
         user_signature=True,
-        )
+    )
     registro = None
     if session.current_entrada:
         registro = db.CabeceraSalida(session.current_entrada)
         session.NuevaLinea = True
     form = SQLFORM(db.CabeceraSalida, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
-    if form.accepts(request.vars, session,onvalidation=ver_cierre):
+    if form.accepts(request.vars, session, onvalidation=ver_cierre):
         response.flash = 'Nueva salida grabada'
         session.current_entrada = form.vars.id
         redirect(URL('nueva_salida', args=[form.vars.id]))
@@ -245,7 +272,7 @@ def nueva_salida():
             session.NuevaLinea = True
             if request.vars.Unidades:
                 if float(request.vars.Unidades) \
-                    != registro_linea.Unidades:
+                        != registro_linea.Unidades:
                     valor_antiguo_uds = registro_linea.Unidades
         else:
             registro_linea = None
@@ -277,11 +304,11 @@ def nueva_salida():
                      == frmlineas.vars.alimento) \
                 & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
             lineas_almacen = db(query).select(db.LineaAlmacen.id,
-                    db.LineaAlmacen.Stock,
-                    orderby=~db.LineaAlmacen.Stock)
+                                              db.LineaAlmacen.Stock,
+                                              orderby=~db.LineaAlmacen.Stock)
             if valor_antiguo_uds > 0:
                 actualiza_lineaalmacen(lineas_almacen.first().id,
-                        valor_antiguo_uds, stock_pendiente)
+                                       valor_antiguo_uds, stock_pendiente)
             else:
                 for linea in lineas_almacen:
                     if stock_pendiente <= linea.Stock:
@@ -295,15 +322,15 @@ def nueva_salida():
                         break
 
             redirect(URL(f='nueva_salida',
-                     args=session.current_entrada))
+                         args=session.current_entrada))
         elif frmlineas.errors:
             response.flash = 'Error en los datos'
     response.files.append(URL(r=request, c='static/jqGrid/js/i18n',
-                          f='grid.locale-es.js'))
+                              f='grid.locale-es.js'))
     response.files.append(URL(r=request, c='static/jqGrid/js',
-                          f='jquery.jqGrid.min.js'))
+                              f='jquery.jqGrid.min.js'))
     response.files.append(URL(r=request, c='static/jqGrid/css',
-                          f='ui.jqgrid.css'))
+                              f='ui.jqgrid.css'))
 
     return dict(form=form, frmlineas=frmlineas,
                 codigo_alimento=codigo_alimento)
@@ -321,7 +348,8 @@ def check_stock(form):
     query = (db.CabeceraAlmacen.alimento == form.vars.alimento) \
         & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
     stock_actual = \
-        db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
+        db(query).select(db.LineaAlmacen.Stock.sum()).first()[
+            db.LineaAlmacen.Stock.sum()]
     if stock_pendiente - session.valor_antiguo > stock_actual:
         stock_pendiente = stock_actual + session.valor_antiguo
         form.vars.Unidades = stock_pendiente
@@ -334,9 +362,9 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
 
     registro = db.LineaAlmacen(linea)
     total = float(registro.Stock)
-    #Limito a tres decimales en el stock
+    # Limito a tres decimales en el stock
     registro.Stock = float("{0:.3f}".format(total + valornuevo - valorprevio))
-    if registro.Stock<0: registro.Stock =0
+    # if registro.Stock<0: registro.Stock =0
     registro.update_record()
 
 
@@ -366,7 +394,7 @@ def nueva_lineaalmacen(valores):
             estanteria=valores.estanteria,
             Lote=valores.Lote,
             Stock=float(valores.Unidades),
-            )
+        )
     return lid
 
 
@@ -390,20 +418,21 @@ def get_codigo():
                 & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
             query = query & (db.Alimento.id == alimento.id)
             stock = \
-                db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
+                db(query).select(db.LineaAlmacen.Stock.sum()).first()[
+                    db.LineaAlmacen.Stock.sum()]
 
             data = {'alimento': ''}
             session.AlmacenAlimento = None
             session.AlmacenStock = None
             if stock:
-                if stock>0:
+                if stock > 0:
                     locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
                     session.AlmacenStock = stock
                     data = {'alimento': alimento.Descripcion}
                     data['stock'] = stock
 
                     data['stock-text'] = locale.format('%.2f', stock,
-                            grouping=True)
+                                                       grouping=True)
 
                     session.AlmacenAlimento = alimento.id
 
@@ -443,13 +472,14 @@ def set_alimento():
                 & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
             query = query & (db.Alimento.Codigo == codigo)
             stock = \
-                db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
+                db(query).select(db.LineaAlmacen.Stock.sum()).first()[
+                    db.LineaAlmacen.Stock.sum()]
             if stock:
                 session.AlmacenStock = stock
                 data['stock'] = stock
 
                 data['stock-text'] = locale.format('%.2f', stock,
-                        grouping=True)
+                                                   grouping=True)
             else:
                 session.AlmacenStock = None
                 data['stock'] = 0
@@ -500,7 +530,7 @@ def get_rows():
         limitby=limitby,
         orderby=orderby,
         groupby=db.CabeceraAlmacen.alimento,
-        ):
+    ):
 
         # print db._lastsql
 
@@ -574,7 +604,7 @@ def get_rows_entradas():
                 vals.append('')
             elif f == 'Donante':
                 vals.append(db.CabeceraEntrada['Donante'
-                            ].represent(r(f)))
+                                               ].represent(r(f)))
             else:
                 vals.append(r[f])
 
@@ -632,7 +662,7 @@ def get_rows_salidas():
                 vals.append('')
             elif f == 'Beneficiario':
                 vals.append(db.CabeceraSalida['Beneficiario'
-                            ].represent(r(f)))
+                                              ].represent(r(f)))
             else:
                 vals.append(r[f])
 
@@ -738,7 +768,7 @@ def get_lineas_almacen():
         'Lote',
         'estanteria',
         'Palets',
-        ]
+    ]
     rows = []
     limitby = None
     total = 0
@@ -752,7 +782,7 @@ def get_lineas_almacen():
         query = (db.LineaAlmacen.cabecera == cabecera.id) \
             & (db.LineaAlmacen.Stock > 0)
         mialimento = db.CabeceraAlmacen['alimento'
-                ].represent(cabecera.alimento)
+                                        ].represent(cabecera.alimento)
         for r in db(query).select(limitby=limitby):
             vals = []
             for f in fields:
@@ -793,7 +823,7 @@ def borrar_linea(linea_id=None):
             registro = db.LineaEntrada(linea_id)
             if registro.LineaAlmacen > 0:
                 actualiza_lineaalmacen(registro.LineaAlmacen, 0,
-                        registro.Unidades)
+                                       registro.Unidades)
             db(db.LineaEntrada.id == linea_id).delete()
         else:
             registro = db.LineaSalida(linea_id)
@@ -801,7 +831,7 @@ def borrar_linea(linea_id=None):
                           == registro.alimento).select().first()
             query = db.LineaAlmacen.cabecera == cabecera.id
             linea_almacen = db(query).select(db.LineaAlmacen.id,
-                    orderby=~db.LineaAlmacen.Stock).first()
+                                             orderby=~db.LineaAlmacen.Stock).first()
 
             # metemos el stock de la línea borrada en la lína
             # de stock que más tenga. No se lleva registro de las
@@ -809,7 +839,7 @@ def borrar_linea(linea_id=None):
 
             if linea_almacen:
                 actualiza_lineaalmacen(linea_almacen.id,
-                        registro.Unidades, 0)
+                                       registro.Unidades, 0)
             db(db.LineaSalida.id == linea_id).delete()
 
 
@@ -889,7 +919,7 @@ def set_donante():
     q = request.vars.donante
     if q:
         query = (db.Colaborador.name == q) & (db.Colaborador.Donante
-                == True)
+                                              == True)
         row = db(query).select(db.Colaborador.name,
                                db.Colaborador.id).first()
         data = {'donante': row.id}
@@ -922,7 +952,7 @@ def search_form(self, url):
               _onclick="jQuery('#keywords').val('');"),
         _method='GET',
         _action=url,
-        )
+    )
 
     return form
 
@@ -939,36 +969,37 @@ def search_query(tableid, search_text, fields):
 
 
 def repaso_almacen():
-    query=(db.LineaSalida.cabecera>507) & (db.LineaEntrada.cabecera>292)
+    query = (db.LineaSalida.cabecera > 507) & (db.LineaEntrada.cabecera > 292)
 
-    sumsalidas= db.LineaSalida.Unidades.sum()
-    sumentradas= db.LineaEntrada.Unidades.sum()
-    totales=[]
+    sumsalidas = db.LineaSalida.Unidades.sum()
+    sumentradas = db.LineaEntrada.Unidades.sum()
+    totales = []
 
-    estado_11_11_2014={2:1267.67,3:61.0,4:9.5,6:55.7,7:147.015,9:1423.8,10:8192.0,11:29114.5,12:7379.0,14:139.84,17:465.0,19:6443.25,21:21506.65,22:48.3,23:486.3,24:62.4,25:35.3,28:10393.2,43:0.0,45:6643.55,46:235.0,51:163.04,99:276.0}
+    estado_11_11_2014 = {2: 1267.67, 3: 61.0, 4: 9.5, 6: 55.7, 7: 147.015, 9: 1423.8, 10: 8192.0, 11: 29114.5, 12: 7379.0, 14: 139.84, 17: 465.0,
+                         19: 6443.25, 21: 21506.65, 22: 48.3, 23: 486.3, 24: 62.4, 25: 35.3, 28: 10393.2, 43: 0.0, 45: 6643.55, 46: 235.0, 51: 163.04, 99: 276.0}
 
-    filas=db(db.LineaSalida.cabecera>507).select(db.LineaSalida.alimento,sumsalidas,groupby=db.LineaSalida.alimento)
-    filase=db(db.LineaEntrada.cabecera>292).select(db.LineaEntrada.alimento,sumentradas,groupby=db.LineaEntrada.alimento)
+    filas = db(db.LineaSalida.cabecera > 507).select(
+        db.LineaSalida.alimento, sumsalidas, groupby=db.LineaSalida.alimento)
+    filase = db(db.LineaEntrada.cabecera > 292).select(
+        db.LineaEntrada.alimento, sumentradas, groupby=db.LineaEntrada.alimento)
 
-    entradas={}
-    totales={}
+    entradas = {}
+    totales = {}
 
     for fila in filase:
-        totales[fila.LineaEntrada.alimento]= fila[sumentradas]
+        totales[fila.LineaEntrada.alimento] = fila[sumentradas]
 
     for fila in filas:
         if fila.LineaSalida.alimento in totales.keys():
-            totales[fila.LineaSalida.alimento]=totales[fila.LineaSalida.alimento] - fila[sumsalidas]
+            totales[fila.LineaSalida.alimento] = totales[
+                fila.LineaSalida.alimento] - fila[sumsalidas]
         else:
-            totales[fila.LineaSalida.alimento]= - fila[sumsalidas]
+            totales[fila.LineaSalida.alimento] = - fila[sumsalidas]
     for estado in estado_11_11_2014:
         try:
-            totales[estado]=estado_11_11_2014[estado]+ totales[estado]
-            totales[estado]=float("{0:.3f}".format(totales[estado]))
+            totales[estado] = estado_11_11_2014[estado] + totales[estado]
+            totales[estado] = float("{0:.3f}".format(totales[estado]))
         except:
             pass
-
-
-
 
     return dict(totales=totales)

@@ -23,36 +23,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+#
+# For the app reports to work python-dateutil package must be installed
 ##############################################################################
 
-#Activate in production:
+# Activate in production:
 # request.requires_https()
 
 # Para el autocompletado con aptana/eclipse+pydev:
 if 0:
     from gluon import *
     (request, session, response, T, cache) = (current.request,
-                                              current.session, current.response, current.t, current.cache)
+                current.session, current.response, current.t, current.cache)
     from gluon.dal import DAL
     from gluon.sqlhtml import *
     from gluon.validators import *
 
-####NOTA IMPORTANTE:
-####  Mientras se está en desarrollo, hay que poner migrate=True y lazy_tables=False
-#### para que se puedan crear las tablas necesarias en la base de datos.
-#### Una vez se pase a producción, migrate=False y lazy_tables=True
-#### hará que sea mucho más rápida la ejecución de la aplicación:
+# NOTA IMPORTANTE:
+# Mientras se está en desarrollo, hay que poner migrate=True y lazy_tables=False
+# para que se puedan crear las tablas necesarias en la base de datos.
+# Una vez se pase a producción, migrate=False y lazy_tables=True
+# hará que sea mucho más rápida la ejecución de la aplicación:
 from gluon import current
 import datetime
-import pytest
 from web2pytest import web2pytest
 
 if web2pytest.is_running_under_test(request, request.application):
     db = DAL('sqlite://test.sqlite', pool_size=1, check_reserved=['all'
-         ], migrate=True, lazy_tables=False)    
+                                            ], migrate=True, lazy_tables=False)
 else:
     db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'
-         ], migrate=True, lazy_tables=False)
+                                    ], migrate=True, lazy_tables=False)
 current.db = db
 
 
@@ -78,7 +79,6 @@ response.generic_patterns = (['*'] if request.is_local else [])
 from gluon.tools import Auth, Crud, Service, PluginManager
 auth = Auth(db)
 (crud, service, plugins) = (Crud(db), Service(), PluginManager())
-
 
 
 # configure email
@@ -118,22 +118,24 @@ db.define_table(
     Field('Conservacion', label='Conservación', default=T('Calor')),
     Field('Unidades', default='Kg.'),
     format='%(Codigo)s - %(Descripcion)s',
-    )
+)
 db.Alimento.Conservacion.requires = IS_IN_SET((T('Calor'), T('Frío')))
 db.Alimento.Unidades.requires = IS_IN_SET(('Kg.', 'L.'))
 
 # after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)
 
-# Lista de paises, obtenida de http://dmnet.bitacoras.com/archivos/inclasificable/lista-de-paises-en-sql.php
-#
+# Lista de paises, obtenida de
+# http://dmnet.bitacoras.com/archivos/inclasificable/lista-de-paises-en-sql.php
+
 # id: ID numérico según la ISO 3166-1 y la División Estadística de las Naciones Unidas
 # iso2: código de dos letras según la ISO 3166-1
 # iso3: código de tres letras según la ISO 3166-1
 # prefijo: prefijo telefónico según la recomendación E.164
 # nombre: nombre completo en español
 # continente: nombre del continente en español
-# subcontinente: nombre del subcontinente en español (para diferenciar América del Sur/Central/Norte/Caribe)
+# subcontinente: nombre del subcontinente en español
+#     (para diferenciar América del Sur/Central/Norte/Caribe)
 # iso_moneda: código de tres letras de su moneda según la ISO 4217
 # nombre_moneda: nombre de la moneda en español
 
@@ -148,7 +150,7 @@ db.define_table(
     Field('iso_moneda', 'string', length=3),
     Field('nombre_moneda', label='Moneda'),
     format='%(pais)s',
-    )
+)
 
 db.define_table(
     'provincia',
@@ -158,7 +160,7 @@ db.define_table(
     Field('provincia3', 'string', length=3, notnull=True, unique=True),
     Field('tabla_id', 'integer'),
     format='%(provincia)s',
-    )
+)
 
 db.define_table(
     'poblacion',
@@ -174,19 +176,19 @@ db.define_table(
         notnull=False,
         default=None,
         label='C\xc3\xb3d. Postal',
-        ),
+    ),
     Field('latitud', 'decimal(9,6)', notnull=False, default=None,
           label='Latitud (Coord)'),
     Field('longitud', 'decimal(9,6)', notnull=False, default=None,
           label='Longitud (Coord)'),
     format='%(poblacion)s',
-    )
+)
 
 db.poblacion.postal.requires = IS_EMPTY_OR(IS_MATCH('^\d{5}(-\d{4})?$',
-        error_message='El Código Postal deben ser 5 dígitos'))
+                        error_message='El Código Postal deben ser 5 dígitos'))
 db.poblacion.provincia_id.requires = IS_IN_DB(db, 'provincia.tabla_id',
-        'provincia.provincia',
-        error_message='Debe asignar una provincia')
+                                   'provincia.provincia',
+                                    error_message='Debe asignar una provincia')
 
 
 def ajax_autocomplete(f, v):
@@ -220,46 +222,47 @@ db.define_table(
           default='badajoz@bancodealimentos.info'),
     Field('cuenta', label='Cuenta bancaria'),
     format='%(name)s',
-    )
+)
 db.Sede.id.readable = False
 db.Sede.postal.requires = IS_EMPTY_OR(IS_MATCH('^\d{5}(-\d{4})?$',
-        error_message='El Código Postal deben ser 5 dígitos'))
+                        error_message='El Código Postal deben ser 5 dígitos'))
 db.Sede.email.requires = \
     IS_EMPTY_OR(IS_EMAIL(error_message=T('Invalid email!')))
 db.Sede.provincia.widget = ajax_autocomplete
 db.Sede.poblacion.widget = ajax_autocomplete
 
 db.define_table('Almacen', Field('name', label='Nombre',
-                default='El Nevero'), Field('sede', db.Sede,
-                label='Sede', default=1))
+                                 default='El Nevero'), Field('sede', db.Sede,
+                                 label='Sede', default=1))
 
 
-
-
-
-auth.settings.extra_fields['auth_user']= [
-  Field('almacen',db.Almacen, label='Almacén', default=1)
-  ]
+auth.settings.extra_fields['auth_user'] = [
+    Field('almacen', db.Almacen, label='Almacén', default=1)
+]
 # create all tables needed by auth if not custom tables
 
 auth.define_tables(username=False, signature=False)
 
-#set session almacenvariable despues de login
-auth.settings.login_onaccept.append(lambda x:session.update({'almacen':session.auth.user.almacen}))
+# set session almacenvariable despues de login
+auth.settings.login_onaccept.append(
+    lambda x: session.update({'almacen': session.auth.user.almacen}))
 
 
-db.define_table('Estanteria', Field('name', label='Nombre',
-                default='Estantería A'), Field('almacen', db.Almacen,
-                label='Almacén', default=1))
+db.define_table('Estanteria',
+    Field('name', label='Nombre', default='Estantería A'),
+    Field('almacen', db.Almacen, label='Almacén', default=1))
 
 
 db.define_table('Cierre',
-                Field('Fecha','date',label="Fecha de cierre",default=datetime.date.today()),
-                Field('Cerrado','boolean',default=False))
+                Field('Fecha', 'date', label="Fecha de cierre",
+                      default=datetime.date.today()),
+                Field('Cerrado', 'boolean', default=False))
 db.Cierre.id.readable = False
 # tipo_empresa = (
-#    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES", "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
-#    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.", "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
+#    "ACTUALIZACIÓN DE STOCK", "MAYORISTAS Y DISTRIBUIDUIDORES",
+#    "EMPRESAS E INDUSTRIA AGROALIMENTARIA",
+#    "BANCO DE ALIMENTOS", "ASOC. BENEF./SOCIAL/DEPORT./CULTUR.",
+#     "CENTROS EDUCATIVOS", "COMERCIOS MINORISTAS",
 #    "DONACIONES PARTICULARES", "ORGANISMOS PÚBLICOS", "FEGA")
 
 tipo_empresa = (
@@ -272,7 +275,7 @@ tipo_empresa = (
     "UNIÓN EUROPEA",
     'COLECTAS',
     'OTRAS',
-    )
+)
 
 tipo_colaboracion = ('Miembro del equipo directivo',
                      'Voluntario en banco', 'Otro modo de voluntariado')
@@ -287,7 +290,7 @@ db.define_table(  # format='%(name)s %(apellido1)s %(apellido2)s'
     Field('direccion', label="Dirección", length=200),
     Field('postal', label='C\xc3\xb3d. Postal', length=5),
     Field('nif', label='CIF/NIF', requires=IS_EMPTY_OR(IS_NOT_IN_DB(db,
-          'Colaborador.nif'))),
+                                                                    'Colaborador.nif'))),
     Field('telefono', label='Teléfono 1'),
     Field('telefono2', label='Fax/Teléfono 2'),
     Field('movil', label='Móvil'),
@@ -317,13 +320,13 @@ db.define_table(  # format='%(name)s %(apellido1)s %(apellido2)s'
     Field('pattipo', label='Tipo de patrocinador', readable=False,
           writable=False),
     format=lambda r: str(r.name) + (('' if not r.apellido1 else ' '
-                                    + r.apellido1)) + ((''
-             if not r.apellido2 else ' ' + r.apellido2)),
-    )
+                                     + r.apellido1)) + ((''
+                                    if not r.apellido2 else ' ' + r.apellido2)),
+)
 
 db.Colaborador.id.readable = False
-db.Colaborador.postal.requires = IS_EMPTY_OR(IS_MATCH('^\d{5}(-\d{4})?$'
-        , error_message='El Código Postal deben ser 5 dígitos'))
+db.Colaborador.postal.requires = IS_EMPTY_OR(IS_MATCH(
+    '^\d{5}(-\d{4})?$', error_message='El Código Postal deben ser 5 dígitos'))
 db.Colaborador.email.requires = \
     IS_EMPTY_OR(IS_EMAIL(error_message=T('Invalid email!')))
 db.Colaborador.provincia.widget = ajax_autocomplete
@@ -349,7 +352,7 @@ db.Colaborador.telefono2.represent = lambda value, row: \
 db.Colaborador.email.represent = lambda value, row: \
     (XML(value) if value is not None else '')
 db.Colaborador.nif.represent = lambda value, row: (XML(value) if value
-        is not None else '')
+                                                   is not None else '')
 db.Colaborador.fechabaja.represent = lambda value, row: \
     (XML(value) if value is not None else '')
 db.Colaborador.direccion.represent = lambda value, row: \
@@ -357,14 +360,18 @@ db.Colaborador.direccion.represent = lambda value, row: \
 db.Colaborador.dontipo.represent = lambda value, row: \
     (XML(value) if value is not None else '')
 db.Colaborador.name.represent = lambda value, row: ((value if value
-        is not None else '')) + ((' ' + row.apellido1 if row.apellido1
-                                 is not None else ''))
+                is not None else '')) + ((' ' + row.apellido1 if row.apellido1
+                is not None else ''))
 
 # tipo_beneficiario = (
-#    "TODOS", "Residencia de Ancianos", "Guarderias", "Comedores Sociales", "Caritas",
-#    "Centros de Reinserción", "Centros de Acogida", "Conventos", "Asociaciones Asistenciales",
-#    "Banco Alimentos", "Regularizacion de existencias", "Iglesias Evangelistas", "Ayuntamientos",
-#    "Otras Asociaciones", "Otras Confesiones Religiosas", "Otros Organismos Publicos")
+#    "TODOS", "Residencia de Ancianos", "Guarderias",
+#    "Comedores Sociales", "Caritas",
+#    "Centros de Reinserción", "Centros de Acogida",
+#    "Conventos", "Asociaciones Asistenciales",
+#    "Banco Alimentos", "Regularizacion de existencias",
+#    "Iglesias Evangelistas", "Ayuntamientos",
+#    "Otras Asociaciones", "Otras Confesiones Religiosas",
+#    "Otros Organismos Publicos")
 
 tipo_beneficiario = ('OTROS BANCOS', 'ASOCIACIONES')
 
@@ -381,25 +388,25 @@ db.define_table(  # Field(
     Field('direccion', label="Dirección", length=200),
     Field('postal', label='C\xc3\xb3d. Postal', length=5),
     Field('nif', label='CIF/NIF', requires=IS_EMPTY_OR(IS_NOT_IN_DB(db,
-          'Beneficiario.nif'))),
+                                                                    'Beneficiario.nif'))),
     Field('telefono', label='Teléfono 1'),
     Field('telefono2', label='Fax/Teléfono 2'),
     Field('movil', label='Móvil'),
     Field('email', label='Correo electrónico'),
     Field('contacto', label='Persona contacto'),
     Field('FAGA', 'boolean', default=False),
-    Field('beneficiarios', 'integer', label="Nº Beneficiarios",notnull=True,
+    Field('beneficiarios', 'integer', label="Nº Beneficiarios", notnull=True,
           default=100),
-    Field('tipobeneficiario', label='Tipo beneficiario',notnull=True,
+    Field('tipobeneficiario', label='Tipo beneficiario', notnull=True,
           default='Banco Alimentos'),
     format=lambda r: str(r.name) + (('' if not r.apellido1 else ' '
-                                    + r.apellido1)) + ((''
-             if not r.apellido2 else ' ' + r.apellido2)),
-    )
+                                     + r.apellido1)) + ((''
+                                    if not r.apellido2 else ' ' + r.apellido2)),
+)
 db.Beneficiario.id.readable = False
 db.Beneficiario.postal.requires = \
     IS_EMPTY_OR(IS_MATCH('^\d{5}(-\d{4})?$',
-                error_message='El Código Postal deben ser 5 dígitos'))
+                         error_message='El Código Postal deben ser 5 dígitos'))
 db.Beneficiario.email.requires = \
     IS_EMPTY_OR(IS_EMAIL(error_message=T('Invalid email!')))
 db.Beneficiario.tipobeneficiario.requires = \
@@ -428,15 +435,15 @@ db.Beneficiario.telefono2.represent = lambda value, row: \
 db.Beneficiario.email.represent = lambda value, row: \
     (XML(value) if value is not None else '')
 db.Beneficiario.nif.represent = lambda value, row: (XML(value) if value
-        is not None else '')
+                                                    is not None else '')
 db.Beneficiario.direccion.represent = lambda value, row: \
     (XML(value) if value is not None else '')
 
 # db.Beneficiario.name.represent = lambda value, row:(value if value is not None else '') + ((' ' +row.apellido1) if row.apellido1 is not None else '')
 
 db.define_table('CabeceraAlmacen', Field('almacen', db.Almacen,
-                label='Almacén', default=1), Field('alimento',
-                db.Alimento))
+                                         label='Almacén', default=1), Field('alimento',
+                                                                            db.Alimento))
 db.define_table(
     'LineaAlmacen',
     Field('cabecera', db.CabeceraAlmacen),
@@ -447,7 +454,7 @@ db.define_table(
     Field('estanteria', db.Estanteria, label="Estantería"),
     Field('PesoUnidad', 'double', default=1.0),
     Field('Palets', 'integer', default=0),
-    )
+)
 
 tipo_procedencia = (
     'COLECTAS',
@@ -456,18 +463,19 @@ tipo_procedencia = (
     'INDUSTRIA',
     'OTROS BANCOS',
     "UNIÓN EUROPEA",
-    )
+)
 
-db.define_table('CabeceraEntrada', Field('almacen', db.Almacen,
-                label='Almacén', default=1), Field('tipoProcedencia',
-                requires=IS_IN_SET(tipo_procedencia), notnull=True,
-                label='Procedencia'), Field('Donante', db.Colaborador),
-                Field('Fecha', 'date', default=datetime.date.today()))
+db.define_table('CabeceraEntrada',
+    Field('almacen', db.Almacen, label='Almacén', default=1),
+    Field('tipoProcedencia', requires=IS_IN_SET(tipo_procedencia),
+        notnull=True, label='Procedencia'),
+    Field('Donante', db.Colaborador),
+    Field('Fecha', 'date', default=datetime.date.today()))
 db.CabeceraEntrada.Donante.requires = \
     IS_IN_DB(db(db.Colaborador.Donante == True), 'Colaborador.id',
              lambda r: str(r.name) + (('' if not r.apellido1 else ' '
-             + r.apellido1)) + (('' if not r.apellido2 else ' '
-             + r.apellido2)), orderby=db.Colaborador.name)
+                                       + r.apellido1)) + (('' if not r.apellido2 else ' '
+                                       + r.apellido2)), orderby=db.Colaborador.name)
 
 db.define_table(
     'LineaEntrada',
@@ -482,22 +490,22 @@ db.define_table(
     Field('LineaAlmacen', db.LineaAlmacen, readable=False,
           writable=False),
     Field('PrecioKg', 'double', default=0, label='Precio Kg.'),
-    )
+)
 
 totalEntrada = db.LineaEntrada.Unidades.sum()
 
-db.CabeceraEntrada.Total = Field.Virtual(lambda row: \
-        db(db.LineaEntrada.cabecera
-        == row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
+db.CabeceraEntrada.Total = Field.Virtual(lambda row:
+                    db(db.LineaEntrada.cabecera
+                    == row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
 
-db.define_table('CabeceraSalida', Field('almacen', db.Almacen,
-                label='Almacén', default=1), Field('Beneficiario',
-                db.Beneficiario), Field('Fecha', 'date',
-                default=datetime.date.today()))
-db.CabeceraSalida.Beneficiario.requires = IS_IN_DB(db, 'Beneficiario.id'
-        , lambda r: str(r.name) + (('' if not r.apellido1 else ' '
-        + r.apellido1)) + (('' if not r.apellido2 else ' '
-        + r.apellido2)), orderby=db.Beneficiario.name)
+db.define_table('CabeceraSalida',
+    Field('almacen', db.Almacen, label='Almacén', default=1),
+    Field('Beneficiario', db.Beneficiario),
+    Field('Fecha', 'date', default=datetime.date.today()))
+db.CabeceraSalida.Beneficiario.requires = IS_IN_DB(db, 'Beneficiario.id',
+                            lambda r: str(r.name) + (('' if not r.apellido1 else ' '
+                            + r.apellido1)) + (('' if not r.apellido2 else ' '
+                            + r.apellido2)), orderby=db.Beneficiario.name)
 
 db.define_table(
     'LineaSalida',
@@ -512,22 +520,24 @@ db.define_table(
     Field('LineaAlmacen', db.LineaAlmacen, label="Línea Almacén",
           readable=False, writable=False),
     Field('PrecioKg', 'double', default=0, label='Precio Kg.'),
-    )
+)
 
 totalSalida = db.LineaSalida.Unidades.sum()
 
-db.CabeceraSalida.Total = Field.Virtual(lambda row: \
-        db(db.LineaSalida.cabecera
-        == row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])
+db.CabeceraSalida.Total = Field.Virtual(lambda row:
+                    db(db.LineaSalida.cabecera
+                    == row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])
 
 
 # Inizializaciones para la primera vez que se ejecute la aplicación:
-#### IMPORTANTE: POR SEGURIDAD UNA VEZ QUE SE ENTRE EN LA APLICACIÓN HAY QUE 
-#### CAMBIAR LA CONTRASEÑA DEL USUARIO admin@admin.com, que inicialmente es
-#### password_malo
+# IMPORTANTE: POR SEGURIDAD UNA VEZ QUE SE ENTRE EN LA APLICACIÓN HAY QUE
+# CAMBIAR LA CONTRASEÑA DEL USUARIO admin@admin.com, que inicialmente es
+# password_malo
+
 db.commit()
-if "comprobado" not in session.keys():  
-    session.comprobado=True
+if "comprobado" not in session.keys():
+
+    session.comprobado = True
     # initialize admin user and roles group:
     useradmin = db(db.auth_user.id == 1).select()
     if len(useradmin) == 0:
@@ -541,7 +551,7 @@ if "comprobado" not in session.keys():
         if str(k) != '1':
             db.executesql('update auth_user set id=1 where id=' + str(k))
 
-        k = auth.add_group('admins','Administradores de la aplicación')
+        k = auth.add_group('admins', 'Administradores de la aplicación')
         if str(k) != '1':
             db.executesql('update auth_group set id=1 where id=' + str(k))
         auth.add_membership(1, 1)
@@ -575,6 +585,6 @@ if "comprobado" not in session.keys():
         id1 = db.Cierre.insert()
     record = db(db.Cierre.id == 1).select().first()
     if record.Cerrado:
-        session.cierre=record.Fecha
+        session.cierre = record.Fecha
     else:
-        session.cierre=None
+        session.cierre = None

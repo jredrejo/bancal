@@ -972,7 +972,7 @@ def search_query(tableid, search_text, fields):
 
 @auth.requires_login()
 def repaso_almacen():
-    query = (db.LineaSalida.cabecera > 507) & (db.LineaEntrada.cabecera > 292)
+    # query = (db.LineaSalida.cabecera > 507) & (db.LineaEntrada.cabecera > 292)
 
     sumsalidas = db.LineaSalida.Unidades.sum()
     sumentradas = db.LineaEntrada.Unidades.sum()
@@ -989,7 +989,6 @@ def repaso_almacen():
     filase = db(db.LineaEntrada.cabecera > 292).select(
         db.LineaEntrada.alimento, sumentradas, groupby=db.LineaEntrada.alimento)
 
-    entradas = {}
     totales = {}
 
     for fila in filase:

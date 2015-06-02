@@ -147,6 +147,7 @@ def nueva_entrada():
         keyword='_autocomplete_category_2_%(fieldname)s',
         user_signature=True,
     )
+
     registro = None
     if session.current_entrada:
         registro = db.CabeceraEntrada(session.current_entrada)
@@ -364,6 +365,7 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
     total = float(registro.Stock)
     # Limito a tres decimales en el stock
     registro.Stock = float("{0:.3f}".format(total + valornuevo - valorprevio))
+
     # if registro.Stock<0: registro.Stock =0
     registro.update_record()
 
@@ -968,6 +970,7 @@ def search_query(tableid, search_text, fields):
     return query
 
 
+@auth.requires_login()
 def repaso_almacen():
     query = (db.LineaSalida.cabecera > 507) & (db.LineaEntrada.cabecera > 292)
 
@@ -975,8 +978,11 @@ def repaso_almacen():
     sumentradas = db.LineaEntrada.Unidades.sum()
     totales = []
 
-    estado_11_11_2014 = {2: 1267.67, 3: 61.0, 4: 9.5, 6: 55.7, 7: 147.015, 9: 1423.8, 10: 8192.0, 11: 29114.5, 12: 7379.0, 14: 139.84, 17: 465.0,
-                         19: 6443.25, 21: 21506.65, 22: 48.3, 23: 486.3, 24: 62.4, 25: 35.3, 28: 10393.2, 43: 0.0, 45: 6643.55, 46: 235.0, 51: 163.04, 99: 276.0}
+    estado_11_11_2014 = {2: 1267.67, 3: 61.0, 4: 9.5, 6: 55.7, 7: 147.015,
+                        9: 1423.8, 10: 8192.0, 11: 29114.5, 12: 7379.0, 14: 139.84,
+                        17: 465.0, 19: 6443.25, 21: 21506.65, 22: 48.3, 23: 486.3,
+                        24: 62.4, 25: 35.3, 28: 10393.2, 43: 0.0, 45: 6643.55,
+                        46: 235.0, 51: 163.04, 99: 276.0}
 
     filas = db(db.LineaSalida.cabecera > 507).select(
         db.LineaSalida.alimento, sumsalidas, groupby=db.LineaSalida.alimento)

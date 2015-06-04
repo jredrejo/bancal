@@ -16,6 +16,7 @@ import sys
 
 sys.path.insert(0, '')
 
+
 @pytest.fixture(scope='session')
 def baseurl(appname):
     '''The base url to call your application.
@@ -97,7 +98,7 @@ def web2py(appname):
 
         r = None
         try:
-            r =  run_controller_in(controller, function, env)
+            r = run_controller_in(controller, function, env)
         except HTTP as e:
             if str(e.status).startswith("2") or str(e.status).startswith("3"):
                 env.db.commit()
@@ -121,7 +122,7 @@ def web2py(appname):
             _formkey=action,
             _formname=formname
         )
-        #pytest.set_trace()
+        # pytest.set_trace()
         if data:
             env.request.post_vars.update(data)
 

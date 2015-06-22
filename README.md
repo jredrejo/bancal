@@ -6,3 +6,8 @@ Para ello se está:
 - Añadiendo Unit Tests
 - Añadiendo soporte multialmacén
 - Refactorizando para un mejor uso de OOP
+
+
+BANCAL está licenciado bajo la licencia GNU General Public License, Versión 3 (GPL-3.0).
+
+BANCAL is made available under the GNU General Public License, Version 3 (GPL-3.0).

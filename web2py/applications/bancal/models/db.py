@@ -29,12 +29,11 @@
 
 # Activate in production:
 # request.requires_https()
-
-# Para el autocompletado con aptana/eclipse+pydev:
 if 0:
     from gluon import *
     (request, session, response, T, cache) = (current.request,
-                current.session, current.response, current.t, current.cache)
+                                              current.session, current.response, current.t, current.cache)
+    LOAD = compileapp.LoadFactory()
     from gluon.dal import DAL
     from gluon.sqlhtml import *
     from gluon.validators import *
@@ -47,13 +46,14 @@ if 0:
 from gluon import current
 import datetime
 from web2pytest import web2pytest
+is_running_under_test = web2pytest.is_running_under_test(request, request.application)
 
-if web2pytest.is_running_under_test(request, request.application):
-    db = DAL('sqlite://test.sqlite', pool_size=1, check_reserved=['all'
-                                            ], migrate=True, lazy_tables=False)
+if is_running_under_test:
+    db = DAL('sqlite://test.sqlite', pool_size=10,
+             check_reserved=['all'], migrate=True, lazy_tables=False)
 else:
-    db = DAL('sqlite://storage.sqlite', pool_size=1, check_reserved=['all'
-                                    ], migrate=True, lazy_tables=False)
+    db = DAL('sqlite://storage.sqlite', pool_size=1,
+             check_reserved=['all'], migrate=True, lazy_tables=False)
 current.db = db
 
 
@@ -95,20 +95,7 @@ auth.settings.registration_requires_approval = True
 auth.settings.reset_password_requires_verification = True
 
 #
-# Define your tables below (or better in another model file) for example
-#
-# >>> db.define_table('mytable',Field('myfield','string'))
-#
-# Fields can be 'string','text','password','integer','double','boolean'
-# 'date','time','datetime','blob','upload', 'reference TABLENAME'
-# There is an implicit 'id integer autoincrement' field
-# Consult manual for more options, validators, etc.
-#
-# More API examples for controllers:
-#
-# >>> db.mytable.insert(myfield='value')
-# >>> rows=db(db.mytable.myfield=='value').select(db.mytable.ALL)
-# >>> for row in rows: print row.id, row.myfield
+# MODELS:
 #
 
 db.define_table(
@@ -185,10 +172,10 @@ db.define_table(
 )
 
 db.poblacion.postal.requires = IS_EMPTY_OR(IS_MATCH('^\d{5}(-\d{4})?$',
-                        error_message='El Código Postal deben ser 5 dígitos'))
+                                                    error_message='El Código Postal deben ser 5 dígitos'))
 db.poblacion.provincia_id.requires = IS_IN_DB(db, 'provincia.tabla_id',
-                                   'provincia.provincia',
-                                    error_message='Debe asignar una provincia')
+                                              'provincia.provincia',
+                                              error_message='Debe asignar una provincia')
 
 
 def ajax_autocomplete(f, v):
@@ -225,7 +212,7 @@ db.define_table(
 )
 db.Sede.id.readable = False
 db.Sede.postal.requires = IS_EMPTY_OR(IS_MATCH('^\d{5}(-\d{4})?$',
-                        error_message='El Código Postal deben ser 5 dígitos'))
+                                               error_message='El Código Postal deben ser 5 dígitos'))
 db.Sede.email.requires = \
     IS_EMPTY_OR(IS_EMAIL(error_message=T('Invalid email!')))
 db.Sede.provincia.widget = ajax_autocomplete
@@ -233,24 +220,24 @@ db.Sede.poblacion.widget = ajax_autocomplete
 
 db.define_table('Almacen', Field('name', label='Nombre',
                                  default='El Nevero'), Field('sede', db.Sede,
-                                 label='Sede', default=1))
+                                                             label='Sede', default=1))
 
 
-auth.settings.extra_fields['auth_user'] = [
-    Field('almacen', db.Almacen, label='Almacén', default=1)
-]
+# auth.settings.extra_fields['auth_user'] = [
+#     Field('almacen', db.Almacen, label='Almacén', default=1)
+# ]
 # create all tables needed by auth if not custom tables
 
 auth.define_tables(username=False, signature=False)
 
 # set session almacenvariable despues de login
-auth.settings.login_onaccept.append(
-    lambda x: session.update({'almacen': session.auth.user.almacen}))
+# auth.settings.login_onaccept.append(
+#     lambda x: session.update({'almacen': session.auth.user.almacen}))
 
 
 db.define_table('Estanteria',
-    Field('name', label='Nombre', default='Estantería A'),
-    Field('almacen', db.Almacen, label='Almacén', default=1))
+                Field('name', label='Nombre', default='Estantería A'),
+                Field('almacen', db.Almacen, label='Almacén', default=1))
 
 
 db.define_table('Cierre',
@@ -321,7 +308,7 @@ db.define_table(  # format='%(name)s %(apellido1)s %(apellido2)s'
           writable=False),
     format=lambda r: str(r.name) + (('' if not r.apellido1 else ' '
                                      + r.apellido1)) + ((''
-                                    if not r.apellido2 else ' ' + r.apellido2)),
+                                                         if not r.apellido2 else ' ' + r.apellido2)),
 )
 
 db.Colaborador.id.readable = False
@@ -360,8 +347,8 @@ db.Colaborador.direccion.represent = lambda value, row: \
 db.Colaborador.dontipo.represent = lambda value, row: \
     (XML(value) if value is not None else '')
 db.Colaborador.name.represent = lambda value, row: ((value if value
-                is not None else '')) + ((' ' + row.apellido1 if row.apellido1
-                is not None else ''))
+                                                     is not None else '')) + ((' ' + row.apellido1 if row.apellido1
+                                                                               is not None else ''))
 
 # tipo_beneficiario = (
 #    "TODOS", "Residencia de Ancianos", "Guarderias",
@@ -398,10 +385,10 @@ db.define_table(  # Field(
     Field('beneficiarios', 'integer', label="Nº Beneficiarios", notnull=True,
           default=100),
     Field('tipobeneficiario', label='Tipo beneficiario', notnull=True,
-          default='Banco Alimentos'),
+          default='ASOCIACIONES'),
     format=lambda r: str(r.name) + (('' if not r.apellido1 else ' '
                                      + r.apellido1)) + ((''
-                                    if not r.apellido2 else ' ' + r.apellido2)),
+                                                         if not r.apellido2 else ' ' + r.apellido2)),
 )
 db.Beneficiario.id.readable = False
 db.Beneficiario.postal.requires = \
@@ -409,8 +396,7 @@ db.Beneficiario.postal.requires = \
                          error_message='El Código Postal deben ser 5 dígitos'))
 db.Beneficiario.email.requires = \
     IS_EMPTY_OR(IS_EMAIL(error_message=T('Invalid email!')))
-db.Beneficiario.tipobeneficiario.requires = \
-    IS_EMPTY_OR(IS_IN_SET(tipo_beneficiario))
+db.Beneficiario.tipobeneficiario.requires = IS_IN_SET(tipo_beneficiario)
 
 # db.Beneficiario.gruporecogida.requires = IS_EMPTY_OR(IS_IN_SET(grupo_recogida))
 
@@ -466,16 +452,16 @@ tipo_procedencia = (
 )
 
 db.define_table('CabeceraEntrada',
-    Field('almacen', db.Almacen, label='Almacén', default=1),
-    Field('tipoProcedencia', requires=IS_IN_SET(tipo_procedencia),
-        notnull=True, label='Procedencia'),
-    Field('Donante', db.Colaborador),
-    Field('Fecha', 'date', default=datetime.date.today()))
+                Field('almacen', db.Almacen, label='Almacén', default=1),
+                Field('tipoProcedencia', requires=IS_IN_SET(tipo_procedencia),
+                      notnull=True, label='Procedencia'),
+                Field('Donante', db.Colaborador),
+                Field('Fecha', 'date', default=datetime.date.today()))
 db.CabeceraEntrada.Donante.requires = \
     IS_IN_DB(db(db.Colaborador.Donante == True), 'Colaborador.id',
              lambda r: str(r.name) + (('' if not r.apellido1 else ' '
                                        + r.apellido1)) + (('' if not r.apellido2 else ' '
-                                       + r.apellido2)), orderby=db.Colaborador.name)
+                                                           + r.apellido2)), orderby=db.Colaborador.name)
 
 db.define_table(
     'LineaEntrada',
@@ -495,17 +481,17 @@ db.define_table(
 totalEntrada = db.LineaEntrada.Unidades.sum()
 
 db.CabeceraEntrada.Total = Field.Virtual(lambda row:
-                    db(db.LineaEntrada.cabecera
-                    == row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
+                                         db(db.LineaEntrada.cabecera
+                                            == row.CabeceraEntrada.id).select(totalEntrada).first()[totalEntrada])
 
 db.define_table('CabeceraSalida',
-    Field('almacen', db.Almacen, label='Almacén', default=1),
-    Field('Beneficiario', db.Beneficiario),
-    Field('Fecha', 'date', default=datetime.date.today()))
+                Field('almacen', db.Almacen, label='Almacén', default=1),
+                Field('Beneficiario', db.Beneficiario),
+                Field('Fecha', 'date', default=datetime.date.today()))
 db.CabeceraSalida.Beneficiario.requires = IS_IN_DB(db, 'Beneficiario.id',
-                            lambda r: str(r.name) + (('' if not r.apellido1 else ' '
-                            + r.apellido1)) + (('' if not r.apellido2 else ' '
-                            + r.apellido2)), orderby=db.Beneficiario.name)
+                                                   lambda r: str(r.name) + (('' if not r.apellido1 else ' '
+                                                                             + r.apellido1)) + (('' if not r.apellido2 else ' '
+                                                                                                 + r.apellido2)), orderby=db.Beneficiario.name)
 
 db.define_table(
     'LineaSalida',
@@ -525,8 +511,8 @@ db.define_table(
 totalSalida = db.LineaSalida.Unidades.sum()
 
 db.CabeceraSalida.Total = Field.Virtual(lambda row:
-                    db(db.LineaSalida.cabecera
-                    == row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])
+                                        db(db.LineaSalida.cabecera
+                                           == row.CabeceraSalida.id).select(totalSalida).first()[totalSalida])
 
 
 # Inizializaciones para la primera vez que se ejecute la aplicación:
@@ -535,7 +521,7 @@ db.CabeceraSalida.Total = Field.Virtual(lambda row:
 # password_malo
 
 db.commit()
-if "comprobado" not in session.keys():
+if "comprobado" not in session.keys() and not is_running_under_test:
 
     session.comprobado = True
     # initialize admin user and roles group:
@@ -546,8 +532,10 @@ if "comprobado" not in session.keys():
         my_crypt = CRYPT(key=auth.settings.hmac_key)
         crypted_passwd = my_crypt('password_malo')[0]
         db.commit()
+        # k = db.auth_user.insert(email='admin@admin.com', first_name='Administrator',
+        #                         password=crypted_passwd, almacen=1)
         k = db.auth_user.insert(email='admin@admin.com', first_name='Administrator',
-                                password=crypted_passwd, almacen=1)
+                                password=crypted_passwd)
         if str(k) != '1':
             db.executesql('update auth_user set id=1 where id=' + str(k))
 
@@ -580,6 +568,7 @@ if "comprobado" not in session.keys():
         # importacion.rellena_lineasalidas()
         importacion.rellena_alimentos2()
 
+        db.commit()
     record = db().select(db.Cierre.ALL, limitby=(0, 1))
     if not record:
         id1 = db.Cierre.insert()

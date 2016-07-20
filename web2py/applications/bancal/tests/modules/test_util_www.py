@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+"""
 from applications.searchprice.modules.util_www import *
 
 
@@ -28,3 +30,4 @@ def test_geoip():
 
 def test_fix_country_name():
     assert fix_country_name("United-States") == 'USA'
+"""

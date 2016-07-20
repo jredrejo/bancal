@@ -574,7 +574,7 @@ def get_rows_entradas():
         orderby = ~db.CabeceraEntrada.Fecha
     if request.vars.sord == 'desc':
         orderby = ~orderby
-
+    orderby = ~db.CabeceraEntrada.id
     query = db.CabeceraEntrada.id > 0
     if session.FechaAlmacen:
         query = query & (db.CabeceraEntrada.Fecha
@@ -638,7 +638,7 @@ def get_rows_salidas():
         orderby = ~orderby
 
     # query = ""
-
+    orderby = ~db.CabeceraSalida.id
     query = db.CabeceraSalida.id > 0
     if session.FechaAlmacen:
         query = query & (db.CabeceraSalida.Fecha

@@ -52,41 +52,38 @@ response.google_analytics_id = None
 if session.auth:
     response.menu = [
         (T('Configuración'), False, None, [
-        (T('Datos de la sede'), False,  URL('config', 'sede'), []),
-        (T('Almacenes'), False,  URL('config', 'almacen'), []),
-        (T('Alimentos'), False,  URL('config', 'alimentos'), []),
-        (T('Cierre Almacén'), False,  URL('config', 'cierre'), []),
+            (T('Datos de la sede'), False, URL('config', 'sede'), []),
+            (T('Almacenes'), False, URL('config', 'almacen'), []),
+            (T('Alimentos'), False, URL('config', 'alimentos'), []),
+            (T('Cierre Almacén'), False, URL('config', 'cierre'), []),
         ])
     ]
 
-    response.menu += [(T('Colaboradores'), False,URL('colaboradores','index'), [
-        (T('Donantes'), False,  URL('colaboradores', 'donantes'), []),        
-        (T('Voluntarios'), False,  URL('colaboradores', 'voluntarios'), []),
-        (T('Patrocinadores'), False,  URL('colaboradores', 'patrocinadores'), []),
-        (T('Socios'), False,  URL('colaboradores', 'socios'), [])
+    response.menu += [(T('Colaboradores'), False, URL('colaboradores', 'index'), [
+        (T('Donantes'), False,  URL('colaboradores', 'donantes'), []),
+        (T('Voluntarios'), False, URL('colaboradores', 'voluntarios'), []),
+        (T('Patrocinadores'), False, URL('colaboradores', 'patrocinadores'), []),
+        (T('Socios'), False, URL('colaboradores', 'socios'), [])
 
     ])]
 
-    response.menu += [(T('Beneficiarios'),False, URL('beneficiarios','index'),[])]
+    response.menu += [(T('Beneficiarios'), False, URL('beneficiarios', 'index'), [])]
 
-    response.menu += [(T('Almacen'), False,  URL('almacen', 'stock'), [
-        (T('Entradas'), False,  URL('almacen', 'entradas'), []),
-        (T('Nueva Entrada'), False,  URL('almacen', 'nueva_entrada'), []),
-        (LI(  _class='divider'),False, None,[]),
-        (T('Salidas'), False,  URL('almacen', 'salidas'), []),
-        (T('Nueva Salida'), False,  URL('almacen', 'nueva_salida'), []),
-        ])]
+    response.menu += [(T('Almacen'), False, URL('almacen', 'stock'), [
+        (T('Entradas'), False, URL('almacen', 'entradas'), []),
+        (T('Nueva Entrada'), False, URL('almacen', 'nueva_entrada'), []),
+        (LI(_class='divider'), False, None, []),
+        (T('Salidas'), False, URL('almacen', 'salidas'), []),
+        (T('Nueva Salida'), False, URL('almacen', 'nueva_salida'), []),
+    ])]
 
+    response.menu += [(T('Informes'), False, None, [
+        (T('Movimientos Mensuales'), False, URL('informes', 'mes'), []),
+        (T('Informe trimestral'), False, URL('informes', 'trimestre'), []),
 
-    response.menu += [(T('Informes'), False,  None, [
-        (T('Movimientos Mensuales'), False,  URL('informes', 'mes'), []),
-        (T('Informe trimestral'), False,  URL('informes', 'trimestre'), []),
+    ])]
 
-        ])]
-
-
-        #(T('Incidencias'), False,  URL('almacen', 'incidencias'), [])])]
+    # (T('Incidencias'), False,  URL('almacen', 'incidencias'), [])])]
 
 else:
     response.menu = []
-

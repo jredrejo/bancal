@@ -110,8 +110,10 @@ def crea_usuario():
     auth.add_group('admins', 'Administradores de la aplicación')
     auth.add_membership(1, 1)
     auth.add_permission(1, 'admins', db.auth_user)
-    db.commit()
 
+    db.Beneficiario.insert(name="Beneficiario 1", tipobeneficiario="ASOCIACIONES")
+    db.Colaborador.insert(name="Donante 1", Donante=True)
+    db.commit()
 
 def cleanup_db():
     db = current.db

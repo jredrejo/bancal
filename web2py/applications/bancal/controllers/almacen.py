@@ -5,7 +5,7 @@
 # Project:     Bancal - Gestión de almacén para los Bancos de Alimentos
 # Language:    Python 2.7
 # Date:        15-Ago-2013.
-# Ver.:        12-Jul-2014.
+# Ver.:        20-Jul-2016.
 # Copyright:   2013-2014 - José L. Redrejo Rodríguez  <jredrejo @nospam@ itais.net>
 #
 # * Dual licensed under the MIT and GPL licenses.
@@ -25,39 +25,30 @@
 #
 ##############################################################################
 
+################################################
+# Variables de sesión usadas:
+#
+# session.AlmacenAlimento: almacena el id de db.Alimento.id del alimento que se está editando, también usado para búsquedas
+# session.Entradas = True si se está gestionando entradas, False si son salidas
+# session.FechaAlmacen: Usada para hacer búsquedas en esa fecha
+# session.DonanteAlmacen = Usada para hacer búsquedas con ese donante
+# session.BeneficiarioAlmacen: Usada para hacer búsquedas sobre ese beneficiario
+# session.ProcedenciaAlmacen = Usada para hacer búsquedas sobre esa procedencia
+# session.current_entrada = db.CabeceraEntrada.id  o db.CabeceraSalida.id de la entrada o salida que se está editando
+
+
 import math
 import locale
 from datetime import datetime
 
 from plugin_suggest_widget import suggest_widget
 if 0:  # for IDE's to find the imports for the globals
-    from gluon.globals import *
-    from gluon.html import *
-    from gluon.http import redirect
-    from gluon.tools import *
-    from gluon.sql import *
-    from gluon.validators import *
-    from gluon.languages import translator as T
-    from gluon.sqlhtml import SQLFORM, SQLTABLE, form_factory
-    from gluon import compileapp
-    from gluon import tools, sql, compileapp
-    from gluon.languages import translator as T
-    from gluon.dal import DAL
-    from gluon.sqlhtml import *
-    from gluon.html import URL
-    from gluon.validators import *
-    global LOAD
+    from gluon import *
+    (request, session, response, T, cache) = (current.request,
+                                              current.session, current.response, current.t, current.cache)
     LOAD = compileapp.LoadFactory()
-    global request
-    request = globals.Request()
-    global response
-    response = globals.Response()
-    global session
-    session = globals.Session()
-    global cache
-    cache = cache.Cache
-    db = DAL('sqlite://storage.sqlite')
-    auth = Auth(globals(), None)
+    from gluon.sqlhtml import *
+    from gluon.validators import *
 
 
 @auth.requires_login()
@@ -130,7 +121,6 @@ def salidas():
 @auth.requires_login()
 def nueva_entrada():
     session.Entradas = True
-    session.NuevaLinea = None
     frmlineas = None
     codigo_alimento = None
     if len(request.args) > 0:
@@ -151,7 +141,6 @@ def nueva_entrada():
     registro = None
     if session.current_entrada:
         registro = db.CabeceraEntrada(session.current_entrada)
-        session.NuevaLinea = True
     form = SQLFORM(db.CabeceraEntrada, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
 
@@ -171,7 +160,6 @@ def nueva_entrada():
             registro_alimento = db.Alimento(registro_linea.alimento)
             codigo_alimento = registro_alimento.Codigo
             session.AlmacenAlimento = registro_alimento.id
-            session.NuevaLinea = True
             if request.vars.Unidades:
                 if float(request.vars.Unidades) \
                         != registro_linea.Unidades:
@@ -193,7 +181,6 @@ def nueva_entrada():
         # session.AlmacenAlimento
 
         if frmlineas.accepts(request.vars, session):
-            session.NuevaLinea = True
             if valor_antiguo_uds and registro_linea.LineaAlmacen:
                 actualiza_lineaalmacen(registro_linea.LineaAlmacen,
                                        float(request.vars.Unidades), valor_antiguo_uds)
@@ -227,7 +214,6 @@ def ver_cierre(form):
 @auth.requires_login()
 def nueva_salida():
     session.Entradas = False
-    session.NuevaLinea = None
     session.AlmacenStock = None
     frmlineas = None
     codigo_alimento = None
@@ -253,7 +239,6 @@ def nueva_salida():
     registro = None
     if session.current_entrada:
         registro = db.CabeceraSalida(session.current_entrada)
-        session.NuevaLinea = True
     form = SQLFORM(db.CabeceraSalida, record=registro,
                    submit_button='Grabar estos datos', keepvalues=True)
     if form.accepts(request.vars, session, onvalidation=ver_cierre):
@@ -270,7 +255,6 @@ def nueva_salida():
             registro_alimento = db.Alimento(registro_linea.alimento)
             codigo_alimento = registro_alimento.Codigo
             session.AlmacenAlimento = registro_alimento.id
-            session.NuevaLinea = True
             if request.vars.Unidades:
                 if float(request.vars.Unidades) \
                         != registro_linea.Unidades:
@@ -295,7 +279,6 @@ def nueva_salida():
 
         if frmlineas.accepts(request.vars, session,
                              onvalidation=check_stock):
-            session.NuevaLinea = True
             stock_pendiente = float(frmlineas.vars.Unidades)
 
             # descontamos el stock ahora de las líneas de almacén que haga
@@ -494,6 +477,7 @@ def set_alimento():
 @auth.requires_login()
 @service.json
 def get_rows():
+    """ Devuelve las filas del almacén con sus cantidades por alimento """
     fields = ['Alimento.Codigo', 'Alimento.Descripcion',
               'Alimento.Conservacion', 'Stock', 'Alimento.Unidades']
     rows = []
@@ -508,6 +492,7 @@ def get_rows():
 
     limitby = (page * pagesize - pagesize, page * pagesize)
 
+    # grid sorting:
     if request.vars.sidx == 'Stock':
         orderby = db.LineaAlmacen.Stock.sum()
     elif request.vars.sidx == 'kkkkk':
@@ -534,7 +519,7 @@ def get_rows():
         groupby=db.CabeceraAlmacen.alimento,
     ):
 
-        # print db._lastsql
+        print db._lastsql
 
         vals = []
         for f in fields:
@@ -703,7 +688,7 @@ def get_lineas():
 def get_lineas_entradas():
     fields = ['alimento', 'Unidades', 'PesoUnidad', 'Caducidad']
     rows = []
-    EnDetalle = False
+    en_detalle = False
     limitby = None
     if 'id' in request.vars:
         cabecera_id = request.vars.id
@@ -713,7 +698,7 @@ def get_lineas_entradas():
             page = int(request.vars.page)  # the page number
             pagesize = int(request.vars.rows)
             limitby = (page * pagesize - pagesize, page * pagesize)
-            EnDetalle = True
+            en_detalle = True
             fields = ['nada'] + fields
 
     if session.Entradas:
@@ -745,7 +730,7 @@ def get_lineas_entradas():
                 vals.append(locale.format('%.2f', r[f], grouping=True))
         rows.append(dict(id=r.id, cell=vals))
 
-    if EnDetalle:
+    if en_detalle:
         if qty_totales:
             totales = locale.format('%.2f', qty_totales, grouping=True)
         else:

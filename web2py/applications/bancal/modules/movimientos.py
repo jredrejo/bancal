@@ -53,7 +53,6 @@ class Almacen(object):
                 registro_linea = self.db.LineaEntrada(id_alimento)
                 registro_alimento = self.db.Alimento(registro_linea.alimento)
                 codigo_alimento = registro_alimento.Codigo
-                session.NuevaLinea = True
                 if unidades:
                     if float(unidades) \
                             != registro_linea.Unidades:
@@ -67,7 +66,6 @@ class Almacen(object):
             # session.AlmacenAlimento
 
             if frmlineas.accepts(request.vars, session):
-                session.NuevaLinea = True
                 if valor_antiguo_uds and registro_linea.LineaAlmacen:
                     actualiza_lineaalmacen(registro_linea.LineaAlmacen,
                             float(request.vars.Unidades), valor_antiguo_uds)

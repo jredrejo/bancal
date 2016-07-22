@@ -1,27 +1,24 @@
-#!/usr/bin/env python
-
-'''py.test test cases to test people application.
-
-These tests run simulating web2py shell environment and don't use webclient
-module.
-
-So, they run faster and don't need web2py server running.
-
-If you want to see webclient approach, see test_people_controller_webclient.py
-in this same directory.
-'''
+# -*- coding: utf-8 -*-
 import pytest
 
 
+@pytest.fixture()
+def insertar_entrada(request):
+    db = web2py.db
+    entrada_id = db.CabeceraEntrada.insert(tipoProcedencia="DISTRIBUCIÓN", Donante=1)
+    db.
+
+
+
 def test_hay_stock(web2py):
-    db=web2py.db
-    hay=0
+    db = web2py.db
+    hay = 0
 
     query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
         & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) \
         & (db.Alimento.Descripcion != None)
 
-    rows= db(query).select(
+    rows = db(query).select(
         db.CabeceraAlmacen.id,
         db.Alimento.Codigo,
         db.Alimento.Descripcion,
@@ -29,16 +26,13 @@ def test_hay_stock(web2py):
         db.Alimento.Unidades,
         db.LineaAlmacen.Stock.sum(),
         groupby=db.CabeceraAlmacen.alimento,
-        )
+    )
     for row in rows:
-        if row[db.LineaAlmacen.Stock.sum()]>0:
-            hay +=1
+        if row[db.LineaAlmacen.Stock.sum()] > 0:
+            hay += 1
             break
 
-    assert hay>0
-
-
-
+    assert hay > 0
 
 
 def kktest_index_exists(web2py):
@@ -82,7 +76,7 @@ def kktest_validate_new_person(web2py):
     )
 
     result = web2py.submit('people', 'new_person', web2py, data,
-                            formname='new_person_form')
+                           formname='new_person_form')
 
     assert result['form'].errors
 
@@ -106,7 +100,7 @@ def kktest_save_new_person(web2py):
     )
 
     result = web2py.submit('people', 'new_person', web2py, data,
-            formname='new_person_form')
+                           formname='new_person_form')
 
     html = web2py.response.render('people/new_person.html', result)
 

@@ -95,8 +95,12 @@ auth.settings.registration_requires_approval = True
 auth.settings.reset_password_requires_verification = True
 
 #
-# MODELS:
-#
+# MODELO:
+# pais, provincia, poblacion
+# Sede, Almacen, Alimento, Estanteria, Cierre
+# Colaborador, Beneficiario
+# CabeceraAlmacen, LineaAlmacen, CabeceraEntrada, LineaEntrada, CabeceraSalida, LineaEntrada
+
 
 db.define_table(
     'Alimento',

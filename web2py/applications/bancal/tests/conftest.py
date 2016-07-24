@@ -36,6 +36,7 @@ def appname():
 
     dirs = os.path.split(__file__)[0]
     appname = dirs.split(os.path.sep)[-2]
+    # sys.path.insert(1, os.path.join(os.getcwd(), 'applications', appname))
     return appname
 
 
@@ -44,7 +45,6 @@ def create_database(web2py):
     import testdb
     db = web2py.db
     testdb.fill_tables(db)
-#    locs = db().select(db.poblacion.ALL, limitby=(0, 1))
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -165,6 +165,7 @@ def web2py(appname):
     if '__file__' in web2py_env:
         del web2py_env['__file__']  # avoid py.test import error
     web2py_env['run'] = run
+    web2py_env['send'] = send
     web2py_env['submit'] = submit
     globals().update(web2py_env)
 

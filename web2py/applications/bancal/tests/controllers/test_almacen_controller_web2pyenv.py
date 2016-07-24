@@ -3,14 +3,23 @@ import pytest
 
 
 @pytest.fixture()
-def insertar_entrada(request):
+def insertar_entrada(web2py):
+    from movimientos import nueva_lineaalmacen
+    from collections import namedtuple
     db = web2py.db
+
     entrada_id = db.CabeceraEntrada.insert(tipoProcedencia="DISTRIBUCIÓN", Donante=1)
-    db.
+    alimento_id = db(db.Alimento.Descripcion != '').select().first().id
+
+    Storage = namedtuple('Storage', 'alimento Caducidad PesoUnidad estanteria Lote Unidades')
+    nuevo_alimento = Storage(alimento=alimento_id, Caducidad='31-12-1999', PesoUnidad=1.0, estanteria=1, Lote=None, Unidades=1.0)
+    nueva_lineaalmacen(nuevo_alimento)
+    db.LineaEntrada.insert(cabecera=entrada_id, alimento=alimento_id, Unidades=100)
+    db.commit()
+    pytest.set_trace()
 
 
-
-def test_hay_stock(web2py):
+def test_hay_stock(web2py, insertar_entrada):
     db = web2py.db
     hay = 0
 

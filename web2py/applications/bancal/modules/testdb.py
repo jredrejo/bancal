@@ -101,8 +101,10 @@ def crea_usuario():
     auth = Auth(db)
 
     db.Sede.insert(name="Sede de pruebas")
-    db.Almacen.insert(name="AlmacenTest 1")
+    id_almacen = db.Almacen.insert(name="AlmacenTest 1")
     db.Almacen.insert(name="AlmacenTest 2")
+    db.Estanteria.insert(name="Estanteria Test", almacen=id_almacen)
+    
     my_crypt = CRYPT(key=auth.settings.hmac_key)
     crypted_passwd = my_crypt('password_malo')[0]
     db.commit()

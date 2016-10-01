@@ -29,7 +29,7 @@
 # Variables de sesión usadas:
 #
 # session.AlmacenAlimento: almacena el id de db.Alimento.id del alimento que se está editando, también usado para búsquedas
-# session.Entradas = True si se está gestionando entradas, False si son salidas
+# session.Entradas = True si se está gestionando entradas, False si son salidas. Usado por get_codigo, set_alimento y get_lineas_entradas
 # session.FechaAlmacen: Usada para hacer búsquedas en esa fecha
 # session.DonanteAlmacen = Usada para hacer búsquedas con ese donante
 # session.BeneficiarioAlmacen: Usada para hacer búsquedas sobre ese beneficiario
@@ -377,37 +377,18 @@ def set_alimento():
 
     if len(request.vars) > 0:
         session.AlmacenAlimento = request.vars.alimento
-        alimento = db(db.Alimento.Descripcion
-                      == request.vars.alimento).select().first()
+        alimento = db(db.Alimento.Descripcion == request.vars.alimento).select().first()
         if alimento:
             codigo = alimento.Codigo
             session.AlmacenAlimento = alimento.id
     if codigo == '':
         session.AlmacenAlimento = None
 
-    if not session.Entradas:
-        data = {'codigo': codigo, 'stock': 0, 'stock-text': ''}
-        locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
-        if codigo != '':
-            query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
-                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
-            query = query & (db.Alimento.Codigo == codigo)
-            stock = \
-                db(query).select(db.LineaAlmacen.Stock.sum()).first()[
-                    db.LineaAlmacen.Stock.sum()]
-            if stock:
-                session.AlmacenStock = stock
-                data['stock'] = stock
+    data = stock_alimento(codigo)
 
-                data['stock-text'] = locale.format('%.2f', stock,
-                                                   grouping=True)
-            else:
-                session.AlmacenStock = None
-                data['stock'] = 0
-                data['stock-text'] = ''
-        return response.json(data)
-    else:
-        return response.json(codigo)
+    session.AlmacenStock = data['stock']
+
+
 
 
 @auth.requires_login()

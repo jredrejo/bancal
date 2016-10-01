@@ -104,7 +104,7 @@ def crea_usuario():
     id_almacen = db.Almacen.insert(name="AlmacenTest 1")
     db.Almacen.insert(name="AlmacenTest 2")
     db.Estanteria.insert(name="Estanteria Test", almacen=id_almacen)
-    
+
     my_crypt = CRYPT(key=auth.settings.hmac_key)
     crypted_passwd = my_crypt('password_malo')[0]
     db.commit()
@@ -121,7 +121,10 @@ def cleanup_db():
     db = current.db
     db.rollback()
     for tab in db.tables:
-        db[tab].truncate()
+        try:
+            db[tab].truncate()
+        except:
+            pass  # the table does not exist yet
     db.commit()
 
 

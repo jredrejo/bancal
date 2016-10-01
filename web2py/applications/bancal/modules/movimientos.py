@@ -23,6 +23,7 @@ if 0:  # for IDE's to find the imports for the globals
     db = DAL('sqlite://storage.sqlite')
     auth = Auth(globals(), None)
 
+import locale
 from datetime import datetime
 from gluon import current
 session = current.session
@@ -60,6 +61,43 @@ def check_stock(form):
             db(query).select(db.LineaAlmacen.id).first().id
 
 
+def stock_alimento(codigo):
+    """Devuelve, dado el código de un alimento:
+    Un diccionario conteniendo
+    - alimento: nombre del alimento
+    - id: id del alimento en la tabla db.Alimento
+    - stock: stock disponible del alimento
+    - stock-text: stock disponible del alimento formateado como texto
+    """
+
+    alimento = db((db.Alimento.Codigo == codigo)
+        & (db.Alimento.Descripcion != None)).select().first()
+    if alimento:
+        data = {'alimento': alimento.Descripcion, 'id': alimento.id}
+
+        query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
+            & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+        query = query & (db.Alimento.id == alimento.id)
+        stock = \
+            db(query).select(db.LineaAlmacen.Stock.sum()).first()[
+                db.LineaAlmacen.Stock.sum()]
+        if stock:
+            if stock > 0:
+                locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
+                session.AlmacenStock = stock
+                data = {'alimento': alimento.Descripcion}
+                data['stock'] = stock
+
+                data['stock-text'] = locale.format('%.2f', stock,
+                                                   grouping=True)
+
+    else:
+        data = {'alimento': '', 'id': None}
+
+    return data
+
+
+
 def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
     """Descuenta o añade stock en una línea de almacén, según el orden de valornuevo y valorprevio"""
 
@@ -73,13 +111,15 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
 
 
 def nueva_lineaalmacen(valores):
-    cabecera = db(db.CabeceraAlmacen.alimento
-                  == valores.alimento).select().first()
+    cabecera = db(db.CabeceraAlmacen.alimento == valores.alimento).select().first()
     if not cabecera:
         cid = db.CabeceraAlmacen.insert(alimento=valores.alimento)
     else:
         cid = cabecera.id
-    fecha_caducidad = datetime.strptime(valores.Caducidad, '%d-%m-%Y')
+    if not valores.Caducidad:
+        fecha_caducidad = datetime.datetime(2999, 12, 31)
+    else:
+        fecha_caducidad = datetime.strptime(valores.Caducidad, '%d-%m-%Y')
     query = (db.LineaAlmacen.cabecera == cid) \
         & (db.LineaAlmacen.PesoUnidad == valores.PesoUnidad)
     query = query & (db.LineaAlmacen.Caducidad == fecha_caducidad)

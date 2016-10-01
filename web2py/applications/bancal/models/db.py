@@ -47,10 +47,11 @@ from gluon import current
 import datetime
 from web2pytest import web2pytest
 is_running_under_test = web2pytest.is_running_under_test(request, request.application)
-
 if is_running_under_test:
+    from tempfile import mkdtemp
+    folder = mkdtemp()
     db = DAL('sqlite://test.sqlite', pool_size=10,
-             check_reserved=['all'], migrate=True, lazy_tables=False)
+             check_reserved=['all'], folder=folder)
 else:
     db = DAL('sqlite://storage.sqlite', pool_size=1,
              check_reserved=['all'], migrate=True, lazy_tables=False)

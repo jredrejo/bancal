@@ -187,11 +187,11 @@ Total Kg. en esta entrada:
       var jsonString={'alimento':  ui.item.value};
       jQuery.post("{{=URL(c='almacen',f='set_alimento')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
-                if (data =='') {
+                if (data["codigo"] =='') {
                   jQuery("#LineaEntrada_alimento").val("");
                   jQuery("#Alimento_Codigo").val("");
                 } else {
-                  jQuery("#Alimento_Codigo").val(data);
+                  jQuery("#Alimento_Codigo").val(data["codigo"]);
                   jQuery.sleep(500);
                   jQuery("#LineaEntrada_Unidades").focus();
 

@@ -2,7 +2,7 @@
 import pytest
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def insertar_entrada(web2py):
     from movimientos import nueva_lineaalmacen
     from collections import namedtuple
@@ -10,13 +10,11 @@ def insertar_entrada(web2py):
 
     entrada_id = db.CabeceraEntrada.insert(tipoProcedencia="DISTRIBUCIÓN", Donante=1)
     alimento_id = db(db.Alimento.Descripcion != '').select().first().id
-
     Storage = namedtuple('Storage', 'alimento Caducidad PesoUnidad estanteria Lote Unidades')
     nuevo_alimento = Storage(alimento=alimento_id, Caducidad='31-12-1999', PesoUnidad=1.0, estanteria=1, Lote=None, Unidades=1.0)
     nueva_lineaalmacen(nuevo_alimento)
     db.LineaEntrada.insert(cabecera=entrada_id, alimento=alimento_id, Unidades=100)
     db.commit()
-    pytest.set_trace()
 
 
 def test_hay_stock(web2py, insertar_entrada):
@@ -42,6 +40,15 @@ def test_hay_stock(web2py, insertar_entrada):
             break
 
     assert hay > 0
+
+
+def test_cantidad_stock(web2py, insertar_entrada):
+    from movimientos import stock_alimento
+    db = web2py.db
+    alimento_id = db(db.Alimento.Descripcion != '').select().first().id
+    data = stock_alimento(alimento_id)
+    pytest.set_trace()
+    assert data['stock'] > 0
 
 
 def kktest_index_exists(web2py):

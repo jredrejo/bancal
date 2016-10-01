@@ -715,10 +715,13 @@ def generar_informe(mes, year, trimestre=False):
                              groupby=(db.LineaEntrada.alimento,
                              db.CabeceraEntrada.tipoProcedencia))
     for row in rows:
+        codigo_alimento = db.Alimento[row.LineaEntrada.alimento].Codigo
         if row.CabeceraEntrada.tipoProcedencia != 'OTROS BANCOS':
-
-            informe[row.LineaEntrada.alimento][row.CabeceraEntrada.tipoProcedencia] = \
-                row[campo]
+            try:
+                informe[codigo_alimento][row.CabeceraEntrada.tipoProcedencia] = \
+                    row[campo]
+            except:
+                print row.LineaEntrada.alimento
         else:
             query2 = query1 & (db.LineaEntrada.alimento
                                == row.LineaEntrada.alimento) \
@@ -726,16 +729,16 @@ def generar_informe(mes, year, trimestre=False):
                    ) & (db.CabeceraEntrada.Donante == db.Colaborador.id)
             bancos = db(query2).select(db.Colaborador.name)
             if len(bancos) > 1:
-                informe[row.LineaEntrada.alimento]['eNombre'] = 'Varios'
+                informe[codigo_alimento]['eNombre'] = 'Varios'
             else:
                 if bancos.first().name[:5] == 'BANCO':
 
-                    informe[row.LineaEntrada.alimento]['eNombre'] = \
+                    informe[codigo_alimento]['eNombre'] = \
                         bancos.first().name[6:]
                 else:
-                    informe[row.LineaEntrada.alimento]['eNombre'] = \
+                    informe[codigo_alimento]['eNombre'] = \
                         'Varios'
-            informe[row.LineaEntrada.alimento]['eCantidad'] = row[campo]
+            informe[codigo_alimento]['eCantidad'] = row[campo]
 
     # SALIDAS:
 
@@ -760,9 +763,12 @@ def generar_informe(mes, year, trimestre=False):
                              groupby=(db.LineaSalida.alimento,
                              db.Beneficiario.tipobeneficiario))
     for row in rows:
-
-        informe[row.LineaSalida.alimento][row.Beneficiario.tipobeneficiario] = \
-            row[campo]
+        codigo_alimento = db.Alimento[row.LineaSalida.alimento].Codigo
+        try:
+            informe[codigo_alimento][row.Beneficiario.tipobeneficiario] = \
+                row[campo]
+        except:
+            print row.LineaSalida.alimento
         if row.Beneficiario.tipobeneficiario == 'OTROS BANCOS':
             query2 = query1 & (db.LineaSalida.alimento
                                == row.LineaSalida.alimento) \
@@ -770,14 +776,14 @@ def generar_informe(mes, year, trimestre=False):
                 & (db.CabeceraSalida.Beneficiario == db.Beneficiario.id)
             bancos = db(query2).select(db.Beneficiario.name)
             if len(bancos) > 1:
-                informe[row.LineaSalida.alimento]['sNombre'] = 'Varios'
+                informe[codigo_alimento]['sNombre'] = 'Varios'
             else:
                 if bancos.first().name[:5] == 'BANCO':
 
-                    informe[row.LineaSalida.alimento]['sNombre'] = \
+                    informe[codigo_alimento]['sNombre'] = \
                         bancos.first().name[6:]
                 else:
-                    informe[row.LineaSalida.alimento]['sNombre'] = \
+                    informe[codigo_alimento]['sNombre'] = \
                         'Varios'
 
     # calculo de beneficiarios

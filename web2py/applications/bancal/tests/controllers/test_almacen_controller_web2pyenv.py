@@ -1,27 +1,31 @@
-#!/usr/bin/env python
-
-'''py.test test cases to test people application.
-
-These tests run simulating web2py shell environment and don't use webclient
-module.
-
-So, they run faster and don't need web2py server running.
-
-If you want to see webclient approach, see test_people_controller_webclient.py
-in this same directory.
-'''
+# -*- coding: utf-8 -*-
 import pytest
 
 
-def test_hay_stock(web2py):
-    db=web2py.db
-    hay=0
+@pytest.fixture(scope="module")
+def insertar_entrada(web2py):
+    from movimientos import nueva_lineaalmacen
+    from collections import namedtuple
+    db = web2py.db
+
+    entrada_id = db.CabeceraEntrada.insert(tipoProcedencia="DISTRIBUCIÓN", Donante=1)
+    alimento_id = db(db.Alimento.Descripcion != '').select().first().id
+    Storage = namedtuple('Storage', 'alimento Caducidad PesoUnidad estanteria Lote Unidades')
+    nuevo_alimento = Storage(alimento=alimento_id, Caducidad='31-12-1999', PesoUnidad=1.0, estanteria=1, Lote=None, Unidades=1.0)
+    nueva_lineaalmacen(nuevo_alimento)
+    db.LineaEntrada.insert(cabecera=entrada_id, alimento=alimento_id, Unidades=100)
+    db.commit()
+
+
+def test_hay_stock(web2py, insertar_entrada):
+    db = web2py.db
+    hay = 0
 
     query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
         & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera) \
         & (db.Alimento.Descripcion != None)
 
-    rows= db(query).select(
+    rows = db(query).select(
         db.CabeceraAlmacen.id,
         db.Alimento.Codigo,
         db.Alimento.Descripcion,
@@ -29,16 +33,22 @@ def test_hay_stock(web2py):
         db.Alimento.Unidades,
         db.LineaAlmacen.Stock.sum(),
         groupby=db.CabeceraAlmacen.alimento,
-        )
+    )
     for row in rows:
-        if row[db.LineaAlmacen.Stock.sum()]>0:
-            hay +=1
+        if row[db.LineaAlmacen.Stock.sum()] > 0:
+            hay += 1
             break
 
-    assert hay>0
+    assert hay > 0
 
 
-
+def test_cantidad_stock(web2py, insertar_entrada):
+    from movimientos import stock_alimento
+    db = web2py.db
+    alimento_id = db(db.Alimento.Descripcion != '').select().first().id
+    data = stock_alimento(alimento_id)
+    pytest.set_trace()
+    assert data['stock'] > 0
 
 
 def kktest_index_exists(web2py):
@@ -82,7 +92,7 @@ def kktest_validate_new_person(web2py):
     )
 
     result = web2py.submit('people', 'new_person', web2py, data,
-                            formname='new_person_form')
+                           formname='new_person_form')
 
     assert result['form'].errors
 
@@ -106,7 +116,7 @@ def kktest_save_new_person(web2py):
     )
 
     result = web2py.submit('people', 'new_person', web2py, data,
-            formname='new_person_form')
+                           formname='new_person_form')
 
     html = web2py.response.render('people/new_person.html', result)
 

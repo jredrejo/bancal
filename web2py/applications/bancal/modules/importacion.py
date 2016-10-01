@@ -23,7 +23,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-"""Módulo de importación de tablas desde la base de datos antigua. 
+"""Módulo de importación de tablas desde la base de datos antigua.
 Una vez hechas las importaciones ya no se usa"""
 
 from gluon import *
@@ -41,7 +41,7 @@ def rellena_provincias():
             'provinciaseo': prov[2],
             'provincia3': prov[3],
             'postal': prov[4],
-            })
+        })
     current.db.provincia.bulk_insert(listado)
 
 
@@ -55,7 +55,7 @@ def rellena_localidades():
             'poblacion': pobl[2],
             'poblacionseo': pobl[3],
             'postal': pobl[4],
-            }
+        }
         datos_localidad['latitud'] = float(pobl[5])
         datos_localidad['longitud'] = float(pobl[6])
         listado.append(datos_localidad)
@@ -74,7 +74,7 @@ def rellena_paises():
             'pais': pais[4],
             'continente': pais[5],
             'subcontinente': pais[6],
-            }
+        }
         datos_pais['iso_moneda'] = pais[7]
         datos_pais['nombre_moneda'] = pais[8]
         listado.append(datos_pais)
@@ -136,7 +136,7 @@ def rellena_alimentos():
             'Descripcion': dato[2],
             'Familia': dato[4],
             'SubFamilia': dato[3],
-            }
+        }
         if dato[5] == 1:
             alimento['Conservacion'] = 'Frío'
         if dato[6] == 2:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """Infrastructure to run an Web2py application under test environment.
 
@@ -15,8 +15,10 @@ where to create their test database.
 import glob
 import os
 
-#default_path = "/tmp"
-default_path = "/dev/shm/web2py_test" # Ubuntu native ramdisk is faster
+__all__ = ['delete_testfile', 'create_testfile', 'is_running_under_test']
+
+# default_path = "/tmp"
+default_path = "/dev/shm/web2py_test"  # native ramdisk is faster
 default_filename = "web2py_test_indicator"
 
 _test_filename = None

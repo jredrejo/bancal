@@ -14,7 +14,7 @@
           <div class="row-fluid">
             <div class="span1" id="fechas">Fecha: {{=form.custom.widget.Fecha}}</div>
             <div class="span4">Beneficiario: {{=form.custom.widget.Beneficiario}}</div>
-           
+
           </div>
            <div class="row-fluid">
              {{=form.custom.submit}}
@@ -34,31 +34,31 @@
 
 
                 <div class="row-fluid">
-                      <div class="span1">Código: 
+                      <div class="span1">Código:
                         <input class="integer" id="Alimento_Codigo" name="Codigo" type="text" value={{=codigo_alimento}} style="width:50px">
                       </div>
         {{=frmlineas.custom.begin}}
                       <div class="span3">{{=frmlineas.custom.label.alimento}}:
                         {{=frmlineas.custom.widget.alimento}}
-                       </div> 
+                       </div>
                         <div class="span1">{{=frmlineas.custom.label.Unidades}}:
                         {{=frmlineas.custom.widget.Unidades}}
-                       </div>  
+                       </div>
                         <div class="span1">{{=frmlineas.custom.label.PesoUnidad}}:
                         {{=frmlineas.custom.widget.PesoUnidad}}
                        </div>
                         <div class="span2"  style="display:none;">{{=frmlineas.custom.label.PrecioKg}}:
                         {{=frmlineas.custom.widget.PrecioKg}}
-                       </div> 
+                       </div>
                          <div class="span1">{{=frmlineas.custom.label.Caducidad}}:
                         {{=frmlineas.custom.widget.Caducidad}}
                        </div>
                 </div>
                <div class="row-fluid">
- 
+
                         <div class="span1" style="display:none;">{{=frmlineas.custom.label.Lote}}:
                         {{=frmlineas.custom.widget.Lote}}
-                       </div>  
+                       </div>
                         <div class="span1"  style="display:none;">{{=frmlineas.custom.label.estanteria}}:
                         {{=frmlineas.custom.widget.estanteria}} {{=frmlineas.custom.widget.LineaAlmacen}}
                        </div>
@@ -68,28 +68,28 @@
                        </div>
 
                         <div class="span3">
-                        {{=frmlineas.custom.submit}} 
-                       </div> 
+                        {{=frmlineas.custom.submit}}
+                       </div>
                </div>
                <div class="row-fluid">
-                              
-               </div>        
+
+               </div>
         {{=frmlineas.custom.end}}
-  
+
               </div> <!-- fin del well lineas-->
 
             <table id="list"></table>
             <div id="pager"></div>
 
 
-          </div>  
-{{pass}} 
+          </div>
+{{pass}}
 
 </div>
 
 
  <style>
-      
+
       .ui-pg-input{width:20px;}
       .ui-pg-selbox{width:50px;padding-top: 0px;}
     #CabeceraSalida_Fecha{ width: 80px;}
@@ -112,15 +112,15 @@
   var stockdisponible_text="";
     function removeSpaces(string) {
     // quita los espacios y todos los caraceres que no son un número
-         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
-    }   
+         return string.split(' ').join('').replace(/[^0-9]/g, '');
+    }
 
     function buscar_alimento() {
         //jQuery("#contenedor_almacen").hide();
         jQuery("#stockalimento").hide();
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
-            jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}", 
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}",
               data, function( data, status, xhr ) {
               if (data['alimento']=='') {
                 jQuery("#LineaSalida_alimento").val("");
@@ -138,8 +138,8 @@
                 stockdisponible_text=data['stock-text'];
                 jQuery("#valorstock").text(data['stock-text']);}
 
-            });        
-    }   
+            });
+    }
 
     function borra_linea(id) {
       var r = confirm("¿Seguro que quiere borrar esta línea?");
@@ -147,27 +147,28 @@
       {
             var jsonString={'linea_id':  id };
             jQuery.post("{{=URL(c='almacen',f='borra_linea')}}", jsonString, {contentType: 'application/json'} )
-                  .success(function(data) {           
-                  jQuery("#list").jqGrid().trigger("reloadGrid");     
-            }); 
+                  .success(function(data) {
+                  jQuery("#list").jqGrid().trigger("reloadGrid");
+            });
       }
     }
 
 
  jQuery(document).ready(function() {
    // chrome fix.
-   document.onselectstart = function () { return false; };             
+   document.onselectstart = function () { return false; };
 
-    {{if session.NuevaLinea:}}
-    jQuery("#Alimento_Codigo").focus();
-    {{else:}}
-    jQuery("#CabeceraSalida_Beneficiario").focus();
-    {{pass}}
+    if (jQuery("#Alimento_Codigo").is(":visible") ) {
+         jQuery("#Alimento_Codigo").focus();
+
+    } else {
+         jQuery("#CabeceraSalida_Beneficiario").focus();
+    }
 
     jQuery('#LineaSalida_Unidades').removeClass("double");
     jQuery('#LineaSalida_Unidades').autoNumeric('init', {aSep: '.', aDec: ','});
-    jQuery('#LineaSalida_PesoUnidad').removeClass("double");    
-    jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.', aDec: ','});    
+    jQuery('#LineaSalida_PesoUnidad').removeClass("double");
+    jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.', aDec: ','});
 
     jQuery('#Alimento_Codigo').change(function(){
             buscar_alimento();
@@ -193,7 +194,7 @@
             else
             $(this).select();
     });
-      
+
       //Para deshacer el formateado numérico en español antes de enviar el formulario
       jQuery('#frmlineas').submit(function(){
         var unidades=jQuery("#LineaSalida_Unidades");
@@ -222,7 +223,7 @@
    jQuery('#LineaSalida_alimento').autocomplete({
       minLength: 2,
       source: function( request, response ) {
-            jQuery.getJSON( "{{=URL(c='almacen',f='get_alimentos')}}", 
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_alimentos')}}",
               request, function( data, status, xhr ) {
               response( data );
             });
@@ -236,7 +237,7 @@
                 if (data['stock'] ==0) {
                   jQuery("#LineaSalida_alimento").val("");
                   jQuery("#Alimento_Codigo").val("");
-                  
+
                 } else {
                  // jQuery("#contenedor_almacen").show();
                   jQuery("#Alimento_Codigo").val(data["codigo"]);
@@ -245,16 +246,16 @@
                   stockdisponible_text=data['stock-text'];
                   jQuery("#valorstock").text(stockdisponible_text);
                   jQuery("#LineaSalida_Unidades").focus();
-                  
-                }    
-                  //jQuery("#list").jqGrid().trigger("reloadGrid");   
+
+                }
+                  //jQuery("#list").jqGrid().trigger("reloadGrid");
             });
 
-    }        
+    }
 
     }); // fin de LineaSalida_alimento autocomplete
 
-   
+
   jQuery("#list").jqGrid({
     url:'{{=URL(r=request,f="call",args=["json","get_lineas_entradas"])}}',
     data: "{}",
@@ -289,7 +290,7 @@
          var ids = thegrid.jqGrid("getDataIDs");
           for(var i=0;i < ids.length;i++){
             var cl = ids[i];
-            //be = "<input style='height:22px;width:20px;' type='button' value='Borrar' onclick=\"jQuery('#list').editRow('"+cl+"');\"  />"; 
+            //be = "<input style='height:22px;width:20px;' type='button' value='Borrar' onclick=\"jQuery('#list').editRow('"+cl+"');\"  />";
             //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
             be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
             thegrid.jqGrid('setRowData',ids[i],{action:be});
@@ -298,9 +299,9 @@
 
     }, // fin del evento gridComplete
     ondblClickRow: function (id){
-      
+
       window.location.href='{{=URL(r=request,f="nueva_salida")}}' + '/{{=session.current_entrada}}?lid=' + id;
-      
+
     } // fin del evento dblclick
 
   }); //fin de la definición de jqgrid list
@@ -318,7 +319,7 @@
   jQuery("#list").jqGrid().jqGrid('bindKeys',
       {
         onEnter: function(id) {
-            
+
         }
       }
   ); //fin de bindKeys

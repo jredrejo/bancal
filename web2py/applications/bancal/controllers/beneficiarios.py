@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 ##############################################################################
@@ -24,6 +23,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+if 0:
+    from gluon import *
+    (request, session, response, T, cache) = (current.request,
+                                              current.session, current.response, current.t, current.cache)
+    LOAD = compileapp.LoadFactory()
+    from gluon.dal import DAL
+    from gluon.sqlhtml import *
+    from gluon.validators import *
+
 
 @auth.requires_login()
 def index():
@@ -46,9 +54,9 @@ def index():
             db.Beneficiario.movil,
             db.Beneficiario.contacto,
             db.Beneficiario.tipobeneficiario,
-            ],
+        ],
         orderby=~db.Beneficiario.id,
-        )
+    )
 
     return locals()
 
@@ -103,7 +111,7 @@ def search_form(self, url):
               _onclick="jQuery('#keywords').val('');"),
         _method='GET',
         _action=url,
-        )
+    )
 
     return form
 

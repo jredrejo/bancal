@@ -61,7 +61,7 @@
     function buscar_alimento() {
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
-            jQuery.getJSON( 'get_codigo',
+            jQuery.getJSON( 'get_alimento_info',
               data, function( data, status, xhr ) {
               if (data['alimento']=='') {
                 jQuery("#Alimento_Descripcion").val("");
@@ -118,7 +118,7 @@
         },
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
-      jQuery.post('set_alimento', jsonString, {contentType: 'application/json;charset=utf-8'} )
+      jQuery.post('get_alimento_info', jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
                 if (data["codigo"] =='') {
                   jQuery("#Alimento_Descripcion").val("");

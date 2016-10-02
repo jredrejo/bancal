@@ -120,7 +120,7 @@
         jQuery("#stockalimento").hide();
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
-            jQuery.getJSON( "{{=URL(c='almacen',f='get_codigo')}}",
+            jQuery.getJSON( "{{=URL(c='almacen',f='get_alimento_info')}}",
               data, function( data, status, xhr ) {
               if (data['alimento']=='') {
                 jQuery("#LineaSalida_alimento").val("");
@@ -231,7 +231,7 @@
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
       //jQuery("#contenedor_almacen").hide();
-      jQuery.post("{{=URL(c='almacen',f='set_alimento.json')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
+      jQuery.post("{{=URL(c='almacen',f='get_alimento_info.json')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
                 jQuery("#stockalimento").hide();
                 if (data['stock'] ==0) {

@@ -29,7 +29,7 @@
 # Variables de sesión usadas:
 #
 # session.AlmacenAlimento: almacena el id de db.Alimento.id del alimento que se está editando, también usado para búsquedas
-# session.Entradas = True si se está gestionando entradas, False si son salidas. Usado por get_codigo, set_alimento y get_lineas_entradas
+# session.Entradas = True si se está gestionando entradas, False si son salidas. Usado por get_lineas_entradas
 # session.FechaAlmacen: Usada para hacer búsquedas en esa fecha
 # session.DonanteAlmacen = Usada para hacer búsquedas con ese donante
 # session.BeneficiarioAlmacen: Usada para hacer búsquedas sobre ese beneficiario
@@ -44,8 +44,6 @@ from gluon import current
 
 from plugin_suggest_widget import suggest_widget
 from movimientos import *
-current.db = db
-current.session = session
 
 if 0:  # for IDE's to find the imports for the globals
     from gluon import *
@@ -320,75 +318,26 @@ def nueva_salida():
 
 
 @service.json
-def get_codigo():
-    """Devuelve:
-    - el nombre de un alimento dado su código
-    - Si estoy en salidas y hay stock devuelve también:
-        - el stock disponible como número real
-        - el stock disponible como cadena de texto"""
-
-    codigo = request.vars.codigo
-    alimento = db((db.Alimento.Codigo == codigo)
-                  & (db.Alimento.Descripcion != None)).select().first()
-    if alimento:
-        data = {'alimento': alimento.Descripcion}
-        session.AlmacenAlimento = alimento.id
-
-        if not session.Entradas:
-            query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
-                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
-            query = query & (db.Alimento.id == alimento.id)
-            stock = \
-                db(query).select(db.LineaAlmacen.Stock.sum()).first()[
-                    db.LineaAlmacen.Stock.sum()]
-
-            data = {'alimento': ''}
-            session.AlmacenAlimento = None
-            session.AlmacenStock = None
-            if stock:
-                if stock > 0:
-                    locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
-                    session.AlmacenStock = stock
-                    data = {'alimento': alimento.Descripcion}
-                    data['stock'] = stock
-
-                    data['stock-text'] = locale.format('%.2f', stock,
-                                                       grouping=True)
-
-                    session.AlmacenAlimento = alimento.id
-
-    else:
-
-        data = {'alimento': ''}
-        session.AlmacenAlimento = None
-
-    return response.json(data)
-
-
-@service.json
-def set_alimento():
+def get_alimento_info():
     """Devuelve:
     - el código de un alimento dado su texto
     - Si hay stock devuelve también:
         - el stock disponible como número real
         - el stock disponible como cadena de texto"""
-
     codigo = ''
-
     if len(request.vars) > 0:
-        session.AlmacenAlimento = request.vars.alimento
-        alimento = db(db.Alimento.Descripcion == request.vars.alimento).select().first()
-        if alimento:
-            codigo = alimento.Codigo
-            session.AlmacenAlimento = alimento.id
-    if codigo == '':
-        session.AlmacenAlimento = None
+        if 'codigo' in request.vars:
+            codigo = request.vars.codigo
+        else:
+            alimento = db(db.Alimento.Descripcion == request.vars.alimento).select().first()
+            if alimento:
+                codigo = alimento.Codigo
 
-    data = stock_alimento(codigo)
+    data = stock_alimento(codigo, db)
+    session.AlmacenStock = data['stock'] if data['stock'] else None
+    session.AlmacenAlimento = data['id'] if data['id'] else None
 
-    session.AlmacenStock = data['stock']
-
-
+    return response.json(data)
 
 
 @auth.requires_login()

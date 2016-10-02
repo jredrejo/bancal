@@ -16,18 +16,18 @@
   <div class="row-fluid">
     <h4>Stock disponible:</h4>
 
-   
+
     <table id="list"></table>
     <div id="pager"></div>
 
 
-  </div>  
- 
+  </div>
+
 
 </div>
 
  <style>
-      
+
       .ui-pg-input{width:30px;}
       .ui-pg-selbox{width:60px;padding-top: 0px;}
       #pager_left{width:10px;}
@@ -39,13 +39,13 @@
 <script type="text/javascript">
     function removeSpaces(string) {
     // quita los espacios y todos los caraceres que no son un número
-         return string.split(' ').join('').replace(/[^0-9]/g, ''); 
-    }   
-    
+         return string.split(' ').join('').replace(/[^0-9]/g, '');
+    }
+
     function buscar_alimento() {
         var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
         var data= {"codigo":codigo};
-            jQuery.getJSON( 'get_codigo', 
+            jQuery.getJSON( 'get_alimento_info',
               data, function( data, status, xhr ) {
               if (data['alimento']=='') {
                 jQuery("#Alimento_Descripcion").val("");
@@ -54,13 +54,13 @@
               } else {
                 jQuery("#Alimento_Descripcion").val(data['alimento']);}
               jQuery("#list").jqGrid().trigger("reloadGrid");
-            });        
-        
-    }   
+            });
+
+    }
 
  $(document).ready(function() {
    // chrome fix.
-   document.onselectstart = function () { return false; };             
+   document.onselectstart = function () { return false; };
 
    //var cachealimentos={}
   jQuery("#Alimento_Codigo").focus();
@@ -84,7 +84,7 @@
               response( cachealimentos[ term ] );
               return;
             }*/
-            jQuery.getJSON( 'get_alimentos', 
+            jQuery.getJSON( 'get_alimentos',
               request, function( data, status, xhr ) {
               //cachealimentos[ term ] = data;
               response( data );
@@ -92,12 +92,12 @@
         },
     select: function( event, ui ) {
       var jsonString={'alimento':  ui.item.value};
-      jQuery.post('set_alimento', jsonString, {contentType: 'application/json;charset=utf-8'} )
-            .success(function(data) {           
-                  jQuery("#list").jqGrid().trigger("reloadGrid");     
+      jQuery.post('get_alimento_info', jsonString, {contentType: 'application/json;charset=utf-8'} )
+            .success(function(data) {
+                  jQuery("#list").jqGrid().trigger("reloadGrid");
             });
 
-    }        
+    }
 
     });
 
@@ -136,9 +136,9 @@
     width: 'auto',
   subGrid : false,
   subGridUrl: 'get_lineas',
-    subGridModel: [{ name  : ['Stock','Fecha caducidad','Peso/Unidad','Stock Inicial','Lote'], 
+    subGridModel: [{ name  : ['Stock','Fecha caducidad','Peso/Unidad','Stock Inicial','Lote'],
                     width : [55,80,80,80,80,80] } ]
- 
+
   });
 
 

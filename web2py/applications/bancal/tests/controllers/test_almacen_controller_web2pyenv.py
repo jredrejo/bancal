@@ -47,7 +47,6 @@ def test_cantidad_stock(web2py, insertar_entrada):
     db = web2py.db
     alimento_id = db(db.Alimento.Descripcion != '').select().first().id
     data = stock_alimento(alimento_id)
-    pytest.set_trace()
     assert data['stock'] > 0
 
 

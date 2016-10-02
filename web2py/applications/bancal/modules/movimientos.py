@@ -20,18 +20,16 @@ if 0:  # for IDE's to find the imports for the globals
     session = globals.Session()
     global cache
     cache = cache.Cache
-    db = DAL('sqlite://storage.sqlite')
     auth = Auth(globals(), None)
 
 import locale
 from datetime import datetime
 from gluon import current
 session = current.session
-db = current.db
 
 __all__ = ['ver_cierre', 'check_stock', 'actualiza_lineaalmacen', 'nueva_lineaalmacen',
            'borrar_linea', 'get_alimentos', 'get_donante', 'set_donante',
-           'search_form', 'search_query']
+           'search_form', 'search_query', 'stock_alimento']
 
 
 def ver_cierre(form):
@@ -47,7 +45,8 @@ def check_stock(form):
     - Si se está editando una línea que ya tenía stock anteriormente descontado
     hay que tenerlo en cuenta: session.valor_antiguo. Si la línea es nueva esto valdrá 0
     """
-
+    # db = form.table._db
+    db = current.db
     stock_pendiente = float(form.vars.Unidades)
     query = (db.CabeceraAlmacen.alimento == form.vars.alimento) \
         & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
@@ -61,7 +60,7 @@ def check_stock(form):
             db(query).select(db.LineaAlmacen.id).first().id
 
 
-def stock_alimento(codigo):
+def stock_alimento(codigo, db1):
     """Devuelve, dado el código de un alimento:
     Un diccionario conteniendo
     - alimento: nombre del alimento
@@ -69,38 +68,29 @@ def stock_alimento(codigo):
     - stock: stock disponible del alimento
     - stock-text: stock disponible del alimento formateado como texto
     """
-
-    alimento = db((db.Alimento.Codigo == codigo)
-        & (db.Alimento.Descripcion != None)).select().first()
+    db = current.db
+    data = {'alimento': '', 'id': None, 'stock': None, 'stock-text': None}
+    alimento = db((db.Alimento.Codigo == codigo) & (db.Alimento.Descripcion != None)).select().first()
     if alimento:
-        data = {'alimento': alimento.Descripcion, 'id': alimento.id}
+        data['alimento'] = alimento.Descripcion
+        data['id'] = alimento.id
 
         query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
             & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
         query = query & (db.Alimento.id == alimento.id)
-        stock = \
-            db(query).select(db.LineaAlmacen.Stock.sum()).first()[
-                db.LineaAlmacen.Stock.sum()]
-        if stock:
-            if stock > 0:
-                locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
-                session.AlmacenStock = stock
-                data = {'alimento': alimento.Descripcion}
-                data['stock'] = stock
-
-                data['stock-text'] = locale.format('%.2f', stock,
-                                                   grouping=True)
-
-    else:
-        data = {'alimento': '', 'id': None}
+        stock = db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
+        if not stock:
+            stock = 0
+        locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
+        data['stock'] = stock
+        data['stock-text'] = locale.format('%.2f', stock, grouping=True)
 
     return data
 
 
-
 def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
     """Descuenta o añade stock en una línea de almacén, según el orden de valornuevo y valorprevio"""
-
+    db = current.db
     registro = db.LineaAlmacen(linea)
     total = float(registro.Stock)
     # Limito a tres decimales en el stock
@@ -111,6 +101,7 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
 
 
 def nueva_lineaalmacen(valores):
+    db = current.db
     cabecera = db(db.CabeceraAlmacen.alimento == valores.alimento).select().first()
     if not cabecera:
         cid = db.CabeceraAlmacen.insert(alimento=valores.alimento)
@@ -143,6 +134,7 @@ def nueva_lineaalmacen(valores):
 
 
 def borrar_linea(linea_id=None):
+    db = current.db
     if linea_id:
         if session.Entradas:
             registro = db.LineaEntrada(linea_id)
@@ -169,6 +161,7 @@ def borrar_linea(linea_id=None):
 
 
 def get_alimentos():
+    db = current.db
     q = request.vars.term
     if q:
         search_term = q.lower().replace(' ', '-')
@@ -181,6 +174,7 @@ def get_alimentos():
 
 
 def get_donante():
+    db = current.db
     q = request.vars.term
     if q:
         query = db.Colaborador.name.contains(q) \
@@ -192,7 +186,7 @@ def get_donante():
 
 
 def set_donante():
-
+    db = current.db
     q = request.vars.donante
     if q:
         query = (db.Colaborador.name == q) & (db.Colaborador.Donante

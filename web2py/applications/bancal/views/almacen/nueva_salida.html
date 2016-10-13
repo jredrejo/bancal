@@ -110,6 +110,12 @@
 <script type="text/javascript">
   var stockdisponible=0;
   var stockdisponible_text="";
+  var $AlimentoCodigo = jQuery("#Alimento_Codigo");
+  var $UnidadesLinea = jQuery('#LineaSalida_Unidades');
+  var $AlimentoLinea = jQuery("#LineaSalida_alimento");
+  var $PesoLinea = jQuery('#LineaSalida_PesoUnidad');
+  var $StockAlimento = jQuery("#stockalimento");
+  var $ValorStock = jQuery("#valorstock");
     function removeSpaces(string) {
     // quita los espacios y todos los caraceres que no son un número
          return string.split(' ').join('').replace(/[^0-9]/g, '');
@@ -117,26 +123,26 @@
 
     function buscar_alimento() {
         //jQuery("#contenedor_almacen").hide();
-        jQuery("#stockalimento").hide();
-        var codigo = removeSpaces(jQuery("#Alimento_Codigo").val());
+        $StockAlimento.hide();
+        var codigo = removeSpaces($AlimentoCodigo.val());
         var data= {"codigo":codigo};
             jQuery.getJSON( "{{=URL(c='almacen',f='get_alimento_info')}}",
               data, function( data, status, xhr ) {
               if (data['alimento']=='') {
-                jQuery("#LineaSalida_alimento").val("");
-                jQuery("#Alimento_Codigo").val("");
-                jQuery("#Alimento_Codigo").focus();
+                $AlimentoLinea.val("");
+                $AlimentoCodigo.val("");
+                $AlimentoCodigo.focus();
                 alert("No hay stock de este producto");
               } else {
-                jQuery("#LineaSalida_alimento").val(data['alimento']);
-                jQuery("#LineaSalida_Unidades").focus();
+                $AlimentoLinea.val(data['alimento']);
+                $UnidadesLinea.focus();
 
                 //jQuery("#contenedor_almacen").show();}
                 //jQuery("#almacen").jqGrid().trigger("reloadGrid");
-                jQuery("#stockalimento").show();
+                $StockAlimento.show();
                 stockdisponible=data['stock'];
                 stockdisponible_text=data['stock-text'];
-                jQuery("#valorstock").text(data['stock-text']);}
+                $ValorStock .text(data['stock-text']);}
 
             });
     }
@@ -158,28 +164,29 @@
    // chrome fix.
    document.onselectstart = function () { return false; };
 
-    if (jQuery("#Alimento_Codigo").is(":visible") ) {
-         jQuery("#Alimento_Codigo").focus();
+
+    if ($AlimentoCodigo.is(":visible") ) {
+         $AlimentoCodigo.focus();
 
     } else {
          jQuery("#CabeceraSalida_Beneficiario").focus();
     }
 
-    jQuery('#LineaSalida_Unidades').removeClass("double");
-    jQuery('#LineaSalida_Unidades').autoNumeric('init', {aSep: '.', aDec: ','});
-    jQuery('#LineaSalida_PesoUnidad').removeClass("double");
-    jQuery('#LineaSalida_PesoUnidad').autoNumeric('init', {aSep: '.', aDec: ','});
+    $UnidadesLinea.removeClass("double");
+    $UnidadesLinea.autoNumeric('init', {aSep: '.', aDec: ','});
+    $PesoLinea.removeClass("double");
+    $PesoLinea.autoNumeric('init', {aSep: '.', aDec: ','});
 
-    jQuery('#Alimento_Codigo').change(function(){
+    $AlimentoCodigo.change(function(){
             buscar_alimento();
     });
 
-    jQuery('#LineaSalida_Unidades').focus(function(){
-        if (!jQuery("#stockalimento").is(":visible") )
+    $UnidadesLinea.focus(function(){
+        if (!$StockAlimento.is(":visible") )
             buscar_alimento();
     });
 
-    jQuery("#LineaSalida_Unidades").focusout(function() {
+    $UnidadesLinea.focusout(function() {
         current_value = parseInt($(this).val());
         if (current_value > stockdisponible) {
             $(this).val(stockdisponible_text);
@@ -188,16 +195,16 @@
     });
 
 
-    jQuery('#LineaSalida_Unidades').focus(function(){
-            if (jQuery('#LineaSalida_Unidades').val()=="1,00")
-              jQuery('#LineaSalida_Unidades').val("");
+    $UnidadesLinea.focus(function(){
+            if ($UnidadesLinea.val()=="1,00")
+              $UnidadesLinea.val("");
             else
             $(this).select();
     });
 
       //Para deshacer el formateado numérico en español antes de enviar el formulario
       jQuery('#frmlineas').submit(function(){
-        var unidades=jQuery("#LineaSalida_Unidades");
+        var unidades=$UnidadesLinea;
         var v=unidades.autoNumeric('get');
         unidades.autoNumeric('destroy');
         unidades.val(v);
@@ -210,7 +217,7 @@
 
 
 
-    /*jQuery('#Alimento_Codigo').keyup(function(e){
+    /*$AlimentoCodigo.keyup(function(e){
         if(e.keyCode == 13)
         {
             buscar_alimento();
@@ -220,7 +227,7 @@
 
 
 
-   jQuery('#LineaSalida_alimento').autocomplete({
+   $AlimentoLinea.autocomplete({
       minLength: 2,
       source: function( request, response ) {
             jQuery.getJSON( "{{=URL(c='almacen',f='get_alimentos')}}",
@@ -233,19 +240,19 @@
       //jQuery("#contenedor_almacen").hide();
       jQuery.post("{{=URL(c='almacen',f='get_alimento_info.json')}}", jsonString, {contentType: 'application/json;charset=utf-8'} )
             .success(function(data) {
-                jQuery("#stockalimento").hide();
+                $StockAlimento.hide();
                 if (data['stock'] ==0) {
-                  jQuery("#LineaSalida_alimento").val("");
-                  jQuery("#Alimento_Codigo").val("");
+                  $AlimentoLinea.val("");
+                  $AlimentoCodigo.val("");
 
                 } else {
                  // jQuery("#contenedor_almacen").show();
-                  jQuery("#Alimento_Codigo").val(data["codigo"]);
-                  jQuery("#stockalimento").show();
+                  $AlimentoCodigo.val(data["codigo"]);
+                  $StockAlimento.show();
                   stockdisponible=data['stock'];
                   stockdisponible_text=data['stock-text'];
-                  jQuery("#valorstock").text(stockdisponible_text);
-                  jQuery("#LineaSalida_Unidades").focus();
+                  $ValorStock .text(stockdisponible_text);
+                  $UnidadesLinea.focus();
 
                 }
                   //jQuery("#list").jqGrid().trigger("reloadGrid");
@@ -255,8 +262,8 @@
 
     }); // fin de LineaSalida_alimento autocomplete
 
-
-  jQuery("#list").jqGrid({
+   var $list = jQuery("#list");
+  $list.jqGrid({
     url:'{{=URL(r=request,f="call",args=["json","get_lineas_entradas"])}}',
     data: "{}",
     datatype: 'json',
@@ -286,15 +293,14 @@
     subGrid : false,
     footerrow: true,
     gridComplete: function() {
-         var thegrid =jQuery("#list");
-         var ids = thegrid.jqGrid("getDataIDs");
+         var ids = $list.jqGrid("getDataIDs");
           for(var i=0;i < ids.length;i++){
             var cl = ids[i];
             //be = "<input style='height:22px;width:20px;' type='button' value='Borrar' onclick=\"jQuery('#list').editRow('"+cl+"');\"  />";
             //be = '<a class="btn btn-mini" href="#" onclick=\"borra_linea('"+cl+"');\"><i class="icon-trash"></i></a>';
             be = '<i class="icon-trash" onclick=\"borra_linea('+cl+');\"></i>';
-            thegrid.jqGrid('setRowData',ids[i],{action:be});
-            thegrid.jqGrid('footerData', 'set', {'Alimento':'TOTALES:', 'Unidades': thegrid.getGridParam('userData') ['qty_totales'] });
+            $list.jqGrid('setRowData',ids[i],{action:be});
+            $list.jqGrid('footerData', 'set', {'Alimento':'TOTALES:', 'Unidades': $list.getGridParam('userData') ['qty_totales'] });
           };
 
     }, // fin del evento gridComplete
@@ -306,7 +312,7 @@
 
   }); //fin de la definición de jqgrid list
 
-  jQuery("#list").jqGrid().jqGrid('bindKeys',
+  $list.jqGrid().jqGrid('bindKeys',
       {
         onEnter: function(id) {
             window.location.href='{{=URL(r=request,f="nueva_salida")}}' + '/{{=session.current_entrada}}?lid=' + id;
@@ -316,7 +322,7 @@
 
 
 
-  jQuery("#list").jqGrid().jqGrid('bindKeys',
+  $list.jqGrid().jqGrid('bindKeys',
       {
         onEnter: function(id) {
 

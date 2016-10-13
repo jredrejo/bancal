@@ -53,11 +53,11 @@ def check_stock(form):
     stock_actual = \
         db(query).select(db.LineaAlmacen.Stock.sum()).first()[
             db.LineaAlmacen.Stock.sum()]
-    if stock_pendiente - session.valor_antiguo > stock_actual:
-        stock_pendiente = stock_actual + session.valor_antiguo
-        form.vars.Unidades = stock_pendiente
-        form.vars.LineaAlmacen = \
-            db(query).select(db.LineaAlmacen.id).first().id
+    # if stock_pendiente - session.valor_antiguo > stock_actual:
+    #     stock_pendiente = stock_actual + session.valor_antiguo
+    #     form.vars.Unidades = stock_pendiente
+    #     form.vars.LineaAlmacen = \
+    #         db(query).select(db.LineaAlmacen.id).first().id
 
 
 def stock_alimento(codigo, db1):
@@ -113,10 +113,10 @@ def nueva_lineaalmacen(valores):
         fecha_caducidad = datetime.strptime(valores.Caducidad, '%d-%m-%Y')
     query = (db.LineaAlmacen.cabecera == cid) \
         & (db.LineaAlmacen.PesoUnidad == valores.PesoUnidad)
-    query = query & (db.LineaAlmacen.Caducidad == fecha_caducidad)
+    query = query & (db.LineaAlmacen.Caducidad <= fecha_caducidad)
     query = query & (db.LineaAlmacen.estanteria == valores.estanteria)
     query = query & (db.LineaAlmacen.Lote == valores.Lote)
-    linea = db(query).select().first()
+    linea = db(query).select(db.LineaAlmacen.id, orderby=db.LineaAlmacen.Stock).first()
     if linea:
         if session.Entradas:
             actualiza_lineaalmacen(linea.id, float(valores.Unidades), 0)

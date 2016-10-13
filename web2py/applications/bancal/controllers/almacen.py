@@ -182,7 +182,6 @@ def nueva_entrada():
                 request.vars.alimento = session.AlmacenAlimento
 
         # session.AlmacenAlimento
-
         if frmlineas.accepts(request.vars, session):
             if valor_antiguo_uds and registro_linea.LineaAlmacen:
                 actualiza_lineaalmacen(registro_linea.LineaAlmacen,
@@ -280,9 +279,7 @@ def nueva_salida():
 
             # descontamos el stock ahora de las líneas de almacén que haga
             # falta:
-
-            query = (db.CabeceraAlmacen.alimento
-                     == frmlineas.vars.alimento) \
+            query = (db.CabeceraAlmacen.alimento == frmlineas.vars.alimento) \
                 & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
             lineas_almacen = db(query).select(db.LineaAlmacen.id,
                                               db.LineaAlmacen.Stock,
@@ -297,10 +294,16 @@ def nueva_salida():
                         stock_pendiente = 0
                     else:
                         stock_resta = linea.Stock
-                        stock_pendiente = stock_pendiente - stock_resta
-                    actualiza_lineaalmacen(linea.id, 0, stock_resta)
-                    if stock_pendiente == 0:
-                        break
+                        if linea.Stock > 0:  # no restamos a un stock negativo
+                            stock_pendiente = stock_pendiente - stock_resta
+                        else:
+                            stock_resta = 0
+                    if stock_resta > 0:
+                        actualiza_lineaalmacen(linea.id, 0, stock_resta)
+                    # if stock_pendiente == 0:
+                    #     break
+                if stock_pendiente > 0:  # Va a haber stock negativo en el almacén, se lo asigno a la última línea
+                    actualiza_lineaalmacen(linea.id, 0, stock_pendiente)
 
             redirect(URL(f='nueva_salida',
                          args=session.current_entrada))

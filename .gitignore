@@ -19,3 +19,16 @@ web2py/.project
 web2py/.pydevproject
 web2py/.settings
 web2py/routes.py
+Bancal/*
+*.txt
+*.xls
+*.pdf
+*.msi
+backups/*
+web2py/.idea/
+web2py/applications/bancal/controllers/appadmin.py
+web2py/applications/bancal/modules/usoalmacen.py
+web2py/applications/people/
+web2py/welcome.w2p
+*.exe
+*.db

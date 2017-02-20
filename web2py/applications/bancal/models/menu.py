@@ -75,6 +75,7 @@ if session.auth:
         (LI(_class='divider'), False, None, []),
         (T('Salidas'), False, URL('almacen', 'salidas'), []),
         (T('Nueva Salida'), False, URL('almacen', 'nueva_salida'), []),
+        (T('Importar salidas desde Hoja de Cálculo'), False, URL('almacen', 'importarsalida'), []),
     ])]
 
     response.menu += [(T('Informes'), False, None, [

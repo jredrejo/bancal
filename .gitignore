@@ -32,3 +32,4 @@ web2py/applications/people/
 web2py/welcome.w2p
 *.exe
 *.db
+web2py/applications/bancal/.vscode/

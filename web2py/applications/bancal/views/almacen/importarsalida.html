@@ -1,0 +1,21 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+{{block right_sidebar}}
+{{pass}}
+
+<h4>Importar salidas desde hoja de cálculo</h4>
+
+<div class="container-fluid">
+  <div class="well well-small">
+
+
+
+<form action="" enctype="multipart/form-data" method="post">
+	<input name="_formname" type="hidden" value="hoja_form">
+	<input class="string" name="sheet_title" type="text" value="">
+	<input class="upload" name="sheet_file" type="file">
+	<input type="submit" value="Enviar">
+</form>
+
+
+  </div>

@@ -773,3 +773,33 @@ def repaso_almacen():
             pass
 
     return dict(totales=totales)
+
+
+@auth.requires_login()
+def importarsalida():
+    
+    hoja_form = FORM(
+        INPUT(_name='sheet_title', _type='text'),
+        INPUT(_name='sheet_file', _type='file')
+        )
+
+    if hoja_form.accepts(request.vars, formname='hoja_form'):
+        import xlrd
+        print hoja_form.vars.sheet_file.filename
+        archivo = hoja_form.vars.sheet_file.file
+        try:
+            wb = xlrd.open_workbook(file_contents=archivo.read())
+            sheets = wb.sheets()
+            for hoja in sheets:
+                importa_hoja_salida(hoja)
+        except:
+            pass
+    
+    return dict()
+
+def importa_hoja_salida(hoja):
+    row = hoja.row(1)  # 2 fila
+    print row
+
+
+    

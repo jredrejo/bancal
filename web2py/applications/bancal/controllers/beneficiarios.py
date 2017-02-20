@@ -41,6 +41,7 @@ def index():
     search_text = request.get_vars.search_text
     query = search_query(db.Beneficiario.id, search_text,
                          [db.Beneficiario.name])
+    db.Beneficiario.id.readable = True
 
     grid = SQLFORM.grid(
         query,
@@ -48,6 +49,7 @@ def index():
         search_widget=search_form,
         maxtextlength=40,
         fields=[
+            db.Beneficiario.id,
             db.Beneficiario.name,
             db.Beneficiario.poblacion,
             db.Beneficiario.telefono,

@@ -19,3 +19,23 @@
 
 
   </div>
+
+	{{ if len(procesados)>0:}}
+<h3>Se han procesados salidas para:</h3>
+		<ul>
+		{{for salida in procesados:}}
+			<li>{{=salida[0]}} con un total de {{=salida[1]}} Kg.</li>
+
+		{{pass}}
+		</ul>
+	{{pass}}
+<hr/>
+	{{if len(errores)>0:}}
+		<h3> Ha habido estos errores al procesar el archivo:</h3>
+		<ul>
+		{{for error in errores:}}
+			<li>{{=error[1]}} procesando {{=error[0]}}
+
+		{{pass}}
+		</ul>
+	{{pass}}

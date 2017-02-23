@@ -781,7 +781,8 @@ def importarsalida():
         INPUT(_name='sheet_title', _type='text'),
         INPUT(_name='sheet_file', _type='file')
         )
-
+    procesado = []
+    errores = []
     if hoja_form.accepts(request.vars, formname='hoja_form'):
         import xlrd
         archivo = hoja_form.vars.sheet_file.file
@@ -789,13 +790,18 @@ def importarsalida():
             wb = xlrd.open_workbook(file_contents=archivo.read())
             sheets = wb.sheets()
             for hoja in sheets:
-                importa_hoja_salida(hoja)
+                proceso, error = importa_hoja_salida(hoja)
+                if proceso: procesado.append(proceso)
+                if error: errores.append(error)
         except:
             pass
 
-    return dict()
+    return dict(errores=errores, procesados=procesado)
 
 def importa_hoja_salida(hoja):
+    proceso = ()
+    error = ()
+
     def busca_total():
         total = None
         for row in range(30, 40):  # para ser más rápido, supongo hay al menos 25 filas de salidas
@@ -806,11 +812,13 @@ def importa_hoja_salida(hoja):
         return (total, row)
     total, ultima_fila = busca_total()
     if not total:  # esta hoja no tiene salidas
-        return
+        return (proceso, error)
+    beneficiario = hoja.cell(1, 2).value
     try:
         beneficiario_id = int(hoja.cell(0, 3).value)
     except ValueError:
-        return  # falta el id del beneficiario
+        error = (beneficiario, "Falta o está mal el id del beneficiario")
+        return (proceso, error)  # falta el id del beneficiario
 
     row = hoja.row(1)  # 2 fila
     print hoja.cell(1, 2).value, beneficiario_id
@@ -822,5 +830,6 @@ def importa_hoja_salida(hoja):
             caducidad = hoja.cell(row, 7).value
             print alimento_id, lote, caducidad, total_alimento
 
+    proceso = (beneficiario, total)
+    return (proceso, error)
 
-    

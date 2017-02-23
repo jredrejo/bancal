@@ -777,7 +777,6 @@ def repaso_almacen():
 
 @auth.requires_login()
 def importarsalida():
-    
     hoja_form = FORM(
         INPUT(_name='sheet_title', _type='text'),
         INPUT(_name='sheet_file', _type='file')
@@ -785,7 +784,6 @@ def importarsalida():
 
     if hoja_form.accepts(request.vars, formname='hoja_form'):
         import xlrd
-        print hoja_form.vars.sheet_file.filename
         archivo = hoja_form.vars.sheet_file.file
         try:
             wb = xlrd.open_workbook(file_contents=archivo.read())
@@ -794,12 +792,35 @@ def importarsalida():
                 importa_hoja_salida(hoja)
         except:
             pass
-    
+
     return dict()
 
 def importa_hoja_salida(hoja):
+    def busca_total():
+        total = None
+        for row in range(30, 40):  # para ser más rápido, supongo hay al menos 25 filas de salidas
+            cell_obj = hoja.cell(row, 7)
+            if cell_obj.value == 'TOTAL':
+                total = hoja.cell(row, 10).value
+                break
+        return (total, row)
+    total, ultima_fila = busca_total()
+    if not total:  # esta hoja no tiene salidas
+        return
+    try:
+        beneficiario_id = int(hoja.cell(0, 3).value)
+    except ValueError:
+        return  # falta el id del beneficiario
+
     row = hoja.row(1)  # 2 fila
-    print row
+    print hoja.cell(1, 2).value, beneficiario_id
+    for row in range(4, ultima_fila):
+        total_alimento = hoja.cell(row, 10).value
+        if total_alimento:  # hay total para esta fila
+            alimento_id = int(hoja.cell(row, 0).value)
+            lote = hoja.cell(row, 6).value
+            caducidad = hoja.cell(row, 7).value
+            print alimento_id, lote, caducidad, total_alimento
 
 
     

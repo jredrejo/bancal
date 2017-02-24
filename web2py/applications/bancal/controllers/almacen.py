@@ -804,9 +804,11 @@ def importa_hoja_salida(hoja):
 
     def busca_total():
         total = None
-        for row in range(30, 40):  # para ser más rápido, supongo hay al menos 25 filas de salidas
-            cell_obj = hoja.cell(row, 7)
-            if cell_obj.value == 'TOTAL':
+        for row in range(20, 40):  # para ser más rápido, supongo hay al menos 25 filas de salidas
+            hoja_nueva = hoja.cell(row, 7).value
+            hoja_vieja = hoja.cell(row, 9).value
+            print hoja_nueva, hoja_vieja
+            if hoja_nueva == 'TOTAL' or hoja_vieja == 'TOTAL':
                 total = hoja.cell(row, 10).value
                 break
         return (total, row)
@@ -822,10 +824,20 @@ def importa_hoja_salida(hoja):
 
     row = hoja.row(1)  # 2 fila
     print hoja.cell(1, 2).value, beneficiario_id
+    prev_id = None
     for row in range(4, ultima_fila):
         total_alimento = hoja.cell(row, 10).value
         if total_alimento:  # hay total para esta fila
-            alimento_id = int(hoja.cell(row, 0).value)
+            alimento_id_string = hoja.cell(row, 0).value
+            if not alimento_id_string:
+                alimento_id_string = prev_id  # para celdas mezcladas, recupero el valor original
+            else:
+                prev_id = alimento_id_string
+            try:
+                alimento_id = int(alimento_id_string)
+            except ValueError:
+                error = (beneficiario, "Falta o está mal el id de algún alimento")
+                break
             lote = hoja.cell(row, 6).value
             caducidad = hoja.cell(row, 7).value
             print alimento_id, lote, caducidad, total_alimento

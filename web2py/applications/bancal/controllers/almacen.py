@@ -54,6 +54,11 @@ if 0:  # for IDE's to find the imports for the globals
     from gluon.validators import *
 
 
+def ver_cierre(form):
+    if session.cierre:
+        if form.vars.Fecha < session.cierre:
+            form.errors.Fecha = 'El almacén está cerrado para esa fecha'
+
 @auth.requires_login()
 def index():
     redirect(URL('entradas'))
@@ -187,7 +192,7 @@ def nueva_entrada():
                 actualiza_lineaalmacen(registro_linea.LineaAlmacen,
                                        float(request.vars.Unidades), valor_antiguo_uds)
             else:
-                cid = nueva_lineaalmacen(request.vars)
+                cid = nueva_lineaalmacen(request.vars, session.Entradas)
                 registro_linea = db.LineaEntrada(frmlineas.vars.id)
                 registro_linea.LineaAlmacen = cid
                 registro_linea.update_record()
@@ -275,36 +280,7 @@ def nueva_salida():
 
         if frmlineas.accepts(request.vars, session,
                              onvalidation=check_stock):
-            stock_pendiente = float(frmlineas.vars.Unidades)
-
-            # descontamos el stock ahora de las líneas de almacén que haga
-            # falta:
-            query = (db.CabeceraAlmacen.alimento == frmlineas.vars.alimento) \
-                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
-            lineas_almacen = db(query).select(db.LineaAlmacen.id,
-                                              db.LineaAlmacen.Stock,
-                                              orderby=~db.LineaAlmacen.Stock)
-            if valor_antiguo_uds > 0:
-                actualiza_lineaalmacen(lineas_almacen.first().id,
-                                       valor_antiguo_uds, stock_pendiente)
-            else:
-                for linea in lineas_almacen:
-                    if stock_pendiente <= linea.Stock:
-                        stock_resta = stock_pendiente
-                        stock_pendiente = 0
-                    else:
-                        stock_resta = linea.Stock
-                        if linea.Stock > 0:  # no restamos a un stock negativo
-                            stock_pendiente = stock_pendiente - stock_resta
-                        else:
-                            stock_resta = 0
-                    if stock_resta > 0:
-                        actualiza_lineaalmacen(linea.id, 0, stock_resta)
-                    # if stock_pendiente == 0:
-                    #     break
-                if stock_pendiente > 0:  # Va a haber stock negativo en el almacén, se lo asigno a la última línea
-                    actualiza_lineaalmacen(linea.id, 0, stock_pendiente)
-
+            actualizar_almacen_linea_salida(frmlineas.vars.alimento, float(frmlineas.vars.Unidades), valor_antiguo_uds)
             redirect(URL(f='nueva_salida',
                          args=session.current_entrada))
         elif frmlineas.errors:
@@ -670,7 +646,7 @@ def incidencias():
 @service.json
 def borra_linea():
     if 'linea_id' in request.vars:
-        borrar_linea(request.vars.linea_id)
+        borrar_linea(request.vars.linea_id, session.Entradas)
 
 
 @auth.requires_login()
@@ -681,7 +657,7 @@ def borra_entrada():
             & (db.CabeceraEntrada.id == request.vars.entrada_id)
         rows = db(query).select(db.LineaEntrada.id)
         for row in rows:
-            borrar_linea(row.id)
+            borrar_linea(row.id, session.Entradas)
 
         db(db.CabeceraEntrada.id == request.vars.entrada_id).delete()
 
@@ -694,7 +670,7 @@ def borra_salida():
             & (db.CabeceraSalida.id == request.vars.salida_id)
         rows = db(query).select(db.LineaSalida.id)
         for row in rows:
-            borrar_linea(row.id)
+            borrar_linea(row.id, session.Entradas)
         db(db.CabeceraSalida.id == request.vars.salida_id).delete()
 
 

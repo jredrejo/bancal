@@ -23,19 +23,14 @@ if 0:  # for IDE's to find the imports for the globals
     auth = Auth(globals(), None)
 
 import locale
-from datetime import datetime
+from datetime import datetime, date
 from gluon import current
-session = current.session
 
-__all__ = ['ver_cierre', 'check_stock', 'actualiza_lineaalmacen', 'nueva_lineaalmacen',
+__all__ = ['check_stock', 'actualiza_lineaalmacen', 'nueva_lineaalmacen',
            'borrar_linea', 'get_alimentos', 'get_donante', 'set_donante',
-           'search_form', 'search_query', 'stock_alimento']
-
-
-def ver_cierre(form):
-    if session.cierre:
-        if form.vars.Fecha < session.cierre:
-            form.errors.Fecha = 'El almacén está cerrado para esa fecha'
+           'search_form', 'search_query', 'stock_alimento', 'ultima_salida',
+           'insertar_salida', 'actualizar_almacen_linea_salida',
+           'insertar_linea_salida']
 
 
 def check_stock(form):
@@ -45,7 +40,6 @@ def check_stock(form):
     - Si se está editando una línea que ya tenía stock anteriormente descontado
     hay que tenerlo en cuenta: session.valor_antiguo. Si la línea es nueva esto valdrá 0
     """
-    # db = form.table._db
     db = current.db
     stock_pendiente = float(form.vars.Unidades)
     query = (db.CabeceraAlmacen.alimento == form.vars.alimento) \
@@ -64,21 +58,20 @@ def stock_alimento(codigo, db1):
     """Devuelve, dado el código de un alimento:
     Un diccionario conteniendo
     - alimento: nombre del alimento
-    - id: id del alimento en la tabla db.Alimento
+    - id: id del alimento en la tabla db1.Alimento
     - stock: stock disponible del alimento
     - stock-text: stock disponible del alimento formateado como texto
     """
-    db = current.db
     data = {'alimento': '', 'id': None, 'stock': None, 'stock-text': None}
-    alimento = db((db.Alimento.Codigo == codigo) & (db.Alimento.Descripcion != None)).select().first()
+    alimento = db1((db1.Alimento.Codigo == codigo) & (db1.Alimento.Descripcion != None)).select().first()
     if alimento:
         data['alimento'] = alimento.Descripcion
         data['id'] = alimento.id
 
-        query = (db.CabeceraAlmacen.alimento == db.Alimento.id) \
-            & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
-        query = query & (db.Alimento.id == alimento.id)
-        stock = db(query).select(db.LineaAlmacen.Stock.sum()).first()[db.LineaAlmacen.Stock.sum()]
+        query = (db1.CabeceraAlmacen.alimento == db1.Alimento.id) \
+            & (db1.CabeceraAlmacen.id == db1.LineaAlmacen.cabecera)
+        query = query & (db1.Alimento.id == alimento.id)
+        stock = db1(query).select(db1.LineaAlmacen.Stock.sum()).first()[db1.LineaAlmacen.Stock.sum()]
         if not stock:
             stock = 0
         locale.setlocale(locale.LC_ALL, 'es_ES.utf-8')
@@ -100,7 +93,7 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
     registro.update_record()
 
 
-def nueva_lineaalmacen(valores):
+def nueva_lineaalmacen(valores, es_entrada=False):
     db = current.db
     cabecera = db(db.CabeceraAlmacen.alimento == valores.alimento).select().first()
     if not cabecera:
@@ -118,7 +111,7 @@ def nueva_lineaalmacen(valores):
     query = query & (db.LineaAlmacen.Lote == valores.Lote)
     linea = db(query).select(db.LineaAlmacen.id, orderby=db.LineaAlmacen.Stock).first()
     if linea:
-        if session.Entradas:
+        if es_entrada:
             actualiza_lineaalmacen(linea.id, float(valores.Unidades), 0)
         lid = linea.id
     else:
@@ -133,10 +126,10 @@ def nueva_lineaalmacen(valores):
     return lid
 
 
-def borrar_linea(linea_id=None):
+def borrar_linea(linea_id=None, es_entrada = False):
     db = current.db
     if linea_id:
-        if session.Entradas:
+        if es_entrada:
             registro = db.LineaEntrada(linea_id)
             if registro.LineaAlmacen > 0:
                 actualiza_lineaalmacen(registro.LineaAlmacen, 0,
@@ -225,59 +218,57 @@ def search_query(tableid, search_text, fields):
     return query
 
 
-class Almacen(object):
+def insertar_salida(beneficiario_id, fecha, almacen=1):
+    db = current.db
+    record = db.CabeceraSalida.insert(Beneficiario=beneficiario_id, Fecha=fecha, almacen=almacen)
+    return record
 
-    def __init__(self, id, db, cierre='2001-01-01'):
-        self.id = id
-        self.db = db
-        self.cierre = cierre
 
-    def actualiza_lineaalmacen(self, linea, valornuevo, valorprevio=None):
-        """Descuenta o añade stock en una línea de almacén,
-        según el orden de valornuevo y valorprevio"""
+def ultima_salida():
+    db = current.db
+    record = db(db.CabeceraSalida.id > 0).select(db.CabeceraSalida.id, orderby=db.CabeceraSalida.id)
+    if len(record) > 0:
+        return record.first().id
+    else:
+        return 0
 
-        registro = self.db.LineaAlmacen(linea)
-        total = float(registro.Stock)
-        # Limito a tres decimales en el stock
-        registro.Stock = float("{0:.3f}".format(total + valornuevo - valorprevio))
 
-        # if registro.Stock<0: registro.Stock =0
-        registro.update_record()
-
-    def nueva_entrada(self, current_entrada, id_alimento, unidades):
-
-        valor_antiguo_uds = None
-
-        if current_entrada:
-            valor_antiguo_uds = None
-            if id_alimento:
-                registro_linea = self.db.LineaEntrada(id_alimento)
-                registro_alimento = self.db.Alimento(registro_linea.alimento)
-                codigo_alimento = registro_alimento.Codigo
-                if unidades:
-                    if float(unidades) \
-                            != registro_linea.Unidades:
-                        valor_antiguo_uds = registro_linea.Unidades
+def actualizar_almacen_linea_salida(alimento_id, uds, valor_antiguo_uds=0):
+    # param: valor_antiguo_uds usado si estoy editando, no añadiendo una línea
+    db = current.db
+    stock_pendiente = uds
+    query = (db.CabeceraAlmacen.alimento == alimento_id) \
+                & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
+    lineas_almacen = db(query).select(db.LineaAlmacen.id, db.LineaAlmacen.Stock, orderby=~db.LineaAlmacen.Stock)
+    if valor_antiguo_uds > 0:
+        actualiza_lineaalmacen(lineas_almacen.first().id,  valor_antiguo_uds, stock_pendiente)
+    else:
+        for linea in lineas_almacen:
+            if stock_pendiente <= linea.Stock:
+                stock_resta = stock_pendiente
+                stock_pendiente = 0
             else:
-                registro_linea = None
-                codigo_alimento = XML('""')
-
-            self.db.LineaEntrada.cabecera.default = current_entrada
-
-            # session.AlmacenAlimento
-
-            if frmlineas.accepts(request.vars, session):
-                if valor_antiguo_uds and registro_linea.LineaAlmacen:
-                    actualiza_lineaalmacen(registro_linea.LineaAlmacen,
-                            float(request.vars.Unidades), valor_antiguo_uds)
+                stock_resta = linea.Stock
+                if linea.Stock > 0:  # no restamos a un stock negativo
+                    stock_pendiente = stock_pendiente - stock_resta
                 else:
-                    cid = nueva_lineaalmacen(request.vars)
-                    registro_linea = db.LineaEntrada(frmlineas.vars.id)
-                    registro_linea.LineaAlmacen = cid
-                    registro_linea.update_record()
+                    stock_resta = 0
+            if stock_resta > 0:
+                actualiza_lineaalmacen(linea.id, 0, stock_resta)
+            # if stock_pendiente == 0:
+            #     break
+        if stock_pendiente > 0:  # Va a haber stock negativo en el almacén, se lo asigno a la última línea
+            actualiza_lineaalmacen(linea.id, 0, stock_pendiente)
 
-                redirect(URL(f='nueva_entrada',
-                             args=session.current_entrada))
 
-        return dict(form=form, frmlineas=frmlineas,
-                    codigo_alimento=codigo_alimento)
+def insertar_linea_salida(cabecera_id, alimento_id, uds, caducidad=None, lote='', peso_unidad=1.0, valor_antiguo_uds=0):
+    # no usando: precio_kg, estanteria, LineaAlmacen
+    db = current.db
+    if caducidad is None:
+        caducidad = date(9999, 12, 31)
+    elif isinstance(caducidad, str):
+        caducidad = datetime.strptime(caducidad, '%d-%m-%Y').date()
+    
+    record = db.LineaSalida.insert(cabecera=cabecera_id, alimento=alimento_id, Unidades=uds, PesoUnidad=peso_unidad, Caducidad=caducidad, Lote=lote)
+    actualizar_almacen_linea_salida(alimento_id, uds)
+    return record

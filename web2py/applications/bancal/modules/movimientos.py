@@ -261,14 +261,15 @@ def actualizar_almacen_linea_salida(alimento_id, uds, valor_antiguo_uds=0):
             actualiza_lineaalmacen(linea.id, 0, stock_pendiente)
 
 
-def insertar_linea_salida(cabecera_id, alimento_id, uds, caducidad=None, lote='', peso_unidad=1.0, valor_antiguo_uds=0):
+def insertar_linea_salida(cabecera_id, codigo_alimento, uds, caducidad=None, lote='', peso_unidad=1.0, valor_antiguo_uds=0):
     # no usando: precio_kg, estanteria, LineaAlmacen
     db = current.db
     if caducidad is None:
         caducidad = date(9999, 12, 31)
-    elif isinstance(caducidad, str):
+    elif isinstance(caducidad, str) or isinstance(caducidad, unicode):
         caducidad = datetime.strptime(caducidad, '%d-%m-%Y').date()
-    
+
+    alimento_id = db(db.Alimento.Codigo == codigo_alimento).select(db.Alimento.id).first()
     record = db.LineaSalida.insert(cabecera=cabecera_id, alimento=alimento_id, Unidades=uds, PesoUnidad=peso_unidad, Caducidad=caducidad, Lote=lote)
     actualizar_almacen_linea_salida(alimento_id, uds)
     return record

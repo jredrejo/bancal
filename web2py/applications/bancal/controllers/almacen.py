@@ -59,6 +59,7 @@ def ver_cierre(form):
         if form.vars.Fecha < session.cierre:
             form.errors.Fecha = 'El almacén está cerrado para esa fecha'
 
+
 @auth.requires_login()
 def index():
     redirect(URL('entradas'))
@@ -405,19 +406,14 @@ def get_rows_entradas():
     orderby = ~db.CabeceraEntrada.id
     query = db.CabeceraEntrada.id > 0
     if session.FechaAlmacen:
-        query = query & (db.CabeceraEntrada.Fecha
-                         == session.FechaAlmacen)
+        query = query & (db.CabeceraEntrada.Fecha == session.FechaAlmacen)
     if session.DonanteAlmacen:
-        query = query & (db.CabeceraEntrada.Donante
-                         == session.DonanteAlmacen)
+        query = query & (db.CabeceraEntrada.Donante == session.DonanteAlmacen)
     if session.ProcedenciaAlmacen:
-        query = query & (db.CabeceraEntrada.tipoProcedencia
-                         == session.ProcedenciaAlmacen)
+        query = query & (db.CabeceraEntrada.tipoProcedencia == session.ProcedenciaAlmacen)
     if session.AlmacenAlimento:
-        query = query & (db.CabeceraEntrada.id
-                         == db.LineaEntrada.cabecera)
-        query = query & (db.LineaEntrada.alimento
-                         == session.AlmacenAlimento)
+        query = query & (db.CabeceraEntrada.id == db.LineaEntrada.cabecera)
+        query = query & (db.LineaEntrada.alimento == session.AlmacenAlimento)
 
     rowsentradas = db(query).select(db.CabeceraEntrada.ALL,
                                     limitby=limitby, orderby=orderby)
@@ -469,16 +465,12 @@ def get_rows_salidas():
     orderby = ~db.CabeceraSalida.id
     query = db.CabeceraSalida.id > 0
     if session.FechaAlmacen:
-        query = query & (db.CabeceraSalida.Fecha
-                         == session.FechaAlmacen)
+        query = query & (db.CabeceraSalida.Fecha == session.FechaAlmacen)
     if session.BeneficiarioAlmacen:
-        query = query & (db.CabeceraSalida.Beneficiario
-                         == session.BeneficiarioAlmacen)
+        query = query & (db.CabeceraSalida.Beneficiario == session.BeneficiarioAlmacen)
     if session.AlmacenAlimento:
-        query = query & (db.CabeceraSalida.id
-                         == db.LineaSalida.cabecera)
-        query = query & (db.LineaSalida.alimento
-                         == session.AlmacenAlimento)
+        query = query & (db.CabeceraSalida.id == db.LineaSalida.cabecera)
+        query = query & (db.LineaSalida.alimento == session.AlmacenAlimento)
     rowssalidas = db(query).select(db.CabeceraSalida.ALL,
                                    limitby=limitby, orderby=orderby)
 
@@ -606,8 +598,7 @@ def get_lineas_almacen():
     page = int(request.vars.page)  # the page number
     pagesize = int(request.vars.rows)
     limitby = (page * pagesize - pagesize, page * pagesize)
-    cabecera = db(db.CabeceraAlmacen.alimento
-                  == session.AlmacenAlimento).select().first()
+    cabecera = db(db.CabeceraAlmacen.alimento == session.AlmacenAlimento).select().first()
     if cabecera:
         query = (db.LineaAlmacen.cabecera == cabecera.id) \
             & (db.LineaAlmacen.Stock > 0)
@@ -682,8 +673,13 @@ def set_parametros():
             valor = None
         if parametro == 'fecha':
             if valor:
-                session.FechaAlmacen = \
-                    datetime.date(datetime.strptime(valor, '%d-%m-%Y'))
+                current_date = date.today()
+                if len(valor) < 3:
+                    valor = "%s-%s-%s" % (valor, current_date.month, current_date.year)
+                try:
+                    session.FechaAlmacen = datetime.date(datetime.strptime(valor, '%d-%m-%Y'))
+                except:
+                    session.FechaAlmacen = current_date
             else:
                 session.FechaAlmacen = None
         elif parametro == 'donante':
@@ -754,7 +750,7 @@ def importarsalida():
     hoja_form = FORM(
         INPUT(_name='sheet_title', _type='text'),
         INPUT(_name='sheet_file', _type='file')
-        )
+    )
     procesado = []
     errores = []
     if hoja_form.accepts(request.vars, formname='hoja_form'):
@@ -771,6 +767,7 @@ def importarsalida():
             pass
 
     return dict(errores=errores, procesados=procesado)
+
 
 def importa_hoja_salida(hoja):
     from xlrd import xldate
@@ -839,4 +836,3 @@ def importa_hoja_salida(hoja):
                 return (proceso, error)
     proceso = (beneficiario, total)
     return (proceso, error)
-

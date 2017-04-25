@@ -1,0 +1,26 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message' in globals())}}
+{{extend 'layout.html'}}
+{{block right_sidebar}}
+{{pass}}
+<h2>Albaranes de Entrada</h2>
+<h4>Seleccione año y mes para el albarán:</h4>
+{{=form}}
+
+<div>
+	<a href="{{=URL('informes', 'submit_albaran',vars={'tipo':'entrada'})}}" class="btn btn-large btn-primary">Descargar albaranes como hoja de cálculo</a>
+</div>
+<script type="text/javascript">
+
+function send_albaran_data() {
+    data = {'tipo': 'salida',
+        'year':$( "#no_table_year option:selected" ).text(),
+        'mes':$( "#no_table_mes option:selected" ).text()}
+    jQuery.post("{{=URL('informes', 'descargar_albaranes')}}", data);
+
+}
+
+
+ jQuery(document).ready(function() {
+    jQuery(".generic-widget").change(send_albaran_data);
+ })
+ </script>

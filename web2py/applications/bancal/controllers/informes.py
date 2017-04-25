@@ -797,6 +797,146 @@ def generar_informe(mes, year, trimestre=False):
 
     return informe
 
+def escribe_detalle_albaran(id, fila, sheet, salidas, cell_style):
+    linea = db.LineaSalida if salidas else db.LineaEntrada
+    query = (linea.cabecera == id)
+    lineas = db(query).select(linea.alimento, linea.Unidades)
+    total = 0
+    for linea in lineas:
+        reg_alimento = db.Alimento[linea.alimento]
+        alimento = "%s - %s" % (reg_alimento.Codigo, reg_alimento.Descripcion)
+        sheet.write(fila, 2, alimento)
+        sheet.write(fila, 3, linea.Unidades)
+        total += linea.Unidades
+        fila += 1
+    sheet.write(fila, 4, total, cell_style)
+    return fila + 2
+
+
+def generar_albaran(mes, year, salidas=True):
+    fecha1 = date(year, mes, 1)
+    fecha2 = fecha1 + relativedelta.relativedelta(months=1)
+    cabecera = db.CabeceraSalida if salidas else db.CabeceraEntrada
+    usuario = db.CabeceraSalida.Beneficiario if salidas else db.CabeceraEntrada.Donante
+    tabla_usuario = db.Beneficiario if salidas else db.Colaborador
+
+    query = (cabecera.Fecha < fecha2) & (cabecera.Fecha >= fecha1)
+    ezxf = xlwt.easyxf
+    book = xlwt.Workbook(encoding='utf-8')
+    sheet = book.add_sheet(session.nombre_mes)
+    data_xfs = [
+        ezxf(num_format_str='#,##0'),
+        ezxf(),
+        ezxf(),
+        ezxf(num_format_str='#,##0'),
+        ezxf(num_format_str='#,##0'),
+        ezxf(num_format_str='#,##0'),
+        ezxf(num_format_str='#,##0'),
+        ]
+
+    style1 = \
+        ezxf('font: name CG Times (WN), bold True, height 220;alignment: vertical center,horizontal center;border: top thin, left medium,right medium,bottom thin'
+             )
+    style2 = \
+        ezxf('font: name CG Times (WN), bold True, height 160;alignment: vertical center,horizontal left;border: top dotted'
+             )             
+    style14 = \
+        ezxf('font: name CG Times (WN), bold False, height 160;alignment: horizontal right,vertical center;border: top dotted, left thin,right thin,bottom dotted'
+             )
+    if salidas:
+        mensaje = "Albaranes de Salida de %s de %s" % (session.nombre_mes, session.nombre_year)
+    else:
+        mensaje = "Albaranes de entrada de %s de %s" % (session.nombre_mes, session.nombre_year)
+    albaranes = db(query).select(cabecera.id, cabecera.Fecha, usuario, orderby=cabecera.Fecha)
+    
+    sheet.write(0,0, mensaje, style1)
+    sheet.write(0,4, "Totales", style1)
+
+    fila = 1
+    for albaran in albaranes:
+        nombre_usuario = albaran[usuario].name
+        sheet.write(fila, 0, nombre_usuario, style2)
+        sheet.write(fila, 1, albaran.Fecha.strftime("%d/%m/%Y"), style2)
+        fila +=1
+        fila = escribe_detalle_albaran(albaran.id, fila, sheet, salidas, style2)
+
+
+    # pie de hoja:
+    fila +=1
+    sheet.write(fila, 4, xlwt.Formula('SUM(E2:E' + str(fila) + ')'),
+                style1)
+    sheet.col(0).width =20000
+    sheet.col(2).width = 15000
+    s = cStringIO.StringIO()
+    doc = CompoundDoc.XlsDoc()
+    doc.save(s, book.get_biff_data())
+
+    response.headers['Content-Type'] = 'application/vnd.ms-excel'
+    response.headers['Content-Disposition'] = \
+            'attachment; filename=Albaranes' + session.nombre_mes \
+            + session.nombre_year + '.xls'
+    return s.getvalue()
+
+
+def datos_previos_albaran():
+    nombre_mes = None
+    nombre_year = None
+    years = range(2013, date.today().year + 1)
+    months = (
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
+        )
+
+    form = SQLFORM.factory(Field('year', label="Año",
+                           requires=IS_IN_SET(years)), Field('mes',
+                           requires=IS_IN_SET(months)),
+                            buttons=[])
+    fecha_pasada = date.today() - relativedelta.relativedelta(months=1)
+    form.vars.year = fecha_pasada.year
+    form.vars.mes = months[fecha_pasada.month - 1]
+    return (form, months)
+
+@auth.requires_login()
+def albaranes_salida():
+    form, months = datos_previos_albaran()
+    if form.accepts(request, session):
+        session.nombre_mes = form.vars.mes
+        session.nombre_year = form.vars.year
+        return generar_albaran(months.index(session.nombre_mes) + 1, int(session.nombre_year), salidas = True)
+    return dict(form=form)
+
+@auth.requires_login()
+def albaranes_entrada():
+    form, _ = datos_previos_albaran()
+    if form.accepts(request, session):
+        session.nombre_mes = form.vars.mes
+        session.nombre_year = form.vars.year
+        return generar_albaran(months.index(session.nombre_mes) + 1, int(session.nombre_year), salidas = False)
+    return dict(form=form)
+
+
+@auth.requires_login()
+def descargar_albaranes():
+    session.nombre_mes = request.vars.mes
+    session.nombre_year = request.vars.year
+    return dict()
+
+@auth.requires_login()
+def submit_albaran():
+    salidas = request.vars.tipo == 'salida'
+    _, months = datos_previos_albaran()
+    return generar_albaran(months.index(session.nombre_mes) + 1, int(session.nombre_year), salidas = salidas)
+
 
 @auth.requires_login()
 def index():

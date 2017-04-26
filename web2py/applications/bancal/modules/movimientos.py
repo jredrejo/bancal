@@ -41,7 +41,11 @@ def check_stock(form):
     hay que tenerlo en cuenta: session.valor_antiguo. Si la línea es nueva esto valdrá 0
     """
     db = current.db
-    stock_pendiente = float(form.vars.Unidades)
+    try:
+        stock_pendiente = float(form.vars.Unidades)
+    except ValueError:
+        form.errors.Unidades = "valor incorrecto"
+        return
     query = (db.CabeceraAlmacen.alimento == form.vars.alimento) \
         & (db.CabeceraAlmacen.id == db.LineaAlmacen.cabecera)
     stock_actual = \

@@ -85,12 +85,16 @@ def actualiza_lineaalmacen(linea, valornuevo, valorprevio=None):
     """Descuenta o añade stock en una línea de almacén, según el orden de valornuevo y valorprevio"""
     db = current.db
     registro = db.LineaAlmacen(linea)
-    total = float(registro.Stock)
-    # Limito a tres decimales en el stock
-    registro.Stock = float("{0:.3f}".format(total + valornuevo - valorprevio))
+    if registro:
+        total = float(registro.Stock)
+        # Limito a tres decimales en el stock
+        registro.Stock = float("{0:.3f}".format(total + valornuevo - valorprevio))
 
-    # if registro.Stock<0: registro.Stock =0
-    registro.update_record()
+        # if registro.Stock<0: registro.Stock =0
+        registro.update_record()
+    else:
+        # debugging info
+        print "No se pudo encontrar la LineaAlmacen %s " % linea
 
 
 def nueva_lineaalmacen(valores, es_entrada=False):

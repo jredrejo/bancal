@@ -935,6 +935,12 @@ def descargar_albaranes():
 def submit_albaran():
     salidas = request.vars.tipo == 'salida'
     _, months = datos_previos_albaran()
+    fecha_pasada = date.today() - relativedelta.relativedelta(months=1)
+    if not session.nombre_mes:
+        session.nombre_mes = months[fecha_pasada.month - 1]
+    if not session.nombre_year:
+        session.nombre_year = str(fecha_pasada.year)
+
     return generar_albaran(months.index(session.nombre_mes) + 1, int(session.nombre_year), salidas = salidas)
 
 

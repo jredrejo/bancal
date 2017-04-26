@@ -554,7 +554,10 @@ def get_lineas_entradas():
             if f == 'nada':
                 vals.append('')
             elif f == 'Caducidad':
-                k = r(f).strftime('%d/%m/%Y')
+                try:
+                    k = r(f).strftime('%d/%m/%Y')
+                except ValueError:
+                    k = "31/12/9999"
                 vals.append(k)
             elif f == 'alimento':
                 k = db.LineaEntrada['alimento'].represent(r(f))
